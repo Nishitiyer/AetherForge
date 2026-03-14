@@ -26,7 +26,7 @@ const Editor = () => {
     { id: 'initial-model', type: 'Model', position: [0, 0, 0], scale: [1, 1, 1], color: '#8b5cf6' }
   ]);
   
-  const { isExpired, isCreator } = useSession();
+  const { isExpired, isCreator, orbSettings } = useSession();
   const [isSignPanelOpen, setIsSignPanelOpen] = useState(false);
   const { otherCursors, updateCursor } = useCollaboration('default-project');
 
