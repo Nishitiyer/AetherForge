@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, History, Package, ShieldCheck } from 'lucide-react';
+import { CreditCard, History as HistoryIcon, Package, ShieldCheck } from 'lucide-react';
 
 const Billing = () => {
   return (

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Camera, Wand2, X } from 'lucide-react';
+import { Camera, WandSparkles, X } from 'lucide-react';
 import './SignLanguagePanel.css';
 
 const SignLanguagePanel = ({ isOpen, onClose, onTranslation }) => {
@@ -79,7 +79,7 @@ const SignLanguagePanel = ({ isOpen, onClose, onTranslation }) => {
       </div>
 
       <div className="accessibility-info">
-        <Wand2 size={14} className="text-primary" />
+        <WandSparkles size={14} className="text-primary" />
         <span>Perform gestures to control AetherForge AI.</span>
       </div>
     </div>
