@@ -1,5 +1,5 @@
 import React from 'react';
-import { SlidersHorizontal, Image, Type } from 'lucide-react';
+import { SlidersHorizontal, Image as ImageIcon, Type } from 'lucide-react';
 import './PropertiesPanel.css';
 
 const PropertiesPanel = ({ activeMode }) => {

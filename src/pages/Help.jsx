@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Search, MessageSquare, PlayCircle } from 'lucide-react';
+import { BookOpen, Search, MessageSquare, CirclePlay } from 'lucide-react';
 
 const Help = () => {
   return (
@@ -20,7 +20,7 @@ const Help = () => {
             <p style={{color: 'var(--color-text-muted)', fontSize: '0.875rem', marginTop: '0.5rem'}}>Deep dive into every tool, node, and AI capability.</p>
           </div>
           <div className="glass-panel" style={{padding: '2rem', borderRadius: '12px', textAlign: 'center'}}>
-            <PlayCircle size={40} className="text-accent" style={{margin: '0 auto 1.5rem'}} />
+            <CirclePlay size={40} className="text-accent" style={{margin: '0 auto 1.5rem'}} />
             <h3>Video Tutorials</h3>
             <p style={{color: 'var(--color-text-muted)', fontSize: '0.875rem', marginTop: '0.5rem'}}>Learn from pros with our step-by-step masterclasses.</p>
           </div>
