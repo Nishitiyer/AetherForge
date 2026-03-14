@@ -5,33 +5,33 @@ import './FeatureGrid.css';
 const features = [
   {
     icon: <Zap size={24} />,
-    title: 'Text to Fully Rigged Characters',
-    description: 'Generate high-fidelity, production-ready characters complete with automated rigging, materials, and facial blendshapes instantly.'
+    title: 'Generative Sculpting',
+    description: 'Describe complex organic shapes. AetherForge generates base meshes with optimized topology, ready for high-detail sculpting.'
   },
   {
     icon: <Layout size={24} />,
-    title: 'Cinematic Environment Generation',
-    description: 'Describe complex scenes—from cyberpunk streets to fantasy castles. AetherForge handles lighting, scattering, and atmopsherics.'
+    title: 'World Building',
+    description: 'Describe complex scenes—from cyberpunk streets to fantasy castles. AetherForge handles lighting, scattering, and atmospherics.'
   },
   {
     icon: <Workflow size={24} />,
-    title: 'Node-Based AI Prompting',
-    description: 'Stack prompts visually to weave concept art, reference images, and text together for precise generative control.'
+    title: 'Node-Based Logic',
+    description: 'A professional node-based workflow for materials, geometry, and AI prompting. Full control over every generative step.'
   },
   {
     icon: <PenTool size={24} />,
-    title: 'Professional Manual Tools',
-    description: 'Retopologize, UV unwrap, sculpt, and adjust nodes natively. AI brings the base, you deliver the masterpiece.'
+    title: 'Precision Modeling',
+    description: 'Full suite of manual tools: Retopology, UV unwrapping, vertex manipulation, and edge-loop control.'
   },
   {
     icon: <Layers size={24} />,
-    title: 'Smart Material Generation',
-    description: 'Describe any material. Automatically generate diffuse, normal, roughness, metallic, and displacement maps.'
+    title: 'AI PBR Materials',
+    description: 'Generate physically-based materials from text. Includes Diffuse, Normal, Roughness, and Metallic maps up to 4K.'
   },
   {
     icon: <Box size={24} />,
-    title: 'Export Anywhere',
-    description: 'Seamlessly export to FBX, GLTF, USD, or native files perfectly optimized for Unreal Engine, Unity, or standard pipelines.'
+    title: 'Universal Pipeline',
+    description: 'Seamlessly export to FBX, GLTF, USDS, or Alembic. Perfectly optimized for Unreal Engine 5, Unity, and Blender.'
   }
 ];
 

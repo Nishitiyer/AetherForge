@@ -18,8 +18,8 @@ const Navbar = () => {
           <Link to="/creator" className="creator-link">Creator</Link>
         </div>
         <div className="navbar-actions">
-          <Link to="/auth" className="btn-secondary">Log In</Link>
-          <Link to="/auth?mode=signup" className="btn-primary">Start Creating</Link>
+          <Link to="/auth-selection" className="btn-secondary">Log In</Link>
+          <Link to="/auth-selection" className="btn-primary">Free Download</Link>
         </div>
       </div>
     </nav>

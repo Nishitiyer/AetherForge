@@ -18,21 +18,20 @@ const Hero = () => {
         </div>
         
         <h1 className="hero-title">
-          Create <span className="text-gradient">Worlds</span><br />
-          with Words.
+          The Free & Open <span className="text-gradient">AI 3D Suite</span><br />
+          For Professionals.
         </h1>
         
         <p className="hero-subtitle">
-          The professional AI-native alternative for 3D creation. Generate models, characters, environments, and animations from natural language, with full manual control to refine every detail.
+          AetherForge is the professional AI-native alternative for 3D creation. Generate models, characters, environments, and animations with cutting-edge generative tools, then refine every vertex with industry-standard manual controls.
         </p>
         
         <div className="hero-actions">
-          <Link to="/auth?mode=signup" className="btn-primary hero-btn glow-shadow">
-            Start Creating Free
+          <Link to="/auth-selection" className="btn-primary hero-btn glow-shadow">
+            Free Download
           </Link>
           <div className="portal-quick-links">
-            <Link to="/creator" className="portal-link">Creator Hub</Link>
-            <Link to="/admin" className="portal-link">Admin Suite</Link>
+            <Link to="/auth-selection" className="portal-link">Login & Access</Link>
           </div>
         </div>
         

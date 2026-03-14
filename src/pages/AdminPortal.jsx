@@ -8,24 +8,13 @@ const AdminPortal = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:5000/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-        setIsAuthenticated(true);
-        setError('');
-      } else {
-        setError('Incorrect admin password');
-      }
-    } catch (err) {
-      setError('Could not connect to server');
+    if (password === 'Lalitha76!') {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Incorrect admin password');
     }
   };
 

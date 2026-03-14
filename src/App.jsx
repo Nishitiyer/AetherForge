@@ -10,6 +10,8 @@ import Billing from './pages/Billing';
 import Help from './pages/Help';
 import AdminPortal from './pages/AdminPortal';
 import CreatorPortal from './pages/CreatorPortal';
+import AuthSelection from './pages/AuthSelection';
+import Download from './pages/Download';
 import { SessionProvider } from './context/SessionContext';
 import { ChatProvider } from './context/ChatContext';
 
@@ -28,6 +30,8 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/billing" element={<Billing />} />
               <Route path="/help" element={<Help />} />
+              <Route path="/auth-selection" element={<AuthSelection />} />
+              <Route path="/download" element={<Download />} />
               <Route path="/admin" element={<AdminPortal />} />
               <Route path="/creator" element={<CreatorPortal />} />
             </Routes>

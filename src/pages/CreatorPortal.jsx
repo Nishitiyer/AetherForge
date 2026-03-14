@@ -79,8 +79,8 @@ const CreatorPortal = () => {
               <Layout size={24} className="text-primary" />
               <h3>Main Workspace</h3>
               <p>Jump directly to the 3D Creation Suite.</p>
-              <button className="btn-primary" onClick={() => navigate('/editor')}>
-                Open Editor
+              <button className="btn-primary" onClick={() => navigate('/download')}>
+                Install Pro Suite
               </button>
             </div>
 

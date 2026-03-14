@@ -1,0 +1,141 @@
+@import '../index.css';
+
+.download-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: 6rem 2rem;
+}
+
+.download-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.download-header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.download-header h1 {
+  font-size: 3.5rem;
+  margin: 1rem 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.download-header p {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.os-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 5rem;
+}
+
+.os-card {
+  padding: 3rem 2rem;
+  border-radius: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.3s;
+}
+
+.os-card:hover {
+  transform: translateY(-10px);
+}
+
+.os-tag {
+  position: absolute;
+  top: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.os-icon {
+  margin-bottom: 2rem;
+  color: var(--color-text-dim);
+}
+
+.os-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.os-version {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.os-card .btn-primary {
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.download-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  padding: 4rem;
+  border-radius: 32px;
+}
+
+.info-section h4 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-primary);
+}
+
+.info-section ul {
+  list-style: none;
+}
+
+.info-section li {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.info-section li strong {
+  min-width: 120px;
+  color: var(--color-text-muted);
+}
+
+.info-section p {
+  line-height: 1.8;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+
+.docs-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .download-info {
+    grid-template-columns: 1fr;
+    padding: 2rem;
+  }
+}
