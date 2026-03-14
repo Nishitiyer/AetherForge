@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Zap, PenTool, LayoutTemplate, Box, Workflow } from 'lucide-react';
+import { Layers, Zap, PenTool, Layout, Box, Workflow } from 'lucide-react';
 import './FeatureGrid.css';
 
 const features = [
@@ -9,7 +9,7 @@ const features = [
     description: 'Generate high-fidelity, production-ready characters complete with automated rigging, materials, and facial blendshapes instantly.'
   },
   {
-    icon: <LayoutTemplate size={24} />,
+    icon: <Layout size={24} />,
     title: 'Cinematic Environment Generation',
     description: 'Describe complex scenes—from cyberpunk streets to fantasy castles. AetherForge handles lighting, scattering, and atmopsherics.'
   },

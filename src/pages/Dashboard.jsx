@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Hexagon, Image as ImageIcon, Video, FolderOpen, Box, User, Settings, Clock, Sparkles, Zap, LayoutDashboard, CircleHelp, CreditCard } from 'lucide-react';
-import Gallery from '../components/dashboard/Gallery';
-import { usePWA } from '../hooks/usePWA';
-import { Download as DownloadIcon } from 'lucide-react';
+import { Plus, Search, Hexagon, Image as ImageIcon, Video, FolderOpen, Box, User, Settings, Clock, Sparkles, Zap, LayoutDashboard, HelpCircle, CreditCard, Download as DownloadIcon } from 'lucide-react';
 import './Dashboard.css';
 
 const recentProjects = [
@@ -56,7 +53,7 @@ const Dashboard = () => {
             <CreditCard size={18} /> Billing
           </Link>
           <Link to="/help" className="dash-nav-item">
-            <CircleHelp size={18} /> Help & Docs
+            <HelpCircle size={18} /> Help & Docs
           </Link>
           <Link to="/settings" className="dash-nav-item mt-auto">
             <Settings size={18} /> Settings
