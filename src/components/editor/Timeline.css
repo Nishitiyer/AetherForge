@@ -1,0 +1,171 @@
+.timeline-panel {
+  height: 200px;
+  background-color: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.timeline-header {
+  height: 32px;
+  background-color: rgba(26, 29, 36, 0.9);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.timeline-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+}
+
+.timeline-btn:hover {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+.timeline-btn.primary {
+  color: var(--color-primary);
+}
+
+.timeline-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--color-border);
+  margin: 0 0.5rem;
+}
+
+.frame-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  background-color: var(--color-bg);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+
+.timeline-track-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.timeline-ruler {
+  height: 20px;
+  background-color: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-left: 120px; /* Offset for track headers */
+}
+
+.ruler-mark {
+  position: relative;
+  width: 40px; /* 10 frames = 40px */
+  border-left: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.ruler-num {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+
+.timeline-tracks {
+  display: flex;
+  flex-direction: column;
+}
+
+.track {
+  display: flex;
+  height: 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.track:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.track-header {
+  width: 120px;
+  flex-shrink: 0;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+}
+
+.track-content {
+  flex-grow: 1;
+  position: relative;
+  background: linear-gradient(90deg, transparent 39px, rgba(255, 255, 255, 0.05) 40px);
+  background-size: 40px 100%;
+}
+
+.keyframe {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background-color: #f59e0b;
+  border: 1px solid #78350f;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.keyframe:hover {
+  background-color: #fbbf24;
+  transform: translate(-50%, -50%) rotate(45deg) scale(1.2);
+}
+
+.keyframe.active {
+  background-color: white;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--color-primary);
+  z-index: 10;
+}
+
+.playhead::before {
+  content: '';
+  position: absolute;
+  top: -20px; /* Extend into ruler */
+  left: -4px;
+  width: 9px;
+  height: 9px;
+  background-color: var(--color-primary);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}

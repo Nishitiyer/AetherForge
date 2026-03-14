@@ -1,0 +1,99 @@
+.project-settings-content {
+  display: flex;
+  gap: 2rem;
+  min-height: 400px;
+}
+
+.settings-nav {
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-right: 1px solid var(--color-border);
+  padding-right: 1rem;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  text-align: left;
+  transition: var(--transition);
+}
+
+.settings-nav-item:hover {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+.settings-nav-item.active {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+}
+
+.settings-pane {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-group label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.settings-input {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: 0.6rem;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.settings-input:focus {
+  border-color: var(--color-primary);
+}
+
+.settings-help {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.settings-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 0.5rem 0;
+}
+
+.toggle-label {
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+  .project-settings-content {
+    flex-direction: column;
+  }
+}

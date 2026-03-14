@@ -1,0 +1,112 @@
+.pricing-section {
+  padding: 8rem 0;
+  background-color: var(--color-bg);
+  position: relative;
+  z-index: 2;
+}
+
+.pricing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  align-items: center;
+}
+
+.pricing-card {
+  padding: 3rem;
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--color-bg-secondary);
+}
+
+.pricing-card.popular {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tier-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.tier-price-wrapper {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.tier-price {
+  font-size: 3rem;
+  font-weight: 800;
+}
+
+.tier-period {
+  color: var(--color-text-muted);
+}
+
+.tier-description {
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+  min-height: 48px;
+}
+
+.tier-features {
+  margin-bottom: 3rem;
+  flex-grow: 1;
+}
+
+.tier-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.check-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pricing-btn {
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .pricing-card.popular {
+    transform: none;
+  }
+}
