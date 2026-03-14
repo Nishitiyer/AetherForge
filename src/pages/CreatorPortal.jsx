@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock, Eye, EyeOff, ArrowRight, Zap, Layout, Camera, Mic, Settings as SettingsIcon } from 'lucide-react';
+import { Shield, Lock, Eye, EyeOff, ArrowRight, Zap, LayoutTemplate, Camera, Mic, Settings as SettingsIcon } from 'lucide-react';
 import VoiceOrb from '../components/common/VoiceOrb';
 import SignLanguagePanel from '../components/editor/SignLanguagePanel';
 import { useSession } from '../context/SessionContext';
@@ -13,8 +13,20 @@ const CreatorPortal = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isCreator') === 'true');
   const [isSignPanelOpen, setIsSignPanelOpen] = useState(false);
   const { orbSettings, setOrbSettings } = useSession();
-  const voices = window.speechSynthesis.getVoices();
+  const [voices, setVoices] = useState([]);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const updateVoices = () => {
+      if (window.speechSynthesis) {
+        setVoices(window.speechSynthesis.getVoices());
+      }
+    };
+    updateVoices();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+  }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -64,7 +76,7 @@ const CreatorPortal = () => {
             </div>
 
             <div className="hub-tool-card glass-panel workspace-card">
-              <Layout size={24} className="text-primary" />
+              <LayoutTemplate size={24} className="text-primary" />
               <h3>Main Workspace</h3>
               <p>Jump directly to the 3D Creation Suite.</p>
               <button className="btn-primary" onClick={() => navigate('/editor')}>

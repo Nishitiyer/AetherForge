@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight, Zap, Target, Palette, Box as BoxIcon, Settings as SettingsIcon, Plus, MessageSquare, Trash2 } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Layers, History as HistoryIcon, ChevronRight, Zap, Target, Palette, Box as BoxIcon, Settings as SettingsIcon, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import VoiceOrb from '../common/VoiceOrb';
 import { useSession } from '../../context/SessionContext';
 import { useChat } from '../../context/ChatContext';
@@ -217,7 +217,7 @@ const AIPanel = ({ activeMode, onAddObject }) => {
         <VoiceOrb onTranscription={handleVoiceInput} settings={orbSettings} />
         
         <div className="ai-input-controls">
-          <button className="control-btn" title="Prompt History"><History size={16}/></button>
+          <button className="control-btn" title="Prompt History"><HistoryIcon size={16}/></button>
           <div className="settings-pill">
             <span>Quality: High</span> <ChevronRight size={12}/>
           </div>
