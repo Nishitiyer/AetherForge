@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, Hexagon, Image as ImageIcon, Video, FolderOpen, Box, User, Settings, Clock, Sparkles, LayoutDashboard, HelpCircle, CreditCard } from 'lucide-react';
 import Gallery from '../components/dashboard/Gallery';
