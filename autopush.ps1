@@ -4,11 +4,11 @@
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $Message = "auto: update changes at $Timestamp"
 
-Write-Host "🚀 Starting auto-push to GitHub..." -ForegroundColor Cyan
+Write-Host "Starting auto-push to GitHub..."
 
 # Check if we are in a git repo
 if (!(Test-Path .git)) {
-    Write-Host "❌ Error: Not a git repository." -ForegroundColor Red
+    Write-Host "Error: Not a git repository."
     exit
 }
 
@@ -18,18 +18,18 @@ git add .
 # Check if there are changes to commit
 $status = git status --porcelain
 if ($null -eq $status) {
-    Write-Host "✨ No changes to commit." -ForegroundColor Green
+    Write-Host "No changes to commit."
 } else {
     git commit -m $Message
-    Write-Host "✅ Changes committed: $Message" -ForegroundColor Green
+    Write-Host "Changes committed: $Message"
 }
 
 # Push to origin main
-Write-Host "📤 Pushing to GitHub..." -ForegroundColor Cyan
+Write-Host "Pushing to GitHub..."
 git push origin main
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "🎉 Successfully pushed to GitHub!" -ForegroundColor Green
+    Write-Host "Successfully pushed to GitHub!"
 } else {
-    Write-Host "❌ Push failed. Please ensure you are authenticated (run 'gh auth login')." -ForegroundColor Red
+    Write-Host "Push failed. Please ensure you are authenticated (run 'gh auth login')."
 }
