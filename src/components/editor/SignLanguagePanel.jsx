@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Camera, Hands, Wand2, X } from 'lucide-react';
+import { Camera, Wand2, X } from 'lucide-react';
 import './SignLanguagePanel.css';
 
 const SignLanguagePanel = ({ isOpen, onClose, onTranslation }) => {

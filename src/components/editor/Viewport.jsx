@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, Maximize, Crosshair, HelpCircle, Layers, Monitor, Rotate3D } from 'lucide-react';
+import { Camera, Maximize, Crosshair, HelpCircle, Layers, Monitor, Rotate3d } from 'lucide-react';
 import Viewport3D from './Viewport3D';
 import './Viewport.css';
 
@@ -40,7 +40,7 @@ const Viewport = ({ activeMode, sceneObjects, setSceneObjects }) => {
       <div className="viewport-nav-controls">
         <button title="Toggle Camera"><Monitor size={16} /></button>
         <button title="Pan"><Crosshair size={16} /></button>
-        <button title="Orbit"><Rotate3D size={16} /></button>
+        <button title="Orbit"><Rotate3d size={16} /></button>
         <button title="Zoom"><Maximize size={16} /></button>
       </div>
     </div>
