@@ -13,7 +13,19 @@ const AIPanel = ({ activeMode, onAddObject }) => {
   const { isExpired, isCreator, orbSettings, setOrbSettings } = useSession();
   const { chats, activeChat, setActiveChatId, addChat, addMessage, deleteChat } = useChat();
   
-  const voices = window.speechSynthesis.getVoices();
+  const [voices, setVoices] = useState([]);
+  
+  React.useEffect(() => {
+    const updateVoices = () => {
+      if (window.speechSynthesis) {
+        setVoices(window.speechSynthesis.getVoices());
+      }
+    };
+    updateVoices();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+  }, []);
 
   const models = [
     { id: 'Genesis', name: 'Genesis', tier: 'Basic', description: 'General 3D generation', icon: <Sparkles size={14}/> },

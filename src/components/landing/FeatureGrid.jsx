@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Zap, PenTool, LayoutTemplate, Cuboid, Workflow } from 'lucide-react';
+import { Layers, Zap, PenTool, LayoutTemplate, Box, Workflow } from 'lucide-react';
 import './FeatureGrid.css';
 
 const features = [
@@ -29,7 +29,7 @@ const features = [
     description: 'Describe any material. Automatically generate diffuse, normal, roughness, metallic, and displacement maps.'
   },
   {
-    icon: <Cuboid size={24} />,
+    icon: <Box size={24} />,
     title: 'Export Anywhere',
     description: 'Seamlessly export to FBX, GLTF, USD, or native files perfectly optimized for Unreal Engine, Unity, or standard pipelines.'
   }
