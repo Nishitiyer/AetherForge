@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AetherForge - AI 3D Creation Platform</title>
+    <script>
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div style="padding: 40px; color: #ff4444; font-family: sans-serif; background: #0f1115; height: 100vh;">' +
+            '<h1>💥 Initialization Error</h1>' +
+            '<p style="color: #8b92a5;">' + msg + '</p>' +
+            '<div style="background: #1a1d24; padding: 15px; border-radius: 8px; margin-top: 20px; font-family: monospace; font-size: 13px;">' +
+            'Location: ' + url + ':' + lineNo + ':' + columnNo +
+            '</div>' +
+            '<button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #8b5cf6; color: white; border-radius: 4px; border: none; cursor: pointer;">Retry Boot</button>' +
+            '</div>';
+        }
+        return false;
+      };
+      console.log("AetherForge: Boot sequence started...");
+    </script>
   </head>
   <body>
     <div id="root">
