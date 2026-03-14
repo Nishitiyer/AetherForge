@@ -30,10 +30,10 @@ const Hero = () => {
           <Link to="/auth?mode=signup" className="btn-primary hero-btn glow-shadow">
             Start Creating Free
           </Link>
-          <button className="btn-secondary hero-btn with-icon">
-            <Play size={18} />
-            Watch Demo
-          </button>
+          <div className="portal-quick-links">
+            <Link to="/creator" className="portal-link">Creator Hub</Link>
+            <Link to="/admin" className="portal-link">Admin Suite</Link>
+          </div>
         </div>
         
         <div className="hero-prompts-preview glass-panel">

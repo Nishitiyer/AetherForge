@@ -41,6 +41,7 @@ const Footer = () => {
               <li><a href="#">Community Forum</a></li>
               <li><a href="#">Prompt Guide</a></li>
               <li><a href="/admin">Admin Portal</a></li>
+              <li><a href="/creator">Creator Portal</a></li>
             </ul>
           </div>
           

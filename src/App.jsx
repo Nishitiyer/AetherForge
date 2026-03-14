@@ -11,12 +11,14 @@ import Help from './pages/Help';
 import AdminPortal from './pages/AdminPortal';
 import CreatorPortal from './pages/CreatorPortal';
 import { SessionProvider } from './context/SessionContext';
+import { ChatProvider } from './context/ChatContext';
 
 function App() {
   return (
     <BrowserRouter>
-      <SessionProvider>
-        <Routes>
+      <ChatProvider>
+        <SessionProvider>
+          <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -29,7 +31,8 @@ function App() {
         <Route path="/creator" element={<CreatorPortal />} />
       </Routes>
     </SessionProvider>
-  </BrowserRouter>
+  </ChatProvider>
+</BrowserRouter>
   );
 }
 

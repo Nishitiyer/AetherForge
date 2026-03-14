@@ -1,13 +1,16 @@
-import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight, Zap, Target, Cpu, Palette, Box as BoxIcon, Settings as SettingsIcon, Mic, MicOff } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight, Zap, Target, Cpu, Palette, Box as BoxIcon, Settings as SettingsIcon, Mic, MicOff, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import VoiceOrb from '../common/VoiceOrb';
 import { useSession } from '../../context/SessionContext';
+import { useChat } from '../../context/ChatContext';
 import './AIPanel.css';
 
 const AIPanel = ({ activeMode, onAddObject }) => {
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState('Genesis');
   const [showOrbSettings, setShowOrbSettings] = useState(false);
+  const [showChatHistory, setShowChatHistory] = useState(false);
   const { isExpired, isCreator, orbSettings, setOrbSettings } = useSession();
+  const { chats, activeChat, setActiveChatId, addChat, addMessage, deleteChat } = useChat();
   
   const voices = window.speechSynthesis.getVoices();
 
@@ -37,9 +40,24 @@ const AIPanel = ({ activeMode, onAddObject }) => {
       return;
     }
 
+    // Add user message to history
+    addMessage(activeChat.id, { type: 'user', content: prompt });
+
     if (prompt.toLowerCase().includes('add') || prompt.toLowerCase().includes('create')) {
       onAddObject(activeMode === 'Animation' ? 'Model' : activeMode);
+      // Add system response
+      addMessage(activeChat.id, { 
+        type: 'system', 
+        content: `Generation complete. I've created the ${activeMode.toLowerCase()} and added it to your scene.` 
+      });
+    } else {
+      // Generic AI response
+      addMessage(activeChat.id, { 
+        type: 'system', 
+        content: `I've analyzed your request for the ${activeMode.toLowerCase()}. I'm refining the generation parameters...` 
+      });
     }
+    
     setPrompt('');
   };
 
@@ -119,22 +137,25 @@ const AIPanel = ({ activeMode, onAddObject }) => {
       )}
 
       <div className="ai-chat-history">
-        <div className="chat-message system">
-          <Sparkles size={16} className="text-primary" />
-          <p>I'm Omni, your AI 3D assistant. I'm ready to generate or edit {activeMode.toLowerCase()}s. What would you like to build?</p>
-        </div>
-        
-        <div className="chat-message user">
-          <p>Generate a low poly fantasy tavern base mesh</p>
-        </div>
-        
-        <div className="chat-message system">
-          <p>Generation complete. I've created the base mesh and added it to your scene. You can ask me to refine it, or use manual tools.</p>
-          <div className="chat-actions">
-            <button className="chat-action-btn"><RefreshCw size={12}/> Regenerate</button>
-            <button className="chat-action-btn"><Layers size={12}/> View Nodes</button>
+        {activeChat.messages.length === 0 && (
+          <div className="chat-message system">
+            <Sparkles size={16} className="text-primary" />
+            <p>I'm {orbSettings.name}, your AI 3D assistant. I'm ready to generate or edit {activeMode.toLowerCase()}s. What would you like to build?</p>
           </div>
-        </div>
+        )}
+        
+        {activeChat.messages.map((msg, idx) => (
+          <div key={idx} className={`chat-message ${msg.type}`}>
+            {msg.type === 'system' && <Sparkles size={16} className="text-gradient" />}
+            <p>{msg.content}</p>
+            {msg.type === 'system' && idx === activeChat.messages.length - 1 && (
+              <div className="chat-actions">
+                <button className="chat-action-btn"><RefreshCw size={12}/> Regenerate</button>
+                <button className="chat-action-btn"><Layers size={12}/> View Nodes</button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="ai-suggestions">
@@ -147,6 +168,39 @@ const AIPanel = ({ activeMode, onAddObject }) => {
       </div>
 
       <div className="ai-input-area">
+        <div className="ai-history-control">
+          <button onClick={() => setShowChatHistory(!showChatHistory)} className="btn-icon">
+            <MessageSquare size={16} /> History ({chats.length})
+          </button>
+          <button onClick={addChat} className="btn-icon">
+            <Plus size={16} /> New Chat
+          </button>
+        </div>
+
+        {showChatHistory && (
+          <div className="chat-sessions-list glass-panel">
+            {chats.map(chat => (
+              <div 
+                key={chat.id} 
+                className={`chat-session-item ${chat.id === activeChat.id ? 'active' : ''}`}
+                onClick={() => setActiveChatId(chat.id)}
+              >
+                <MessageSquare size={14} />
+                <span>{chat.name}</span>
+                <button 
+                  className="delete-chat" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteChat(chat.id);
+                  }}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <VoiceOrb onTranscription={handleVoiceInput} settings={orbSettings} />
         
         <div className="ai-input-controls">
