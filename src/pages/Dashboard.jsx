@@ -93,29 +93,17 @@ const Dashboard = () => {
           <div className="dash-content">
             <div className="dash-creation-hero glass-panel">
               <div className="dash-hero-text">
-                <h2>What will you build today?</h2>
-                <p>Type a prompt or choose a start point below.</p>
+                <h2>Project Workspace</h2>
+                <p>Manage your professional 3D assets and launch the AetherForge Suite.</p>
               </div>
               
-              <form className="dash-prompt-form" onSubmit={handlePrompt}>
-                <div className="dash-prompt-wrapper">
-                  <Sparkles size={20} className="prompt-icon hidden-mobile" />
-                  <input 
-                    type="text" 
-                    placeholder="e.g., A low poly ancient ruins diorama with mysterious glowing ruins..." 
-                    className="dash-prompt-input"
-                    required
-                  />
-                  <button type="submit" className="btn-primary prompt-generate-btn">
-                    Generate
-                  </button>
-                </div>
-              </form>
-              
-              <div className="prompt-chips">
-                <button className="chip">Cyberpunk Alleyway <span className="chip-tag text-accent">Scene</span></button>
-                <button className="chip">Sci-fi Heavy Armor <span className="chip-tag text-primary">Character</span></button>
-                <button className="chip">Mossy Stone <span className="chip-tag text-purple">Material</span></button>
+              <div className="dash-hero-actions">
+                <button className="btn-primary" onClick={() => navigate('/editor')}>
+                  Launch Professional Suite
+                </button>
+                <button className="btn-secondary" onClick={() => navigate('/download')}>
+                  Install Latest Build
+                </button>
               </div>
             </div>
 

@@ -15,6 +15,7 @@ import NodeEditor from '../components/editor/NodeEditor';
 import { useCollaboration } from '../hooks/useCollaboration';
 import { useSession } from '../context/SessionContext';
 import SignLanguagePanel from '../components/editor/SignLanguagePanel';
+import VoiceOrb from '../components/common/VoiceOrb';
 import './Editor.css';
 
 const Editor = () => {
@@ -64,6 +65,10 @@ const Editor = () => {
         >
           <Camera size={20} />
         </button>
+
+        <div className="editor-voice-assistant">
+          <VoiceOrb onTranscription={(t) => console.log('AI Command:', t)} settings={orbSettings} />
+        </div>
 
         <div className="editor-center-column">
           {activeMode === 'Material' ? (

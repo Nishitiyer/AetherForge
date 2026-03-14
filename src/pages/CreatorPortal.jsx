@@ -51,66 +51,20 @@ const CreatorPortal = () => {
         <div className="creator-hub glass-panel animate-in">
           <div className="hub-header">
             <Zap size={32} className="text-gradient" />
-            <h1>Creator Control Hub</h1>
-            <p>Master control for AetherForge Pro systems.</p>
+            <h1>Creator Edition Active</h1>
+            <p>Your professional AetherForge license is verified and active.</p>
           </div>
 
-          <div className="hub-grid">
-            <div className="hub-tool-card glass-panel">
-              <Mic size={24} className="text-primary" />
-              <h3>Voice Assistant</h3>
-              <p>Test the global voice command system.</p>
-              <VoiceOrb onTranscription={handleTranscription} settings={orbSettings} />
-            </div>
-
-            <div className="hub-tool-card glass-panel">
-              <Camera size={24} className="text-primary" />
-              <h3>Vision & Sign</h3>
-              <p>Manage accessibility camera systems.</p>
-              <button 
-                className="btn-secondary" 
-                onClick={() => setIsSignPanelOpen(true)}
-              >
-                Open Camera Panel
+          <div className="hub-grid" style={{gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto'}}>
+            <div className="hub-tool-card glass-panel featured-card">
+              <Zap size={32} className="text-primary" style={{marginBottom: '1rem'}} />
+              <h3>AetherForge Pro Suite</h3>
+              <p>Everything you need: AI Voice Control, Sign Accessibility, Real-time Collaboration, and the full Professional Editor.</p>
+              <button className="btn-primary" style={{width: '100%', padding: '1.25rem', marginTop: '1.5rem'}} onClick={() => navigate('/download')}>
+                Install Professional Suite
               </button>
-            </div>
-
-            <div className="hub-tool-card glass-panel workspace-card">
-              <Layout size={24} className="text-primary" />
-              <h3>Main Workspace</h3>
-              <p>Jump directly to the 3D Creation Suite.</p>
-              <button className="btn-primary" onClick={() => navigate('/download')}>
-                Install Pro Suite
-              </button>
-            </div>
-
-            <div className="hub-tool-card glass-panel config-card">
-              <SettingsIcon size={24} className="text-primary" />
-              <h3>Orb Customization</h3>
-              <div className="hub-config-inputs">
-                <input 
-                  type="text" 
-                  placeholder="Assistant Name"
-                  value={orbSettings.name}
-                  onChange={(e) => setOrbSettings({...orbSettings, name: e.target.value})}
-                />
-                <select 
-                  value={orbSettings.voice} 
-                  onChange={(e) => setOrbSettings({...orbSettings, voice: parseInt(e.target.value)})}
-                >
-                  {voices.slice(0, 10).map((v, i) => (
-                    <option key={i} value={i}>{v.name}</option>
-                  ))}
-                </select>
-              </div>
             </div>
           </div>
-
-          <SignLanguagePanel 
-            isOpen={isSignPanelOpen} 
-            onClose={() => setIsSignPanelOpen(false)} 
-            onTranslation={(t) => console.log('Creator Sign:', t)}
-          />
 
           <button className="logout-link" onClick={() => {
             localStorage.removeItem('isCreator');
