@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+// Socket is initialized on demand or with conditional URL
+let socket;
+try {
+  socket = io(location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://aether-forge-server.vercel.app');
+} catch (e) {
+  socket = { on: () => {}, off: () => {}, emit: () => {} };
+}
 
 export const useCollaboration = (projectId) => {
   const [otherCursors, setOtherCursors] = useState({});

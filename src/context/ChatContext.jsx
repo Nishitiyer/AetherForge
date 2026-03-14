@@ -4,10 +4,13 @@ const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(() => {
-    const saved = localStorage.getItem('chatHistory');
-    return saved ? JSON.parse(saved) : [
-      { id: 'default', name: 'New Session', messages: [] }
-    ];
+    try {
+      const saved = localStorage.getItem('chatHistory')
+      return saved ? JSON.parse(saved) : [{ id: 'default', name: 'New Session', messages: [] }]
+    } catch (e) {
+      console.error('Failed to parse chat history:', e)
+      return [{ id: 'default', name: 'New Session', messages: [] }]
+    }
   });
   const [activeChatId, setActiveChatId] = useState('default');
 
