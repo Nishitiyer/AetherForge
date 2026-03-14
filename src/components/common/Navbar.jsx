@@ -15,6 +15,7 @@ const Navbar = () => {
           <a href="#features">Features</a>
           <a href="#workflows">Workflows</a>
           <a href="#pricing">Pricing</a>
+          <Link to="/creator" className="creator-link">Creator</Link>
         </div>
         <div className="navbar-actions">
           <Link to="/auth" className="btn-secondary">Log In</Link>

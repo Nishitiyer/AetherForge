@@ -1,0 +1,171 @@
+.creator-portal-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #050505;
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+  padding: 2rem;
+}
+
+.creator-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.creator-header {
+  text-align: center;
+}
+
+.creator-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.creator-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.creator-header p {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.creator-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.creator-submit {
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.error-badge {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.creator-hub {
+  max-width: 900px;
+  width: 100%;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+
+.hub-header {
+  text-align: center;
+}
+
+.hub-header h1 {
+  font-size: 2.5rem;
+  margin: 0.5rem 0;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.hub-tool-card {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.hub-tool-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-primary);
+}
+
+.hub-tool-card h3 {
+  margin: 0;
+}
+
+.hub-tool-card p {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.hub-config-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.hub-config-inputs input, .hub-config-inputs select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.workspace-card {
+  background: rgba(139, 92, 246, 0.05);
+  grid-column: span 1;
+}
+
+.logout-link {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.logout-link:hover {
+  color: #ef4444;
+}
+
+.creator-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}

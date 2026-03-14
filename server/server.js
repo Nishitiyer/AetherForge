@@ -5,6 +5,14 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
+const httpServer = require('http').createServer(app);
+const io = require('socket.io')(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = 5000;
 const DB_PATH = path.join(__dirname, 'db.json');
 
@@ -54,6 +62,26 @@ app.post('/api/admin/users', (req, res) => {
   res.json(db.users);
 });
 
-app.listen(PORT, () => {
+// Socket.io Collaboration Logic
+io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on("join-project", (projectId) => {
+    socket.join(projectId);
+  });
+
+  socket.on("cursor-move", (data) => {
+    socket.to(data.projectId).emit("user-cursor", {
+      userId: socket.id,
+      position: data.position
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
+httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

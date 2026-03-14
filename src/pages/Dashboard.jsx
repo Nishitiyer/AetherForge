@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, Hexagon, Image as ImageIcon, Video, FolderOpen, Box, User, Settings, Clock, Sparkles, LayoutDashboard, HelpCircle, CreditCard } from 'lucide-react';
+import Gallery from '../components/dashboard/Gallery';
+import { usePWA } from '../hooks/usePWA';
+import { Download as DownloadIcon } from 'lucide-react';
 import './Dashboard.css';
 
 const recentProjects = [
@@ -19,6 +22,8 @@ const templates = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('projects');
+  const { isInstallable, installApp } = usePWA();
 
   const handlePrompt = (e) => {
     e.preventDefault();
@@ -35,12 +40,18 @@ const Dashboard = () => {
         </Link>
         
         <nav className="dash-nav">
-          <Link to="/dashboard" className="dash-nav-item active">
+          <button 
+            className={`dash-nav-item ${activeTab === 'projects' ? 'active' : ''}`}
+            onClick={() => setActiveTab('projects')}
+          >
             <LayoutDashboard size={18} /> Projects
-          </Link>
-          <a href="#" className="dash-nav-item">
-            <FolderOpen size={18} /> Library
-          </a>
+          </button>
+          <button 
+            className={`dash-nav-item ${activeTab === 'library' ? 'active' : ''}`}
+            onClick={() => setActiveTab('library')}
+          >
+            <FolderOpen size={18} /> Gallery
+          </button>
           <Link to="/billing" className="dash-nav-item">
             <CreditCard size={18} /> Billing
           </Link>
@@ -50,6 +61,11 @@ const Dashboard = () => {
           <Link to="/settings" className="dash-nav-item mt-auto">
             <Settings size={18} /> Settings
           </Link>
+          {isInstallable && (
+            <button className="dash-nav-item install-btn" onClick={installApp}>
+              <DownloadIcon size={18} /> Install App
+            </button>
+          )}
         </nav>
       </aside>
 
@@ -63,6 +79,11 @@ const Dashboard = () => {
           </div>
           
           <div className="dash-user-actions">
+            {localStorage.getItem('isCreator') === 'true' && (
+              <div className="creator-badge-indicator">
+                <Zap size={14} /> Creator Edition
+              </div>
+            )}
             <Link to="/billing" className="dash-credits">
               <Sparkles size={16} className="text-gradient" />
               <span>950 Credits</span>
@@ -71,88 +92,94 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="dash-content">
-          <div className="dash-creation-hero glass-panel">
-            <div className="dash-hero-text">
-              <h2>What will you build today?</h2>
-              <p>Type a prompt or choose a start point below.</p>
-            </div>
-            
-            <form className="dash-prompt-form" onSubmit={handlePrompt}>
-              <div className="dash-prompt-wrapper">
-                <Sparkles size={20} className="prompt-icon hidden-mobile" />
-                <input 
-                  type="text" 
-                  placeholder="e.g., A low poly ancient ruins diorama with mysterious glowing ruins..." 
-                  className="dash-prompt-input"
-                  required
-                />
-                <button type="submit" className="btn-primary prompt-generate-btn">
-                  Generate
-                </button>
-              </div>
-            </form>
-            
-            <div className="prompt-chips">
-              <button className="chip">Cyberpunk Alleyway <span className="chip-tag text-accent">Scene</span></button>
-              <button className="chip">Sci-fi Heavy Armor <span className="chip-tag text-primary">Character</span></button>
-              <button className="chip">Mossy Stone <span className="chip-tag text-purple">Material</span></button>
-            </div>
-          </div>
-
-          <div className="dash-section">
-            <div className="dash-section-header">
-              <h3>Recent Projects</h3>
-              <button className="btn-secondary btn-sm">View All</button>
-            </div>
-            
-            <div className="projects-grid">
-              <div 
-                className="project-card create-new" 
-                onClick={() => navigate('/editor')}
-              >
-                <div className="create-icon-wrapper">
-                  <Plus size={32} />
-                </div>
-                <h4>New Manual Project</h4>
-                <p>Start from scratch with the editor</p>
+        {activeTab === 'projects' ? (
+          <div className="dash-content">
+            <div className="dash-creation-hero glass-panel">
+              <div className="dash-hero-text">
+                <h2>What will you build today?</h2>
+                <p>Type a prompt or choose a start point below.</p>
               </div>
               
-              {recentProjects.map(proj => (
-                <div key={proj.id} className="project-card glass-panel" onClick={() => navigate('/editor')}>
-                  <div className="project-thumbnail">
-                    {proj.icon}
+              <form className="dash-prompt-form" onSubmit={handlePrompt}>
+                <div className="dash-prompt-wrapper">
+                  <Sparkles size={20} className="prompt-icon hidden-mobile" />
+                  <input 
+                    type="text" 
+                    placeholder="e.g., A low poly ancient ruins diorama with mysterious glowing ruins..." 
+                    className="dash-prompt-input"
+                    required
+                  />
+                  <button type="submit" className="btn-primary prompt-generate-btn">
+                    Generate
+                  </button>
+                </div>
+              </form>
+              
+              <div className="prompt-chips">
+                <button className="chip">Cyberpunk Alleyway <span className="chip-tag text-accent">Scene</span></button>
+                <button className="chip">Sci-fi Heavy Armor <span className="chip-tag text-primary">Character</span></button>
+                <button className="chip">Mossy Stone <span className="chip-tag text-purple">Material</span></button>
+              </div>
+            </div>
+
+            <div className="dash-section">
+              <div className="dash-section-header">
+                <h3>Recent Projects</h3>
+                <button className="btn-secondary btn-sm">View All</button>
+              </div>
+              
+              <div className="projects-grid">
+                <div 
+                  className="project-card create-new" 
+                  onClick={() => navigate('/editor')}
+                >
+                  <div className="create-icon-wrapper">
+                    <Plus size={32} />
                   </div>
-                  <div className="project-info">
-                    <h4>{proj.name}</h4>
-                    <div className="project-meta">
-                      <span className="project-type">{proj.type}</span>
-                      <span className="project-date"><Clock size={12} /> {proj.updated}</span>
+                  <h4>New Manual Project</h4>
+                  <p>Start from scratch with the editor</p>
+                </div>
+                
+                {recentProjects.map(proj => (
+                  <div key={proj.id} className="project-card glass-panel" onClick={() => navigate('/editor')}>
+                    <div className="project-thumbnail">
+                      {proj.icon}
+                    </div>
+                    <div className="project-info">
+                      <h4>{proj.name}</h4>
+                      <div className="project-meta">
+                        <span className="project-type">{proj.type}</span>
+                        <span className="project-date"><Clock size={12} /> {proj.updated}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="dash-section">
-            <div className="dash-section-header">
-              <h3>Starter Templates</h3>
-            </div>
-            
-            <div className="templates-grid">
-              {templates.map((tpl, i) => (
-                <div key={i} className="template-card" onClick={() => navigate('/editor')}>
-                  <div className="template-header">
-                    <h4>{tpl.name}</h4>
-                    <span className="template-badge">{tpl.type}</span>
+            <div className="dash-section">
+              <div className="dash-section-header">
+                <h3>Starter Templates</h3>
+              </div>
+              
+              <div className="templates-grid">
+                {templates.map((tpl, i) => (
+                  <div key={i} className="template-card" onClick={() => navigate('/editor')}>
+                    <div className="template-header">
+                      <h4>{tpl.name}</h4>
+                      <span className="template-badge">{tpl.type}</span>
+                    </div>
+                    <p>{tpl.description}</p>
                   </div>
-                  <p>{tpl.description}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="dash-content animate-in">
+            <Gallery />
+          </div>
+        )}
       </main>
     </div>
   );

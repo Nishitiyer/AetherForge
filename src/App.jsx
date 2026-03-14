@@ -9,11 +9,14 @@ import Settings from './pages/Settings';
 import Billing from './pages/Billing';
 import Help from './pages/Help';
 import AdminPortal from './pages/AdminPortal';
+import CreatorPortal from './pages/CreatorPortal';
+import { SessionProvider } from './context/SessionContext';
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <SessionProvider>
+        <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -23,8 +26,10 @@ function App() {
         <Route path="/billing" element={<Billing />} />
         <Route path="/help" element={<Help />} />
         <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/creator" element={<CreatorPortal />} />
       </Routes>
-    </BrowserRouter>
+    </SessionProvider>
+  </BrowserRouter>
   );
 }
 

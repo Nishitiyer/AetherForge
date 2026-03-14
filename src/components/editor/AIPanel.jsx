@@ -1,10 +1,48 @@
-import React, { useState } from 'react';
-import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight, Zap, Target, Cpu, Palette, Box as BoxIcon, Settings as SettingsIcon, Mic, MicOff } from 'lucide-react';
+import VoiceOrb from '../common/VoiceOrb';
+import { useSession } from '../../context/SessionContext';
 import './AIPanel.css';
 
-const AIPanel = ({ activeMode }) => {
+const AIPanel = ({ activeMode, onAddObject }) => {
   const [prompt, setPrompt] = useState('');
+  const [selectedModel, setSelectedModel] = useState('Genesis');
+  const [showOrbSettings, setShowOrbSettings] = useState(false);
+  const { isExpired, isCreator, orbSettings, setOrbSettings } = useSession();
   
+  const voices = window.speechSynthesis.getVoices();
+
+  const models = [
+    { id: 'Genesis', name: 'Genesis', tier: 'Basic', description: 'General 3D generation', icon: <Sparkles size={14}/> },
+    { id: 'Draft', name: 'Draft', tier: 'Basic', description: 'Fast, low detail', icon: <Zap size={14}/> },
+    { id: 'Poly', name: 'Poly', tier: 'Basic', description: 'Low-poly optimized', icon: <BoxIcon size={14}/> },
+    { id: 'Nexus', name: 'Nexus Ultra', tier: 'Pro', description: 'Locked for users - Free for you', icon: <Target size={14}/> },
+    { id: 'Artisan', name: 'Artisan', tier: 'Pro', description: 'Locked for users - Free for you', icon: <Palette size={14}/> },
+  ];
+
+  const handleVoiceInput = (text) => {
+    setPrompt(text);
+    // Auto-trigger if it's a clear command
+    if (text.toLowerCase().includes('add') || text.toLowerCase().includes('create')) {
+      onAddObject(activeMode === 'Animation' ? 'Model' : activeMode);
+    }
+  };
+
+  const handleSend = () => {
+    if (!prompt.trim()) return;
+    const model = models.find(m => m.id === selectedModel);
+    
+    // Rigid gating logic: Premium/Pro models lock after 2hrs for users
+    if (model.tier === 'Pro' && isExpired && !isCreator) {
+      alert('Daily Pro session ended. Please use Basic models or upgrade.');
+      return;
+    }
+
+    if (prompt.toLowerCase().includes('add') || prompt.toLowerCase().includes('create')) {
+      onAddObject(activeMode === 'Animation' ? 'Model' : activeMode);
+    }
+    setPrompt('');
+  };
+
   const suggestions = {
     Model: ['Make it more realistic', 'Reduce poly count', 'Add battle damage', 'Optimize for mobile'],
     Character: ['Change clothing color', 'Make them smile', 'Adjust pose to combat', 'Make taller'],
@@ -15,6 +53,71 @@ const AIPanel = ({ activeMode }) => {
 
   return (
     <div className="ai-panel">
+      <div className="ai-model-selector">
+        {models.map(m => (
+          <button 
+            key={m.id}
+            className={`model-card ${selectedModel === m.id ? 'active' : ''} ${m.tier === 'Pro' && isExpired && !isCreator ? 'locked' : ''}`}
+            onClick={() => setSelectedModel(m.id)}
+            title={m.description}
+          >
+            {m.icon}
+            <span className="model-name">{m.name}</span>
+            {m.tier === 'Pro' && <span className="pro-badge">PRO</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="orb-settings-toggle">
+        <button onClick={() => setShowOrbSettings(!showOrbSettings)} className="btn-icon">
+          <SettingsIcon size={16} /> {showOrbSettings ? 'Close Voice Settings' : 'Orb Settings'}
+        </button>
+      </div>
+
+      {showOrbSettings && (
+        <div className="orb-config-panel glass-panel">
+          <div className="config-group">
+            <label>Orb Name</label>
+            <input 
+              type="text" 
+              value={orbSettings.name} 
+              onChange={(e) => setOrbSettings({...orbSettings, name: e.target.value})} 
+            />
+          </div>
+          <div className="config-group">
+            <label>Theme Color</label>
+            <input 
+              type="color" 
+              value={orbSettings.color} 
+              onChange={(e) => setOrbSettings({...orbSettings, color: e.target.value})} 
+            />
+          </div>
+          <div className="config-group">
+            <label>Animation</label>
+            <select 
+              value={orbSettings.animation} 
+              onChange={(e) => setOrbSettings({...orbSettings, animation: e.target.value})}
+            >
+              <option>Pulse</option>
+              <option>Float</option>
+              <option>Spin</option>
+              <option>Ripple</option>
+            </select>
+          </div>
+          <div className="config-group">
+            <label>Voice ({voices.length} found)</label>
+            <select 
+              value={orbSettings.voice} 
+              onChange={(e) => setOrbSettings({...orbSettings, voice: parseInt(e.target.value)})}
+            >
+              {voices.slice(0, 10).map((v, i) => (
+                <option key={i} value={i}>{v.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       <div className="ai-chat-history">
         <div className="chat-message system">
           <Sparkles size={16} className="text-primary" />
@@ -44,6 +147,8 @@ const AIPanel = ({ activeMode }) => {
       </div>
 
       <div className="ai-input-area">
+        <VoiceOrb onTranscription={handleVoiceInput} settings={orbSettings} />
+        
         <div className="ai-input-controls">
           <button className="control-btn" title="Prompt History"><History size={16}/></button>
           <div className="settings-pill">
@@ -58,7 +163,7 @@ const AIPanel = ({ activeMode }) => {
             onChange={(e) => setPrompt(e.target.value)}
             rows={2}
           ></textarea>
-          <button className="send-btn" disabled={!prompt.trim()}>
+          <button className="send-btn" disabled={!prompt.trim()} onClick={handleSend}>
             <Send size={16} />
           </button>
         </div>

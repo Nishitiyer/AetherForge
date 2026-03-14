@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Box, Home, Save, Download, Undo, Redo, Settings, Play, Image as ImageIcon } from 'lucide-react';
 import './EditorToolbar.css';
 
-const EditorToolbar = ({ activeMode, setActiveMode, onExportOpen, onSettingsOpen }) => {
+const EditorToolbar = ({ activeMode, setActiveMode, onExportOpen, onSettingsOpen, onAddObject }) => {
   const modes = ['Model', 'Character', 'Material', 'Animation', 'Environment'];
 
   return (
@@ -31,6 +31,11 @@ const EditorToolbar = ({ activeMode, setActiveMode, onExportOpen, onSettingsOpen
           </div>
           <div className="menu-item">
             <span>Tools</span>
+            <div className="menu-dropdown">
+              <button onClick={() => onAddObject('Model')} className="menu-btn-action">Add Model</button>
+              <button onClick={() => onAddObject('Character')} className="menu-btn-action">Add Character</button>
+              <button onClick={() => onAddObject('Material')} className="menu-btn-action">Add Primitive</button>
+            </div>
           </div>
         </div>
       </div>

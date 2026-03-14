@@ -87,6 +87,20 @@
   gap: 1.5rem;
 }
 
+.creator-badge-indicator {
+  padding: 0.4rem 0.8rem;
+  background: var(--gradient-primary);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+}
+
+
 .dash-credits {
   display: flex;
   align-items: center;
