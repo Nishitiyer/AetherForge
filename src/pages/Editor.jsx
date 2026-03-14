@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Camera, Lock, Clock } from 'lucide-react';
 import EditorSidebar from '../components/editor/EditorSidebar';
 import EditorToolbar from '../components/editor/EditorToolbar';
 import Viewport from '../components/editor/Viewport';
