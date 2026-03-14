@@ -39,7 +39,7 @@ const Onboarding = () => {
           {step === 1 && (
             <div className="step-content animate-in">
               <h2>What's your 3D experience level?</h2>
-              <p>Tailor OmniForm's interface to match your workflow.</p>
+              <p>Tailor AetherForge's interface to match your workflow.</p>
               
               <div className="options-grid">
                 <OptionCard 

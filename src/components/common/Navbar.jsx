@@ -9,7 +9,7 @@ const Navbar = () => {
       <div className="navbar-container">
         <Link to="/" className="navbar-brand">
           <Box className="brand-icon text-gradient" />
-          <span className="brand-name">OmniForm</span>
+          <span className="brand-name">AetherForge</span>
         </Link>
         <div className="navbar-links">
           <a href="#features">Features</a>

@@ -11,7 +11,7 @@ const features = [
   {
     icon: <LayoutTemplate size={24} />,
     title: 'Cinematic Environment Generation',
-    description: 'Describe complex scenes—from cyberpunk streets to fantasy castles. OmniForm handles lighting, scattering, and atmopsherics.'
+    description: 'Describe complex scenes—from cyberpunk streets to fantasy castles. AetherForge handles lighting, scattering, and atmopsherics.'
   },
   {
     icon: <Workflow size={24} />,

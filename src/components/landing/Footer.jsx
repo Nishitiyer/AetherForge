@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="footer-brand-col">
             <div className="navbar-brand" style={{ marginBottom: '1.5rem' }}>
               <Box className="brand-icon text-gradient" />
-              <span className="brand-name">OmniForm</span>
+              <span className="brand-name">AetherForge</span>
             </div>
             <p className="footer-description">
               The next-generation AI-native 3D creation platform. Generate, edit, and export production-ready assets with the power of natural language.
@@ -57,7 +57,7 @@ const Footer = () => {
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} OmniForm AI Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} AetherForge AI Inc. All rights reserved.</p>
           <div className="legal-links">
             <a href="#">Privacy Policy</a>
             <a href="#">Terms of Service</a>

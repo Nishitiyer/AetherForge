@@ -35,7 +35,7 @@ const AdminPortal = () => {
         <div className="auth-container glass-panel">
           <div className="auth-header">
             <Shield size={40} className="text-primary" style={{marginBottom: '1rem'}} />
-            <h2>OmniForm Admin</h2>
+            <h2>AetherForge Admin</h2>
             <p>Enter the master password to access user records.</p>
           </div>
           

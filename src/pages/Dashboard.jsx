@@ -31,7 +31,7 @@ const Dashboard = () => {
       <aside className="dash-sidebar glass-panel">
         <Link to="/" className="navbar-brand dash-brand">
           <Box className="brand-icon text-gradient" size={24} />
-          <span className="brand-name">OmniForm</span>
+          <span className="brand-name">AetherForge</span>
         </Link>
         
         <nav className="dash-nav">

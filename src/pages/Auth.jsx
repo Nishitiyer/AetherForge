@@ -58,7 +58,7 @@ const Auth = () => {
               <ShieldCheck size={32} />
             </div>
           </div>
-          <h2>{isLogin ? 'Welcome Back' : 'Join OmniForm'}</h2>
+          <h2>{isLogin ? 'Welcome Back' : 'Join AetherForge'}</h2>
           <p>{isLogin ? 'Enter your credentials to continue' : 'Start your AI-powered 3D journey today'}</p>
         </div>
 
