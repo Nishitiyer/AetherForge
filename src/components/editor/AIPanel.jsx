@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight, Zap, Target, Cpu, Palette, Box as BoxIcon, Settings as SettingsIcon, Mic, MicOff, Plus, MessageSquare, Trash2 } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Layers, History, ChevronRight, Zap, Target, Palette, Box as BoxIcon, Settings as SettingsIcon, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import VoiceOrb from '../common/VoiceOrb';
 import { useSession } from '../../context/SessionContext';
 import { useChat } from '../../context/ChatContext';
