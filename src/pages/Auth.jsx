@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Github, Chrome, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, Github, Globe, ArrowRight, ShieldCheck } from 'lucide-react';
 import './Auth.css';
 
 const Auth = () => {
@@ -64,7 +64,7 @@ const Auth = () => {
 
         <div className="auth-social">
           <button className="social-btn"><Github size={20} /> GitHub</button>
-          <button className="social-btn"><Chrome size={20} /> Google</button>
+          <button className="social-btn"><Globe size={20} /> Google</button>
         </div>
 
         <div className="auth-divider">
