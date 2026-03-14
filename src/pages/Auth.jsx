@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; // Initialized State
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Github, Globe, ArrowRight, ShieldCheck } from 'lucide-react';
 import './Auth.css';
