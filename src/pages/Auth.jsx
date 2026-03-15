@@ -27,7 +27,7 @@ const Auth = () => {
         
         if (response.ok) {
           localStorage.setItem('userEmail', email);
-          navigate('/download');
+          navigate('/onboarding');
         } else {
           const data = await response.json();
           setError(data.error || 'Signup failed');
@@ -35,7 +35,7 @@ const Auth = () => {
       } else {
         // Sign In (Mocked for now, but stores email)
         localStorage.setItem('userEmail', email);
-        navigate('/download');
+        navigate('/dashboard');
       }
     } catch (err) {
       setError('Could not connect to the authentication server');

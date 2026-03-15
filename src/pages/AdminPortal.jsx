@@ -10,13 +10,35 @@ const AdminPortal = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (password === 'Lalitha76!') {
-      setIsAuthenticated(true);
-      setError('');
-    } else {
-      setError('Incorrect admin password');
+    verifyAdmin();
+  };
+
+  const verifyAdmin = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+        setIsAuthenticated(true);
+        setError('');
+      } else {
+        setError('Incorrect admin password or server error');
+      }
+    } catch (err) {
+      setError('Could not connect to admin server');
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      verifyAdmin();
+    }
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (

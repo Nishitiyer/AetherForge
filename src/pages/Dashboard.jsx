@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, Hexagon, Image as ImageIcon, Video, FolderOpen, Box, User, Settings, Clock, Sparkles, Zap, LayoutDashboard, HelpCircle, CreditCard, Download as DownloadIcon } from 'lucide-react';
+import { usePWA } from '../hooks/usePWA';
+import Gallery from '../components/dashboard/Gallery';
 import './Dashboard.css';
 
 const recentProjects = [
