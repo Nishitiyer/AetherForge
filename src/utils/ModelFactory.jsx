@@ -58,14 +58,6 @@ export const MODEL_TEMPLATES = {
   })
 };
 
-// Advanced primitives mapping
-export const PRIMITIVES = {
-  Box: (args = [1, 1, 1]) => <boxGeometry args={args} />,
-  Sphere: (args = [1, 32, 32]) => <sphereGeometry args={args} />,
-  Cylinder: (args = [0.5, 0.5, 1, 32]) => <cylinderGeometry args={args} />,
-  Cone: (args = [0.5, 1, 32]) => <coneGeometry args={args} />,
-  Torus: (args = [0.5, 0.2, 16, 100]) => <torusGeometry args={args} />,
-};
 
 /**
  * assembleFromAI: Parses a text prompt into a set of primitive instructions.

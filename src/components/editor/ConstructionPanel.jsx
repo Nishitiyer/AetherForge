@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box as BoxIcon, Hammer, Palette, Plus, Trash2, Layers } from 'lucide-react';
-import { MODEL_TEMPLATES, createModel } from '../../utils/ModelFactory';
+import { MODEL_TEMPLATES, createModel } from '../../utils/ModelFactory.jsx';
 import './ConstructionPanel.css';
 
 const ConstructionPanel = ({ 
@@ -130,9 +130,14 @@ const ConstructionPanel = ({
                 type="color" 
                 value={selectedPart.color} 
                 onChange={(e) => {
-                  const newObjects = [...sceneObjects];
-                  const obj = newObjects.find(o => o.id === selectedObjectId);
-                  obj.parts[selectedPartIndex].color = e.target.value;
+                  const newObjects = sceneObjects.map(o => {
+                    if (o.id === selectedObjectId) {
+                      const newParts = [...o.parts];
+                      newParts[selectedPartIndex] = { ...newParts[selectedPartIndex], color: e.target.value };
+                      return { ...o, parts: newParts };
+                    }
+                    return o;
+                  });
                   setSceneObjects(newObjects);
                 }} 
               />
@@ -143,11 +148,16 @@ const ConstructionPanel = ({
                 type="range" min="-2" max="5" step="0.1"
                 value={selectedPart.position[1]} 
                 onChange={(e) => {
-                  const newObjects = [...sceneObjects];
-                  const obj = newObjects.find(o => o.id === selectedObjectId);
-                  const newPos = [...obj.parts[selectedPartIndex].position];
-                  newPos[1] = parseFloat(e.target.value);
-                  obj.parts[selectedPartIndex].position = newPos;
+                  const newObjects = sceneObjects.map(o => {
+                    if (o.id === selectedObjectId) {
+                      const newParts = [...o.parts];
+                      const newPos = [...newParts[selectedPartIndex].position];
+                      newPos[1] = parseFloat(e.target.value);
+                      newParts[selectedPartIndex] = { ...newParts[selectedPartIndex], position: newPos };
+                      return { ...o, parts: newParts };
+                    }
+                    return o;
+                  });
                   setSceneObjects(newObjects);
                 }} 
               />

@@ -15,7 +15,6 @@ import NodeEditor from '../components/editor/NodeEditor';
 import { useCollaboration } from '../hooks/useCollaboration';
 import { useSession } from '../context/SessionContext';
 import ConstructionPanel from '../components/editor/ConstructionPanel';
-import AIPanel from '../components/editor/AIPanel';
 import SignLanguagePanel from '../components/editor/SignLanguagePanel';
 import VoiceOrb from '../components/common/VoiceOrb';
 import './Editor.css';
@@ -79,7 +78,16 @@ const Editor = () => {
           {activeMode === 'Material' ? (
             <div className="shader-workspace">
               <div className="shader-viewport">
-                <Viewport activeMode={activeMode} sceneObjects={sceneObjects} setSceneObjects={setSceneObjects} />
+                <Viewport 
+                  activeMode={activeMode} 
+                  sceneObjects={sceneObjects} 
+                  setSceneObjects={setSceneObjects}
+                  selectedObjectId={selectedObjectId}
+                  setSelectedObjectId={setSelectedObjectId}
+                  selectedPartIndex={selectedPartIndex}
+                  setSelectedPartIndex={setSelectedPartIndex}
+                  transformMode={transformMode}
+                />
               </div>
               <div className="shader-nodes relative">
                 {!isCreator && (
@@ -94,7 +102,16 @@ const Editor = () => {
             </div>
           ) : (
             <>
-              <Viewport activeMode={activeMode} sceneObjects={sceneObjects} setSceneObjects={setSceneObjects} />
+              <Viewport 
+                activeMode={activeMode} 
+                sceneObjects={sceneObjects} 
+                setSceneObjects={setSceneObjects}
+                selectedObjectId={selectedObjectId}
+                setSelectedObjectId={setSelectedObjectId}
+                selectedPartIndex={selectedPartIndex}
+                setSelectedPartIndex={setSelectedPartIndex}
+                transformMode={transformMode}
+              />
               {activeMode === 'Animation' && <Timeline />}
             </>
           )}

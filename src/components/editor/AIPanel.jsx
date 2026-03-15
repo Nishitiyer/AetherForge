@@ -3,7 +3,7 @@ import { Send, Sparkles, RefreshCw, Layers, History as HistoryIcon, ChevronRight
 import VoiceOrb from '../common/VoiceOrb';
 import { useSession } from '../../context/SessionContext';
 import { useChat } from '../../context/ChatContext';
-import { assembleFromAI } from '../../utils/ModelFactory';
+import { assembleFromAI } from '../../utils/ModelFactory.jsx';
 import './AIPanel.css';
 
 const AIPanel = ({ activeMode, onAddObject }) => {
