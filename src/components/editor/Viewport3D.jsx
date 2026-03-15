@@ -11,12 +11,24 @@ const Scene = ({ activeMode, sceneObjects }) => {
       <Suspense fallback={null}>
         <Stage intensity={0.5} environment="city" shadows={{ type: 'contact', opacity: 0.2 }} adjustCamera>
            {sceneObjects.map((obj) => (
-             <mesh key={obj.id} position={obj.position} scale={obj.scale}>
-               {obj.type === 'Model' && <boxGeometry args={[1, 1, 1]} />}
-               {obj.type === 'Character' && <capsuleGeometry args={[0.3, 1, 4, 8]} />}
-               {obj.type === 'Material' && <sphereGeometry args={[1, 64, 64]} />}
-               <meshStandardMaterial color={obj.color} roughness={0.3} metalness={0.8} />
-             </mesh>
+             <group key={obj.id} position={obj.position} scale={obj.scale}>
+               {obj.type === 'Group' ? (
+                 obj.parts.map((part, pIdx) => (
+                   <mesh key={pIdx} position={part.position} scale={part.scale}>
+                     {part.type === 'Box' && <boxGeometry args={[1, 1, 1]} />}
+                     {part.type === 'Sphere' && <sphereGeometry args={[1, 32, 32]} />}
+                     <meshStandardMaterial color={part.color} roughness={0.3} metalness={0.8} />
+                   </mesh>
+                 ))
+               ) : (
+                 <mesh>
+                   {obj.type === 'Model' && <boxGeometry args={[1, 1, 1]} />}
+                   {obj.type === 'Character' && <capsuleGeometry args={[0.3, 1, 4, 8]} />}
+                   {obj.type === 'Material' && <sphereGeometry args={[1, 64, 64]} />}
+                   <meshStandardMaterial color={obj.color} roughness={0.3} metalness={0.8} />
+                 </mesh>
+               )}
+             </group>
            ))}
         </Stage>
       </Suspense>

@@ -14,13 +14,14 @@ import RiggingPanel from '../components/editor/RiggingPanel';
 import NodeEditor from '../components/editor/NodeEditor';
 import { useCollaboration } from '../hooks/useCollaboration';
 import { useSession } from '../context/SessionContext';
+import ConstructionPanel from '../components/editor/ConstructionPanel';
 import SignLanguagePanel from '../components/editor/SignLanguagePanel';
 import VoiceOrb from '../components/common/VoiceOrb';
 import './Editor.css';
 
 const Editor = () => {
   const [activeMode, setActiveMode] = useState('Animation');
-  const [rightPanel, setRightPanel] = useState('AI');
+  const [rightPanel, setRightPanel] = useState('Constructor');
   const [activeModal, setActiveModal] = useState(null);
   const [sceneObjects, setSceneObjects] = useState([
     { id: 'initial-model', type: 'Model', position: [0, 0, 0], scale: [1, 1, 1], color: '#8b5cf6' }
@@ -98,9 +99,9 @@ const Editor = () => {
         <div className="editor-right-column">
           <div className="right-panel-tabs">
             <button 
-              className={`panel-tab ${rightPanel === 'AI' ? 'active' : ''}`}
-              onClick={() => setRightPanel('AI')}
-            >AI Assistant</button>
+              className={`panel-tab ${rightPanel === 'Constructor' ? 'active' : ''}`}
+              onClick={() => setRightPanel('Constructor')}
+            >Exact Constructor</button>
             <button 
               className={`panel-tab ${rightPanel === 'Outliner' ? 'active' : ''}`}
               onClick={() => setRightPanel('Outliner')}
@@ -118,7 +119,7 @@ const Editor = () => {
           </div>
           
           <div className="right-panel-content">
-            {rightPanel === 'AI' && <AIPanel activeMode={activeMode} onAddObject={addObject} />}
+            {rightPanel === 'Constructor' && <ConstructionPanel onAddObject={addObject} sceneObjects={sceneObjects} setSceneObjects={setSceneObjects} />}
             {rightPanel === 'Outliner' && <Outliner />}
             {rightPanel === 'Properties' && <PropertiesPanel activeMode={activeMode} />}
             {rightPanel === 'Rigging' && <RiggingPanel />}
