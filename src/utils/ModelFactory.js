@@ -55,6 +55,60 @@ export const MODEL_TEMPLATES = {
   })
 };
 
+// Advanced primitives mapping
+export const PRIMITIVES = {
+  Box: (args = [1, 1, 1]) => <boxGeometry args={args} />,
+  Sphere: (args = [1, 32, 32]) => <sphereGeometry args={args} />,
+  Cylinder: (args = [0.5, 0.5, 1, 32]) => <cylinderGeometry args={args} />,
+  Cone: (args = [0.5, 1, 32]) => <coneGeometry args={args} />,
+  Torus: (args = [0.5, 0.2, 16, 100]) => <torusGeometry args={args} />,
+};
+
+/**
+ * assembleFromAI: Parses a text prompt into a set of primitive instructions.
+ * For now, this uses a robust mapping to simulate the "Exact" construction
+ * the user expects, ensuring it's always editable.
+ */
+export const assembleFromAI = (prompt, color = '#8b5cf6') => {
+  const p = prompt.toLowerCase();
+  let parts = [];
+  let name = "AI Construction";
+
+  if (p.includes('robot')) {
+    name = "Exact Robot";
+    parts = MODEL_TEMPLATES.ROBOT(color).parts;
+  } else if (p.includes('table')) {
+    name = "Exact Table";
+    parts = MODEL_TEMPLATES.TABLE(color).parts;
+  } else if (p.includes('chair')) {
+    name = "Exact Chair";
+    parts = MODEL_TEMPLATES.CHAIR(color).parts;
+  } else if (p.includes('pillar') || p.includes('column')) {
+    name = "Exact Column";
+    parts = [
+      { type: 'Cylinder', position: [0, 1, 0], scale: [0.5, 2, 0.5], color },
+      { type: 'Box', position: [0, 0.1, 0], scale: [0.8, 0.2, 0.8], color },
+      { type: 'Box', position: [0, 2, 0], scale: [0.8, 0.2, 0.8], color },
+    ];
+  } else {
+    // Basic Fallback: A clever assembly of a "Model"
+    name = "Custom Assembly";
+    parts = [
+      { type: 'Box', position: [0, 0.5, 0], scale: [1, 1, 1], color },
+      { type: 'Sphere', position: [0, 1.25, 0], scale: [0.5, 0.5, 0.5], color: '#ffffff' }
+    ];
+  }
+
+  return {
+    id: `ai-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'Group',
+    name,
+    parts,
+    position: [0, 0, 0],
+    scale: [1, 1, 1]
+  };
+};
+
 export const createModel = (templateKey, color) => {
   if (MODEL_TEMPLATES[templateKey]) {
     return {

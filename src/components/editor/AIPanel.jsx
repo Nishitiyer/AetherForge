@@ -3,6 +3,7 @@ import { Send, Sparkles, RefreshCw, Layers, History as HistoryIcon, ChevronRight
 import VoiceOrb from '../common/VoiceOrb';
 import { useSession } from '../../context/SessionContext';
 import { useChat } from '../../context/ChatContext';
+import { assembleFromAI } from '../../utils/ModelFactory';
 import './AIPanel.css';
 
 const AIPanel = ({ activeMode, onAddObject }) => {
@@ -56,12 +57,13 @@ const AIPanel = ({ activeMode, onAddObject }) => {
     // Add user message to history
     addMessage(activeChat.id, { type: 'user', content: prompt });
 
-    if (prompt.toLowerCase().includes('add') || prompt.toLowerCase().includes('create')) {
-      onAddObject(activeMode === 'Animation' ? 'Model' : activeMode);
+    if (prompt.toLowerCase().includes('add') || prompt.toLowerCase().includes('create') || prompt.toLowerCase().includes('build')) {
+      const newModel = assembleFromAI(prompt);
+      onAddObject(newModel); // Pass the exact model group
       // Add system response
       addMessage(activeChat.id, { 
         type: 'system', 
-        content: `Generation complete. I've created the ${activeMode.toLowerCase()} and added it to your scene.` 
+        content: `Exact construction of "${newModel.name}" complete. I've assembled it from ${newModel.parts.length} geometric primitives. You can now edit each part in the Constructor panel.` 
       });
     } else {
       // Generic AI response

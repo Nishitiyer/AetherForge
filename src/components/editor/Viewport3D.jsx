@@ -17,7 +17,15 @@ const Scene = ({ activeMode, sceneObjects }) => {
                    <mesh key={pIdx} position={part.position} scale={part.scale}>
                      {part.type === 'Box' && <boxGeometry args={[1, 1, 1]} />}
                      {part.type === 'Sphere' && <sphereGeometry args={[1, 32, 32]} />}
-                     <meshStandardMaterial color={part.color} roughness={0.3} metalness={0.8} />
+                     {part.type === 'Cylinder' && <cylinderGeometry args={[1, 1, 1, 32]} />}
+                     {part.type === 'Cone' && <coneGeometry args={[1, 1, 32]} />}
+                     {part.type === 'Torus' && <torusGeometry args={[1, 0.4, 16, 100]} />}
+                     <meshStandardMaterial 
+                       color={part.color} 
+                       roughness={0.2} 
+                       metalness={0.7} 
+                       envMapIntensity={1}
+                     />
                    </mesh>
                  ))
                ) : (
@@ -43,8 +51,16 @@ const Scene = ({ activeMode, sceneObjects }) => {
         cellColor="#1e293b" 
       />
       
-      <Environment preset="night" />
-      <ContactShadows position={[0, 0, 0]} opacity={0.25} scale={10} blur={2.5} far={1} />
+      <Environment preset="city" />
+      <ContactShadows 
+        position={[0, 0, 0]} 
+        opacity={0.4} 
+        scale={20} 
+        blur={2} 
+        far={4.5} 
+      />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
     </>
   );
 };

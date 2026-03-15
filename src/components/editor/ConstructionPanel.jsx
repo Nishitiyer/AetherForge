@@ -5,6 +5,11 @@ import './ConstructionPanel.css';
 
 const ConstructionPanel = ({ onAddObject, sceneObjects, setSceneObjects }) => {
   const [selectedColor, setSelectedColor] = useState('#8b5cf6');
+  const [selectedObjectId, setSelectedObjectId] = useState(null);
+  const [selectedPartIndex, setSelectedPartIndex] = useState(null);
+
+  const selectedObject = sceneObjects.find(o => o.id === selectedObjectId);
+  const selectedPart = selectedObject?.parts?.[selectedPartIndex];
 
   const handleAddExact = (templateKey) => {
     const newModel = createModel(templateKey, selectedColor);
@@ -60,25 +65,80 @@ const ConstructionPanel = ({ onAddObject, sceneObjects, setSceneObjects }) => {
         <div className="section-label">Scene Hierarchy</div>
         <div className="outliner-list">
           {sceneObjects.map((obj, i) => (
-            <div key={obj.id} className="outliner-item">
-              <div className="item-info">
-                <Layers size={14} />
-                <span>{obj.name || obj.type} #{i+1}</span>
-              </div>
-              <button 
-                className="delete-item" 
-                onClick={() => removeObject(obj.id)}
-                title="Remove Object"
+            <div key={obj.id} className="outliner-wrapper">
+              <div 
+                className={`outliner-item ${selectedObjectId === obj.id && selectedPartIndex === null ? 'active' : ''}`}
+                onClick={() => { setSelectedObjectId(obj.id); setSelectedPartIndex(null); }}
               >
-                <Trash2 size={14} />
-              </button>
+                <div className="item-info">
+                  <Layers size={14} />
+                  <span>{obj.name || obj.type}</span>
+                </div>
+                <button 
+                  className="delete-item" 
+                  onClick={(e) => { e.stopPropagation(); removeObject(obj.id); }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              
+              {/* Nested parts if grouped */}
+              {obj.parts && (
+                <div className="nested-parts">
+                  {obj.parts.map((part, pIdx) => (
+                    <div 
+                      key={pIdx} 
+                      className={`outliner-item nested ${selectedObjectId === obj.id && selectedPartIndex === pIdx ? 'active' : ''}`}
+                      onClick={() => { setSelectedObjectId(obj.id); setSelectedPartIndex(pIdx); }}
+                    >
+                      <div className="item-info">
+                        <BoxIcon size={12} />
+                        <span>{part.type} Part</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
-          {sceneObjects.length === 0 && (
-            <div className="empty-outliner">No objects in scene</div>
-          )}
         </div>
       </div>
+
+      {selectedPart && (
+        <div className="construction-section part-editor glass-panel">
+          <div className="section-label">Edit Part: {selectedPart.type}</div>
+          <div className="edit-controls">
+            <div className="edit-row">
+              <label>Color</label>
+              <input 
+                type="color" 
+                value={selectedPart.color} 
+                onChange={(e) => {
+                  const newObjects = [...sceneObjects];
+                  const obj = newObjects.find(o => o.id === selectedObjectId);
+                  obj.parts[selectedPartIndex].color = e.target.value;
+                  setSceneObjects(newObjects);
+                }} 
+              />
+            </div>
+            <div className="edit-row">
+              <label>Y Pos</label>
+              <input 
+                type="range" min="-2" max="5" step="0.1"
+                value={selectedPart.position[1]} 
+                onChange={(e) => {
+                  const newObjects = [...sceneObjects];
+                  const obj = newObjects.find(o => o.id === selectedObjectId);
+                  const newPos = [...obj.parts[selectedPartIndex].position];
+                  newPos[1] = parseFloat(e.target.value);
+                  obj.parts[selectedPartIndex].position = newPos;
+                  setSceneObjects(newObjects);
+                }} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="construction-footer">
         <p>Models are built programmatically from exact geometric primitives.</p>
