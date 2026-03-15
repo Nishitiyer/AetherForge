@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, Maximize, Crosshair, Layers, Monitor, Rotate3d } from 'lucide-react';
-import Viewport3D from './Viewport3D';
+import Viewport3D from './Viewport3D.jsx';
 import './Viewport.css';
 
 const Viewport = ({ 

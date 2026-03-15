@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Sparkles, RefreshCw, Layers, History as HistoryIcon, ChevronRight, Zap, Target, Palette, Box as BoxIcon, Settings as SettingsIcon, Plus, MessageSquare, Trash2 } from 'lucide-react';
-import VoiceOrb from '../common/VoiceOrb';
-import { useSession } from '../../context/SessionContext';
-import { useChat } from '../../context/ChatContext';
+import VoiceOrb from '../common/VoiceOrb.jsx';
+import { useSession } from '../../context/SessionContext.jsx';
+import { useChat } from '../../context/ChatContext.jsx';
 import { assembleFromAI } from '../../utils/ModelFactory.jsx';
 import './AIPanel.css';
 

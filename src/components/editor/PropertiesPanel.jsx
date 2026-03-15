@@ -41,7 +41,7 @@ const PropertiesPanel = ({ activeMode }) => {
 
       <div className="prop-section">
         <div className="prop-header">
-          <Image size={14} />
+          <ImageIcon size={14} />
           <span>Material Setup</span>
         </div>
         <div className="prop-content">
