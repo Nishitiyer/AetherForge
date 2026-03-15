@@ -1,19 +1,19 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Landing from './pages/Landing';
-import Auth from './pages/Auth';
-import Onboarding from './pages/Onboarding';
-import Dashboard from './pages/Dashboard';
-import Editor from './pages/Editor';
-import Settings from './pages/Settings';
-import Billing from './pages/Billing';
-import Help from './pages/Help';
-import AdminPortal from './pages/AdminPortal';
-import CreatorPortal from './pages/CreatorPortal';
-import AuthSelection from './pages/AuthSelection';
-import Download from './pages/Download';
-import { SessionProvider } from './context/SessionContext';
-import { ChatProvider } from './context/ChatContext';
+import Landing from './pages/Landing.jsx';
+import Auth from './pages/Auth.jsx';
+import Onboarding from './pages/Onboarding.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Editor from './pages/Editor.jsx';
+import Settings from './pages/Settings.jsx';
+import Billing from './pages/Billing.jsx';
+import Help from './pages/Help.jsx';
+import AdminPortal from './pages/AdminPortal.jsx';
+import CreatorPortal from './pages/CreatorPortal.jsx';
+import AuthSelection from './pages/AuthSelection.jsx';
+import Download from './pages/Download.jsx';
+import { SessionProvider } from './context/SessionContext.jsx';
+import { ChatProvider } from './context/ChatContext.jsx';
 
 function App() {
   try {

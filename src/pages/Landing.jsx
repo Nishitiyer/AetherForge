@@ -1,10 +1,10 @@
 import React from 'react';
-import Navbar from '../components/common/Navbar';
-import Hero from '../components/landing/Hero';
-import FeatureGrid from '../components/landing/FeatureGrid';
-import Workflows from '../components/landing/Workflows';
-import Pricing from '../components/landing/Pricing';
-import Footer from '../components/landing/Footer';
+import Navbar from '../components/common/Navbar.jsx';
+import Hero from '../components/landing/Hero.jsx';
+import FeatureGrid from '../components/landing/FeatureGrid.jsx';
+import Workflows from '../components/landing/Workflows.jsx';
+import Pricing from '../components/landing/Pricing.jsx';
+import Footer from '../components/landing/Footer.jsx';
 import './Landing.css';
 
 const Landing = () => {

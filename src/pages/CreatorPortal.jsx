@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Eye, EyeOff, ArrowRight, Zap, Layout, Camera, Mic, Settings as SettingsIcon } from 'lucide-react';
-import VoiceOrb from '../components/common/VoiceOrb';
-import SignLanguagePanel from '../components/editor/SignLanguagePanel';
-import { useSession } from '../context/SessionContext';
+import VoiceOrb from '../components/common/VoiceOrb.jsx';
+import SignLanguagePanel from '../components/editor/SignLanguagePanel.jsx';
+import { useSession } from '../context/SessionContext.jsx';
 import './CreatorPortal.css';
 
 const CreatorPortal = () => {
