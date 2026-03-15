@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Home, Save, Download, Undo, Redo, Settings, Play, Image as ImageIcon } from 'lucide-react';
 import './EditorToolbar.css';

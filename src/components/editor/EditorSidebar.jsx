@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { MousePointer2, Move, RotateCcw, Maximize, GitMerge, Edit3, Type, BoxSelect } from 'lucide-react';
 import './EditorSidebar.css';
 

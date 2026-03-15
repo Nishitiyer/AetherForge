@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Mail, Shield, Bell, Key } from 'lucide-react';
 
 const Settings = () => {

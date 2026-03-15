@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing.jsx';
 import Auth from './pages/Auth.jsx';
@@ -43,7 +43,7 @@ function App() {
     console.error('App Crash:', err);
     return (
       <div style={{ padding: '40px', background: '#0f1115', color: '#ff4444', height: '100vh' }}>
-        <h2>⚠️ AetherForge Runtime Error</h2>
+        <h2>âš ï¸ AetherForge Runtime Error</h2>
         <p>{err.message}</p>
         <button onClick={() => location.reload()}>Retry</button>
       </div>

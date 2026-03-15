@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ModelFactory.js
  * Programmatic construction of 3D models using Three.js primitives.
  * This ensures "exact" models rather than AI-generated approximations.

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Eye, EyeOff, ArrowRight, Zap, Layout, Camera, Mic, Settings as SettingsIcon } from 'lucide-react';
 import VoiceOrb from '../components/common/VoiceOrb.jsx';
@@ -95,7 +95,7 @@ const CreatorPortal = () => {
               <input 
                 id="password"
                 type={showPassword ? "text" : "password"} 
-                placeholder="••••••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -119,7 +119,7 @@ const CreatorPortal = () => {
 
         <div className="creator-footer">
           <Shield size={14} />
-          <span>Private User Instance · Encrypted Session</span>
+          <span>Private User Instance Â· Encrypted Session</span>
         </div>
       </div>
     </div>

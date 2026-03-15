@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { CreditCard, History as HistoryIcon, Package, ShieldCheck } from 'lucide-react';
 
 const Billing = () => {
@@ -12,7 +12,7 @@ const Billing = () => {
             <div>
               <p style={{fontSize: '0.875rem', color: 'var(--color-text-muted)'}}>Current Plan</p>
               <h3 style={{fontSize: '1.5rem', marginTop: '0.25rem'}}>OmniPro Monthly</h3>
-              <p style={{fontSize: '0.875rem', marginTop: '0.5rem'}}>$29.00 / month • Renews on April 14, 2026</p>
+              <p style={{fontSize: '0.875rem', marginTop: '0.5rem'}}>$29.00 / month â€¢ Renews on April 14, 2026</p>
             </div>
             <button className="btn-primary">Manage Plan</button>
           </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Eye, Lock, ChevronDown, ChevronRight, Box, Image as ImageIcon, Camera, Sun } from 'lucide-react';
 import './Outliner.css';
 

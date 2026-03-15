@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+﻿import React, { useRef, useEffect, useState } from 'react';
 import { Camera, Wand2, X, Languages } from 'lucide-react';
 import './SignLanguagePanel.css';
 

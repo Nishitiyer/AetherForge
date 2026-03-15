@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Box as BoxIcon, Hammer, Palette, Plus, Trash2, Layers } from 'lucide-react';
 import { MODEL_TEMPLATES, createModel } from '../../utils/ModelFactory.jsx';
 import './ConstructionPanel.css';

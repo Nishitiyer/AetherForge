@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Settings, Globe, Shield, Zap, Database } from 'lucide-react';
 import './ProjectSettings.css';
 

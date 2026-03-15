@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 export const usePWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);

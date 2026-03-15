@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Shield, Zap, ArrowRight, Box } from 'lucide-react';
 import './AuthSelection.css';

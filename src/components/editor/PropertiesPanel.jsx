@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { SlidersHorizontal, Image as ImageIcon, Type } from 'lucide-react';
 import './PropertiesPanel.css';
 

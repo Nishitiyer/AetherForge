@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Layers, Zap, PenTool, Layout, Box, Workflow } from 'lucide-react';
 import './FeatureGrid.css';
 
@@ -11,7 +11,7 @@ const features = [
   {
     icon: <Layout size={24} />,
     title: 'World Building',
-    description: 'Describe complex scenes—from cyberpunk streets to fantasy castles. AetherForge handles lighting, scattering, and atmospherics.'
+    description: 'Describe complex scenesâ€”from cyberpunk streets to fantasy castles. AetherForge handles lighting, scattering, and atmospherics.'
   },
   {
     icon: <Workflow size={24} />,

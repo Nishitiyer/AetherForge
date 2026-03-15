@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { Sparkles, Play, Box as BoxIcon } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stage, Grid, Environment, ContactShadows } from '@react-three/drei';

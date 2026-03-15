@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Monitor, Apple, Terminal, Download as DownloadIcon, Box, ArrowRight } from 'lucide-react';
 import './Download.css';
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, User, Hash, Zap, Activity } from 'lucide-react';
 import './RiggingPanel.css';
 

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Play, Pause, SkipBack, SkipForward, Clock } from 'lucide-react';
 import './Timeline.css';
 

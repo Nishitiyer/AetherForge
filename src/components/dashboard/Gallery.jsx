@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Sparkles, Download, ExternalLink, Clock, Trash2 } from 'lucide-react';
 import './Gallery.css';
 

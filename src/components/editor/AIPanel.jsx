@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Send, Sparkles, RefreshCw, Layers, History as HistoryIcon, ChevronRight, Zap, Target, Palette, Box as BoxIcon, Settings as SettingsIcon, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import VoiceOrb from '../common/VoiceOrb.jsx';
 import { useSession } from '../../context/SessionContext.jsx';

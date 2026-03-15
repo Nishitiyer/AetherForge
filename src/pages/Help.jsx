@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { BookOpen, Search, MessageSquare, PlayCircle } from 'lucide-react';
 
 const Help = () => {
