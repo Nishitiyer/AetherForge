@@ -1,0 +1,98 @@
+.workflows-section {
+  padding: 8rem 2rem;
+  background: radial-gradient(circle at center, rgba(79, 70, 229, 0.05) 0%, transparent 70%);
+}
+
+.workflows-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.workflow-steps {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 4rem;
+}
+
+.workflow-card {
+  flex: 1;
+  padding: 3rem 2rem;
+  position: relative;
+  text-align: center;
+  transition: transform 0.3s ease;
+  overflow: visible;
+}
+
+.workflow-card:hover {
+  transform: translateY(-10px);
+}
+
+.workflow-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: var(--accent-color);
+  box-shadow: 0 0 15px var(--accent-color);
+}
+
+.step-num {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 30px;
+  height: 30px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.workflow-icon {
+  color: var(--accent-color);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.workflow-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.workflow-card p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.workflow-connector {
+  color: rgba(255, 255, 255, 0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.3; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
+  100% { opacity: 0.3; transform: translateX(0); }
+}
+
+@media (max-width: 992px) {
+  .workflow-steps {
+    flex-direction: column;
+  }
+  .workflow-connector {
+    transform: rotate(90deg);
+  }
+  @keyframes pulse {
+    0% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(5px); }
+    100% { opacity: 0.3; transform: translateY(0); }
+  }
+}

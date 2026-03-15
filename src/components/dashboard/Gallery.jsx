@@ -4,10 +4,10 @@ import './Gallery.css';
 
 const Gallery = () => {
   const assets = [
-    { id: 1, name: 'Cyberpunk Soldier', type: 'Character', date: '2 hours ago', status: 'Completed', thumb: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=400&h=300&fit=crop' },
-    { id: 2, name: 'Sci-Fi Corridor', type: 'Environment', date: 'Yesterday', status: 'Completed', thumb: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=300&fit=crop' },
-    { id: 3, name: 'Neon Dragon', type: 'Creature', date: 'Mar 12, 2024', status: 'In Progress', thumb: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&h=300&fit=crop' },
-    { id: 4, name: 'Modular Crate', type: 'Prop', date: 'Mar 10, 2024', status: 'Completed', thumb: 'https://images.unsplash.com/photo-1542332606-b3d2b0e9d6d5?w=400&h=300&fit=crop' },
+    { id: 1, name: 'Cyberpunk Soldier', type: 'Character', date: '2 hours ago', status: 'Completed', thumb: '/assets/soldier.png' },
+    { id: 2, name: 'Sci-Fi Corridor', type: 'Environment', date: 'Yesterday', status: 'Completed', thumb: '/assets/corridor.png' },
+    { id: 3, name: 'Neon Dragon', type: 'Creature', date: 'Mar 12, 2024', status: 'Completed', thumb: '/assets/dragon.png' },
+    { id: 4, name: 'Modular Crate', type: 'Prop', date: 'Mar 10, 2024', status: 'Completed', thumb: '/assets/crate.png' },
   ];
 
   return (
