@@ -41,7 +41,6 @@ const CreatorPortal = () => {
   };
 
   const handleTranscription = (text) => {
-    console.log('Creator Voice Instruction:', text);
     // Future: Link to global creator commands
   };
 

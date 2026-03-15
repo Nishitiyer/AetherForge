@@ -15,7 +15,11 @@ const AdminPortal = () => {
 
   const verifyAdmin = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/users', {
+      const apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000' 
+        : 'https://aether-forge-server.vercel.app';
+
+      const response = await fetch(`${apiUrl}/api/admin/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })

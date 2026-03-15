@@ -19,7 +19,11 @@ const Auth = () => {
     try {
       if (!isLogin) {
         // Sign Up
-        const response = await fetch('http://localhost:5000/api/auth/signup', {
+        const apiUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:5000' 
+          : 'https://aether-forge-server.vercel.app';
+          
+        const response = await fetch(`${apiUrl}/api/auth/signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
