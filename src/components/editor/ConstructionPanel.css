@@ -158,3 +158,93 @@
   color: var(--color-text-muted);
   line-height: 1.4;
 }
+.transform-toggles {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--color-text-muted);
+}
+
+.mode-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+.mode-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.outliner-item.active {
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.nested-parts {
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  margin-left: 1rem;
+}
+
+.outliner-item.nested {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.outliner-item.nested.active {
+  background: rgba(139, 92, 246, 0.3);
+  opacity: 1;
+}
+
+.part-editor {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(139, 92, 246, 0.05) !important;
+  border: 1px solid rgba(139, 92, 246, 0.1) !important;
+  border-radius: 12px;
+}
+
+.edit-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edit-row label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.edit-row input[type="range"] {
+  width: 120px;
+}
+
+.edit-row input[type="color"] {
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}

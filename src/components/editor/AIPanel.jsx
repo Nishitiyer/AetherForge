@@ -58,12 +58,28 @@ const AIPanel = ({ activeMode, onAddObject }) => {
     addMessage(activeChat.id, { type: 'user', content: prompt });
 
     if (prompt.toLowerCase().includes('add') || prompt.toLowerCase().includes('create') || prompt.toLowerCase().includes('build')) {
-      const newModel = assembleFromAI(prompt);
-      onAddObject(newModel); // Pass the exact model group
-      // Add system response
+      const color = prompt.toLowerCase().includes('red') ? '#ef4444' : 
+                    prompt.toLowerCase().includes('blue') ? '#3b82f6' : 
+                    prompt.toLowerCase().includes('green') ? '#22c55e' : '#8b5cf6';
+                    
+      const newModel = assembleFromAI(prompt, color);
+      onAddObject(newModel);
+      
       addMessage(activeChat.id, { 
         type: 'system', 
-        content: `Exact construction of "${newModel.name}" complete. I've assembled it from ${newModel.parts.length} geometric primitives. You can now edit each part in the Constructor panel.` 
+        content: `Exact construction of "${newModel.name}" complete. I've assembled it from ${newModel.parts.length} primitives including detailed "definitions". You can drag and edit each part in the Constructor panel.` 
+      });
+    } else if (prompt.toLowerCase().includes('animate') || prompt.toLowerCase().includes('walk') || prompt.toLowerCase().includes('wave')) {
+      // Find the last added/selected object and apply animation
+      const type = prompt.toLowerCase().includes('walk') ? 'Walk' : 
+                   prompt.toLowerCase().includes('wave') ? 'Wave' : 'Idle';
+      
+      // We rely on the parent (Editor) to handle the state update for animations
+      onAddObject({ action: 'ANIMATE', type });
+      
+      addMessage(activeChat.id, { 
+        type: 'system', 
+        content: `Animation sequence "${type}" applied to the character. You can see it performing the action in the viewport now.` 
       });
     } else {
       // Generic AI response

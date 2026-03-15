@@ -36,11 +36,14 @@ export const MODEL_TEMPLATES = {
     parts: [
       { type: 'Box', position: [0, 1, 0], scale: [0.6, 0.8, 0.4], color }, // Torso
       { type: 'Box', position: [0, 1.6, 0], scale: [0.4, 0.4, 0.4], color: '#6366f1' }, // Head
-      { type: 'Box', position: [-0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color }, // L Arm
-      { type: 'Box', position: [0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color }, // R Arm
-      { type: 'Box', position: [-0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color }, // L Leg
-      { type: 'Box', position: [0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color }, // R Leg
-    ]
+      { type: 'Sphere', position: [-0.1, 1.65, 0.2], scale: [0.05, 0.05, 0.05], color: '#ffffff', name: 'EyeL' }, // L Eye (Definition)
+      { type: 'Sphere', position: [0.1, 1.65, 0.2], scale: [0.05, 0.05, 0.05], color: '#ffffff', name: 'EyeR' }, // R Eye (Definition)
+      { type: 'Box', position: [-0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color, name: 'ArmL' }, // L Arm
+      { type: 'Box', position: [0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color, name: 'ArmR' }, // R Arm
+      { type: 'Box', position: [-0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color, name: 'LegL' }, // L Leg
+      { type: 'Box', position: [0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color, name: 'LegR' }, // R Leg
+    ],
+    animation: { type: 'Idle', amplitude: 0.1, speed: 1 }
   }),
 
   STAIRS: (color = '#cbd5e1') => ({
@@ -105,8 +108,42 @@ export const assembleFromAI = (prompt, color = '#8b5cf6') => {
     name,
     parts,
     position: [0, 0, 0],
-    scale: [1, 1, 1]
+    scale: [1, 1, 1],
+    animation: p.includes('walk') ? { type: 'Walk', speed: 2 } : 
+               p.includes('wave') ? { type: 'Wave', speed: 3 } : 
+               { type: 'Idle', speed: 1 }
   };
+};
+
+/**
+ * ANIMATION_LOGIC: Defines how primitive types/names react to animation states.
+ */
+export const applyAnimation = (parts, animation, time) => {
+  return parts.map(part => {
+    const newPos = [...part.position];
+    const newRot = part.rotation ? [...part.rotation] : [0, 0, 0];
+
+    if (animation.type === 'Walk') {
+      if (part.name?.includes('LegL')) newPos[2] = Math.sin(time * animation.speed) * 0.3;
+      if (part.name?.includes('LegR')) newPos[2] = Math.cos(time * animation.speed) * 0.3;
+      if (part.name?.includes('ArmL')) newPos[2] = Math.cos(time * animation.speed) * 0.2;
+      if (part.name?.includes('ArmR')) newPos[2] = Math.sin(time * animation.speed) * 0.2;
+    }
+
+    if (animation.type === 'Wave') {
+      if (part.name === 'ArmR') {
+        newRot[0] = -Math.PI / 2;
+        newPos[0] = 0.5 + Math.sin(time * animation.speed) * 0.1;
+        newPos[1] = 1.3 + Math.cos(time * animation.speed) * 0.1;
+      }
+    }
+
+    if (animation.type === 'Idle') {
+      newPos[1] += Math.sin(time * animation.speed) * 0.01;
+    }
+
+    return { ...part, position: newPos, rotation: newRot };
+  });
 };
 
 export const createModel = (templateKey, color) => {

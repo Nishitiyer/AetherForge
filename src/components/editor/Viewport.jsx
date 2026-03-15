@@ -3,7 +3,16 @@ import { Camera, Maximize, Crosshair, Layers, Monitor, Rotate3d } from 'lucide-r
 import Viewport3D from './Viewport3D';
 import './Viewport.css';
 
-const Viewport = ({ activeMode, sceneObjects, setSceneObjects }) => {
+const Viewport = ({ 
+  activeMode, 
+  sceneObjects, 
+  setSceneObjects,
+  selectedObjectId,
+  setSelectedObjectId,
+  selectedPartIndex,
+  setSelectedPartIndex,
+  transformMode
+}) => {
   const [viewType, setViewType] = useState('Perspective');
   const [shading, setShading] = useState('Rendered');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -34,7 +43,16 @@ const Viewport = ({ activeMode, sceneObjects, setSceneObjects }) => {
 
       {/* Main Interactive Area Placeholder */}
       {/* Main Interactive Area with Real 3D Engine */}
-      <Viewport3D activeMode={activeMode} sceneObjects={sceneObjects} />
+      <Viewport3D 
+        activeMode={activeMode} 
+        sceneObjects={sceneObjects} 
+        setSceneObjects={setSceneObjects}
+        selectedObjectId={selectedObjectId}
+        setSelectedObjectId={setSelectedObjectId}
+        selectedPartIndex={selectedPartIndex}
+        setSelectedPartIndex={setSelectedPartIndex}
+        transformMode={transformMode}
+      />
 
       {/* Viewport Navigation Overlay */}
       <div className="viewport-nav-controls">

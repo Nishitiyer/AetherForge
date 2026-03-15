@@ -3,13 +3,20 @@ import { Box as BoxIcon, Hammer, Palette, Plus, Trash2, Layers } from 'lucide-re
 import { MODEL_TEMPLATES, createModel } from '../../utils/ModelFactory';
 import './ConstructionPanel.css';
 
-const ConstructionPanel = ({ onAddObject, sceneObjects, setSceneObjects }) => {
+const ConstructionPanel = ({ 
+  onAddObject, 
+  sceneObjects, 
+  setSceneObjects,
+  selectedObjectId,
+  setSelectedObjectId,
+  selectedPartIndex,
+  setSelectedPartIndex,
+  transformMode,
+  setTransformMode
+}) => {
   const [selectedColor, setSelectedColor] = useState('#8b5cf6');
-  const [selectedObjectId, setSelectedObjectId] = useState(null);
-  const [selectedPartIndex, setSelectedPartIndex] = useState(null);
-
   const selectedObject = sceneObjects.find(o => o.id === selectedObjectId);
-  const selectedPart = selectedObject?.parts?.[selectedPartIndex];
+  const selectedPart = selectedObject?.parts?.[selectedPartIndex] || (selectedPartIndex === null ? selectedObject : null);
 
   const handleAddExact = (templateKey) => {
     const newModel = createModel(templateKey, selectedColor);
@@ -27,6 +34,15 @@ const ConstructionPanel = ({ onAddObject, sceneObjects, setSceneObjects }) => {
       <div className="panel-header">
         <Hammer size={20} className="text-primary" />
         <h2>Exact Constructor</h2>
+      </div>
+
+      <div className="construction-section">
+        <div className="section-label">Transform Mode</div>
+        <div className="transform-toggles">
+          <button className={`mode-btn ${transformMode === 'translate' ? 'active' : ''}`} onClick={() => setTransformMode('translate')}>Move</button>
+          <button className={`mode-btn ${transformMode === 'rotate' ? 'active' : ''}`} onClick={() => setTransformMode('rotate')}>Rotate</button>
+          <button className={`mode-btn ${transformMode === 'scale' ? 'active' : ''}`} onClick={() => setTransformMode('scale')}>Scale</button>
+        </div>
       </div>
 
       <div className="construction-section">

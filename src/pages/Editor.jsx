@@ -24,6 +24,9 @@ const Editor = () => {
   const [activeMode, setActiveMode] = useState('Animation');
   const [rightPanel, setRightPanel] = useState('AI');
   const [activeModal, setActiveModal] = useState(null);
+  const [selectedObjectId, setSelectedObjectId] = useState(null);
+  const [selectedPartIndex, setSelectedPartIndex] = useState(null);
+  const [transformMode, setTransformMode] = useState('translate');
   const [sceneObjects, setSceneObjects] = useState([
     { id: 'initial-model', type: 'Model', position: [0, 0, 0], scale: [1, 1, 1], color: '#8b5cf6' }
   ]);
@@ -124,8 +127,37 @@ const Editor = () => {
           </div>
           
           <div className="right-panel-content">
-            {rightPanel === 'AI' && <AIPanel activeMode={activeMode} onAddObject={(obj) => typeof obj === 'string' ? addObject(obj) : setSceneObjects([...sceneObjects, obj])} />}
-            {rightPanel === 'Constructor' && <ConstructionPanel onAddObject={addObject} sceneObjects={sceneObjects} setSceneObjects={setSceneObjects} />}
+            {rightPanel === 'AI' && (
+              <AIPanel 
+                activeMode={activeMode} 
+                onAddObject={(obj) => {
+                  if (obj?.action === 'ANIMATE') {
+                    // Update animation of selected or last object
+                    const targetId = selectedObjectId || (sceneObjects.length > 0 ? sceneObjects[sceneObjects.length - 1].id : null);
+                    if (targetId) {
+                      setSceneObjects(sceneObjects.map(o => o.id === targetId ? { ...o, animation: { ...o.animation, type: obj.type } } : o));
+                    }
+                  } else if (typeof obj === 'string') {
+                    addObject(obj);
+                  } else {
+                    setSceneObjects([...sceneObjects, obj]);
+                  }
+                }} 
+              />
+            )}
+            {rightPanel === 'Constructor' && (
+              <ConstructionPanel 
+                onAddObject={addObject} 
+                sceneObjects={sceneObjects} 
+                setSceneObjects={setSceneObjects} 
+                selectedObjectId={selectedObjectId}
+                setSelectedObjectId={setSelectedObjectId}
+                selectedPartIndex={selectedPartIndex}
+                setSelectedPartIndex={setSelectedPartIndex}
+                transformMode={transformMode}
+                setTransformMode={setTransformMode}
+              />
+            )}
             {rightPanel === 'Outliner' && <Outliner />}
             {rightPanel === 'Properties' && <PropertiesPanel activeMode={activeMode} />}
             {rightPanel === 'Rigging' && <RiggingPanel />}
