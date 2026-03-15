@@ -17,6 +17,7 @@ import { useSession } from '../context/SessionContext';
 import ConstructionPanel from '../components/editor/ConstructionPanel';
 import SignLanguagePanel from '../components/editor/SignLanguagePanel';
 import VoiceOrb from '../components/common/VoiceOrb';
+import { assembleFromAI } from '../utils/ModelFactory.jsx';
 import './Editor.css';
 
 const Editor = () => {
@@ -47,6 +48,33 @@ const Editor = () => {
       color: '#' + Math.floor(Math.random()*16777215).toString(16)
     };
     setSceneObjects([...sceneObjects, newObj]);
+  };
+
+  const processAICommand = (prompt) => {
+    if (!prompt) return;
+    const lowerPrompt = prompt.toLowerCase();
+    
+    if (lowerPrompt.includes('add') || lowerPrompt.includes('create') || lowerPrompt.includes('build')) {
+      const color = lowerPrompt.includes('red') ? '#ef4444' : 
+                    lowerPrompt.includes('blue') ? '#3b82f6' : 
+                    lowerPrompt.includes('green') ? '#22c55e' : '#8b5cf6';
+                    
+      const newModel = assembleFromAI(prompt, color);
+      setSceneObjects([...sceneObjects, newModel]);
+    } else if (lowerPrompt.includes('animate') || lowerPrompt.includes('walk') || lowerPrompt.includes('wave')) {
+      const type = lowerPrompt.includes('walk') ? 'Walk' : 
+                   lowerPrompt.includes('wave') ? 'Wave' : 'Idle';
+      
+      const targetId = selectedObjectId || (sceneObjects.length > 0 ? sceneObjects[sceneObjects.length - 1].id : null);
+      if (targetId) {
+        setSceneObjects(sceneObjects.map(o => o.id === targetId ? { ...o, animation: { ...o.animation, type } } : o));
+      }
+    } else if (lowerPrompt.includes('rotate')) {
+      const targetId = selectedObjectId || (sceneObjects.length > 0 ? sceneObjects[sceneObjects.length - 1].id : null);
+      if (targetId) {
+        setSceneObjects(sceneObjects.map(o => o.id === targetId ? { ...o, rotation: [0, (o.rotation?.[1] || 0) + Math.PI / 4, 0] } : o));
+      }
+    }
   };
   
   return (
@@ -216,7 +244,7 @@ const Editor = () => {
       <SignLanguagePanel 
         isOpen={isSignPanelOpen} 
         onClose={() => setIsSignPanelOpen(false)} 
-        onTranslation={(text) => addObject(text.includes('Character') ? 'Character' : 'Model')}
+        onTranslation={processAICommand}
       />
 
       {isExpired && !isCreator && (
