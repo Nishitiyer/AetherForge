@@ -55,7 +55,9 @@ app.post('/api/auth/onboarding', (req, res) => {
 // Admin Endpoint
 app.post('/api/admin/users', (req, res) => {
   const { password } = req.body;
-  if (password !== 'Lalitha76!') {
+  // Master password check (moved to env-based check for CI security)
+  const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'Lalitha76!';
+  if (password !== ADMIN_PASS) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const db = readDB();
