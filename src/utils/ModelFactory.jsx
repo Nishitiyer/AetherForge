@@ -5,6 +5,58 @@
  */
 
 export const MODEL_TEMPLATES = {
+  TABLE: (color = '#8b4513') => ({
+    type: 'Group',
+    name: 'Table',
+    parts: [
+      { type: 'Box', position: [0, 0.75, 0], scale: [2, 0.1, 1.2], color }, // Top
+      { type: 'Box', position: [-0.9, 0.35, -0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 1
+      { type: 'Box', position: [0.9, 0.35, -0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 2
+      { type: 'Box', position: [-0.9, 0.35, 0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 3
+      { type: 'Box', position: [0.9, 0.35, 0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 4
+    ]
+  }),
+
+  CHAIR: (color = '#4b3621') => ({
+    type: 'Group',
+    name: 'Chair',
+    parts: [
+      { type: 'Box', position: [0, 0.45, 0], scale: [0.5, 0.1, 0.5], color }, // Seat
+      { type: 'Box', position: [0, 0.75, -0.2], scale: [0.5, 0.6, 0.05], color }, // Back
+      { type: 'Box', position: [-0.2, 0.2, -0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 1
+      { type: 'Box', position: [0.2, 0.2, -0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 2
+      { type: 'Box', position: [-0.2, 0.2, 0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 3
+      { type: 'Box', position: [0.2, 0.2, 0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 4
+    ]
+  }),
+
+  ROBOT: (color = '#94a3b8') => ({
+    type: 'Group',
+    name: 'Robot',
+    parts: [
+      { type: 'Box', position: [0, 1, 0], scale: [0.6, 0.8, 0.4], color }, // Torso
+      { type: 'Box', position: [0, 1.6, 0], scale: [0.4, 0.4, 0.4], color: '#6366f1' }, // Head
+      { type: 'Sphere', position: [-0.1, 1.65, 0.2], scale: [0.05, 0.05, 0.05], color: '#ffffff', name: 'EyeL' },
+      { type: 'Sphere', position: [0.1, 1.65, 0.2], scale: [0.05, 0.05, 0.05], color: '#ffffff', name: 'EyeR' },
+      { type: 'Box', position: [-0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color, name: 'ArmL' }, // L Arm
+      { type: 'Box', position: [0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color, name: 'ArmR' }, // R Arm
+      { type: 'Box', position: [-0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color, name: 'LegL' }, // L Leg
+      { type: 'Box', position: [0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color, name: 'LegR' }, // R Leg
+    ],
+    animation: { type: 'Idle', amplitude: 0.1, speed: 1 }
+  }),
+
+  STAIRS: (color = '#cbd5e1') => ({
+    type: 'Group',
+    name: 'Stairs',
+    parts: Array.from({ length: 5 }, (_, i) => ({
+      type: 'Box',
+      position: [0, i * 0.2, i * 0.2],
+      scale: [1, 0.2, 0.2],
+      color
+    }))
+  }),
+
   CUBE: (color = '#8b5cf6') => ({
     type: 'Mesh',
     name: 'Cube',
@@ -17,8 +69,8 @@ export const MODEL_TEMPLATES = {
     parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 32 }]
   }),
 
-  ICOSPHERE: (color = '#ffffff') => ({
-    type: 'Mesh',
+  ICOSPHERE: (color = '#00f2fe') => ({
+    type: 'IcoSphere',
     name: 'Ico Sphere',
     parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, isIco: true, detail: 2 }]
   }),
@@ -41,10 +93,22 @@ export const MODEL_TEMPLATES = {
     parts: [{ type: 'Torus', position: [0, 0, 0], scale: [1, 1, 1], color }]
   }),
 
+  PLANE: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Plane',
+    parts: [{ type: 'Plane', position: [0, 0, 0], scale: [2, 2, 1], color, rotation: [-Math.PI / 2, 0, 0] }]
+  }),
+
+  CIRCLE: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Circle',
+    parts: [{ type: 'Circle', position: [0, 0, 0], scale: [1, 1, 1], color, rotation: [-Math.PI / 2, 0, 0] }]
+  }),
+
   GRID: (color = '#475569') => ({
     type: 'Mesh',
     name: 'Grid',
-    parts: [{ type: 'Plane', position: [0, 0, 0], scale: [2, 2, 1], color, segments: 10, rotation: [-Math.PI / 2, 0, 0] }]
+    parts: [{ type: 'Plane', position: [0, 0, 0], scale: [5, 5, 1], color, wireframe: true, rotation: [-Math.PI / 2, 0, 0] }]
   }),
 
   MONKEY: (color = '#8b5cf6') => ({
@@ -54,10 +118,16 @@ export const MODEL_TEMPLATES = {
       { type: 'Sphere', position: [0, 0, 0], scale: [0.6, 0.5, 0.4], color }, // Head
       { type: 'Sphere', position: [-0.4, 0.1, 0.1], scale: [0.2, 0.2, 0.1], color }, // Ear L
       { type: 'Sphere', position: [0.4, 0.1, 0.1], scale: [0.2, 0.2, 0.1], color }, // Ear R
-      { type: 'Sphere', position: [-0.15, 0.1, 0.3], scale: [0.1, 0.1, 0.1], color: '#fff', name: 'EyeL' }, // Eye L
-      { type: 'Sphere', position: [0.15, 0.1, 0.3], scale: [0.1, 0.1, 0.1], color: '#fff', name: 'EyeR' }, // Eye R
+      { type: 'Sphere', position: [-0.15, 0.1, 0.3], scale: [0.1, 0.1, 0.1], color: '#fff', name: 'EyeL' },
+      { type: 'Sphere', position: [0.15, 0.1, 0.3], scale: [0.1, 0.1, 0.1], color: '#fff', name: 'EyeR' },
       { type: 'Box', position: [0, -0.1, 0.3], scale: [0.2, 0.1, 0.2], color: '#d1d5db' }, // Snout
     ]
+  }),
+
+  TEXT: (color = '#ffffff') => ({
+    type: 'Mesh',
+    name: '3D Text',
+    parts: [{ type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color }]
   }),
 
   // Curve Objects
@@ -70,7 +140,7 @@ export const MODEL_TEMPLATES = {
   BEZIER_CIRCLE: (color = '#00f2fe') => ({
     type: 'Curve',
     name: 'Bezier Circle',
-    parts: [{ type: 'Torus', position: [0, 0, 0], scale: [1, 0.02, 1], color }]
+    parts: [{ type: 'Torus', position: [0, 0, 0], scale: [1, 0.02, 1], color, rotation: [-Math.PI / 2, 0, 0] }]
   }),
 
   PATH: (color = '#00f2fe') => ({
@@ -93,13 +163,6 @@ export const MODEL_TEMPLATES = {
     parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, isMeta: true }]
   }),
 
-  // Text
-  TEXT: (color = '#ffffff') => ({
-    type: 'Mesh',
-    name: 'Text',
-    parts: [{ type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color, isText: true }]
-  }),
-
   // Light Objects
   LIGHT_POINT: (color = '#ffcc00') => ({
     type: 'Light',
@@ -110,7 +173,7 @@ export const MODEL_TEMPLATES = {
   LIGHT_SUN: (color = '#ffffff') => ({
     type: 'Light',
     name: 'Sun Light',
-    parts: [{ type: 'Cylinder', position: [0, 2, 0], scale: [0.05, 1, 0.05], color, emissive: color, emissiveIntensity: 1 }]
+    parts: [{ type: 'Cylinder', position: [0, 0, 0], scale: [0.05, 1, 0.05], color, emissive: color, emissiveIntensity: 1 }]
   }),
 
   LIGHT_SPOT: (color = '#ffffff') => ({
@@ -125,11 +188,21 @@ export const MODEL_TEMPLATES = {
     parts: [{ type: 'Plane', position: [0, 2, 0], scale: [1, 1, 1], color, emissive: color, emissiveIntensity: 0.8 }]
   }),
 
-  // Empty
+  // Empty & Utilities
   EMPTY_PLAIN: () => ({
     type: 'Empty',
     name: 'Empty',
     parts: [{ type: 'Box', position: [0, 0, 0], scale: [0.1, 0.1, 0.1], color: '#ffffff', opacity: 0.5, wireframe: true }]
+  }),
+
+  EMPTY_AXES: () => ({
+    type: 'Empty',
+    name: 'Empty Axes',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [1, 0.01, 0.01], color: '#ff0000' },
+      { type: 'Box', position: [0, 0, 0], scale: [0.01, 1, 0.01], color: '#00ff00' },
+      { type: 'Box', position: [0, 0, 0], scale: [0.01, 0.01, 1], color: '#0000ff' },
+    ]
   }),
 
   CAMERA: () => ({
@@ -145,33 +218,30 @@ export const MODEL_TEMPLATES = {
 
 /**
  * assembleFromAI: Parses a text prompt into a set of primitive instructions.
- * For now, this uses a robust mapping to simulate the "Exact" construction
- * the user expects, ensuring it's always editable.
  */
 export const assembleFromAI = (prompt, color = '#8b5cf6') => {
   const p = prompt.toLowerCase();
   let parts = [];
-  let name = "AI Construction";
+  let name = 'AI Construction';
 
   if (p.includes('robot')) {
-    name = "Exact Robot";
+    name = 'Exact Robot';
     parts = MODEL_TEMPLATES.ROBOT(color).parts;
   } else if (p.includes('table')) {
-    name = "Exact Table";
+    name = 'Exact Table';
     parts = MODEL_TEMPLATES.TABLE(color).parts;
   } else if (p.includes('chair')) {
-    name = "Exact Chair";
+    name = 'Exact Chair';
     parts = MODEL_TEMPLATES.CHAIR(color).parts;
   } else if (p.includes('pillar') || p.includes('column')) {
-    name = "Exact Column";
+    name = 'Exact Column';
     parts = [
       { type: 'Cylinder', position: [0, 1, 0], scale: [0.5, 2, 0.5], color },
       { type: 'Box', position: [0, 0.1, 0], scale: [0.8, 0.2, 0.8], color },
       { type: 'Box', position: [0, 2, 0], scale: [0.8, 0.2, 0.8], color },
     ];
   } else {
-    // Basic Fallback: A clever assembly of a "Model"
-    name = "Custom Assembly";
+    name = 'Custom Assembly';
     parts = [
       { type: 'Box', position: [0, 0.5, 0], scale: [1, 1, 1], color },
       { type: 'Sphere', position: [0, 1.25, 0], scale: [0.5, 0.5, 0.5], color: '#ffffff' }
@@ -185,8 +255,8 @@ export const assembleFromAI = (prompt, color = '#8b5cf6') => {
     parts,
     position: [0, 0, 0],
     scale: [1, 1, 1],
-    animation: p.includes('walk') ? { type: 'Walk', speed: 2 } : 
-               p.includes('wave') ? { type: 'Wave', speed: 3 } : 
+    animation: p.includes('walk') ? { type: 'Walk', speed: 2 } :
+               p.includes('wave') ? { type: 'Wave', speed: 3 } :
                { type: 'Idle', speed: 1 }
   };
 };
