@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Monitor, Apple, Terminal, Download as DownloadIcon, Box, ArrowRight } from 'lucide-react';
 import './Download.css';
 
@@ -8,6 +8,16 @@ const Download = () => {
     { name: 'macOS', icon: <Apple size={32} />, version: 'v1.4.2 (Universal)', tag: 'Intel & Silicon' },
     { name: 'Linux', icon: <Terminal size={32} />, version: 'v1.4.2 (AppImage)', tag: 'glibc 2.27+' },
   ];
+
+  const handleDownload = (os) => {
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = '/aetherforge_setup.exe'; // Using the dummy file we created
+    link.download = `AetherForge_${os.name}_Setup.exe`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="download-page">
@@ -25,7 +35,7 @@ const Download = () => {
               <div className="os-icon">{os.icon}</div>
               <h3>AetherForge for {os.name}</h3>
               <p className="os-version">{os.version}</p>
-              <button className="btn-primary">
+              <button className="btn-primary" onClick={() => handleDownload(os)}>
                 <DownloadIcon size={18} /> Download Installer
               </button>
             </div>
