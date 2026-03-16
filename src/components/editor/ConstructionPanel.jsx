@@ -79,27 +79,52 @@ const ConstructionPanel = ({
       <div className="construction-section">
         <div className="section-label">Mesh Primitives</div>
         <div className="template-grid">
-          {['PLANE', 'Box (Cube)', 'CIRCLE', 'SPHERE', 'ICOSPHERE', 'Cylinder', 'Cone', 'Torus', 'GRID', 'MONKEY'].map(key => {
-            const templateKey = key.includes('(') ? key.split(' ')[0].toUpperCase() : key.toUpperCase();
-            return (
-              <button key={key} className="template-card" onClick={() => handleAddExact(templateKey)}>
-                <BoxIcon size={20} className="template-icon" />
-                <span style={{ fontSize: '0.65rem' }}>{key}</span>
-                <Plus size={12} className="add-plus" />
-              </button>
-            );
-          })}
+          {['PLANE', 'CUBE', 'CIRCLE', 'UVSPHERE', 'ICOSPHERE', 'CYLINDER', 'CONE', 'TORUS', 'GRID', 'MONKEY'].map(key => (
+            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
+              <BoxIcon size={20} className="template-icon" />
+              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
+              <Plus size={12} className="add-plus" />
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="construction-section">
         <div className="section-label">Curves & Text</div>
         <div className="template-grid">
-          <button className="template-card" onClick={() => handleAddExact('TEXT')}>
-            <Palette size={20} className="template-icon" />
-            <span style={{ fontSize: '0.65rem' }}>3D TEXT</span>
-            <Plus size={12} className="add-plus" />
-          </button>
+          {['BEZIER_CURVE', 'BEZIER_CIRCLE', 'TEXT'].map(key => (
+            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
+              <Palette size={20} className="template-icon" />
+              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
+              <Plus size={12} className="add-plus" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="construction-section">
+        <div className="section-label">Lights & Camera</div>
+        <div className="template-grid">
+          {['LIGHT_POINT', 'LIGHT_SUN', 'CAMERA'].map(key => (
+            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
+              <BoxIcon size={20} className="template-icon" />
+              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
+              <Plus size={12} className="add-plus" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="construction-section">
+        <div className="section-label">Utilities</div>
+        <div className="template-grid">
+          {['EMPTY_AXES'].map(key => (
+            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
+              <Layers size={20} className="template-icon" />
+              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
+              <Plus size={12} className="add-plus" />
+            </button>
+          ))}
         </div>
       </div>
 

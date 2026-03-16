@@ -114,7 +114,101 @@ export const MODEL_TEMPLATES = {
     type: 'Mesh',
     name: '3D Text',
     parts: [
-      { type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color } // Placeholder for actual text geometry
+      { type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color }
+    ]
+  }),
+
+  CUBE: (color = '#8b5cf6') => ({
+    type: 'Mesh',
+    name: 'Cube',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [1, 1, 1], color }
+    ]
+  }),
+
+  UVSPHERE: (color = '#ffffff') => ({
+    type: 'Mesh',
+    name: 'UV Sphere',
+    parts: [
+      { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 32 }
+    ]
+  }),
+
+  CYLINDER: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Cylinder',
+    parts: [
+      { type: 'Cylinder', position: [0, 0, 0], scale: [1, 1, 1], color }
+    ]
+  }),
+
+  CONE: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Cone',
+    parts: [
+      { type: 'Cone', position: [0, 0, 0], scale: [1, 1, 1], color }
+    ]
+  }),
+
+  TORUS: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Torus',
+    parts: [
+      { type: 'Torus', position: [0, 0, 0], scale: [1, 1, 1], color }
+    ]
+  }),
+
+  // Curve Objects (Visual Placeholders)
+  BEZIER_CURVE: (color = '#00f2fe') => ({
+    type: 'Curve',
+    name: 'Bezier Curve',
+    parts: [
+      { type: 'Torus', position: [0, 0, 0], scale: [1, 0.05, 1], color, rotation: [0, 0, 0] } // Mockup
+    ]
+  }),
+
+  BEZIER_CIRCLE: (color = '#00f2fe') => ({
+    type: 'Curve',
+    name: 'Bezier Circle',
+    parts: [
+      { type: 'Torus', position: [0, 0, 0], scale: [1, 0.02, 1], color, rotation: [-Math.PI / 2, 0, 0] }
+    ]
+  }),
+
+  // Light Objects
+  LIGHT_POINT: (color = '#ffcc00') => ({
+    type: 'Light',
+    name: 'Point Light',
+    parts: [
+      { type: 'Sphere', position: [0, 0, 0], scale: [0.1, 0.1, 0.1], color, emissive: color, emissiveIntensity: 2 }
+    ]
+  }),
+
+  LIGHT_SUN: (color = '#ffffff') => ({
+    type: 'Light',
+    name: 'Sun Light',
+    parts: [
+      { type: 'Cylinder', position: [0, 0, 0], scale: [0.05, 1, 0.05], color, emissive: color, emissiveIntensity: 1 }
+    ]
+  }),
+
+  // Empty & Utilities
+  EMPTY_AXES: () => ({
+    type: 'Empty',
+    name: 'Empty Axes',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [1, 0.01, 0.01], color: '#fff' },
+      { type: 'Box', position: [0, 0, 0], scale: [0.01, 1, 0.01], color: '#fff' },
+      { type: 'Box', position: [0, 0, 0], scale: [0.01, 0.01, 1], color: '#fff' },
+    ]
+  }),
+
+  CAMERA: () => ({
+    type: 'Camera',
+    name: 'Camera',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [0.5, 0.3, 0.4], color: '#444' },
+      { type: 'Cone', position: [0, 0, 0.3], scale: [0.2, 0.3, 0.2], color: '#222', rotation: [Math.PI / 2, 0, 0] }
     ]
   })
 };
