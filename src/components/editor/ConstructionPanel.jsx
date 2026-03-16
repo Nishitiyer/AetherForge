@@ -51,7 +51,7 @@ const ConstructionPanel = ({
     <div className="construction-panel hologram-panel">
       <div className="property-tabs">
         <button 
-          className={`prop-tab ${activeTab === 'Add' ? 'active' : ''}`}
+          className={`prop-tab glitch-on-hover ${activeTab === 'Add' ? 'active' : ''}`}
           onClick={() => setActiveTab('Add')}
           title="Add Objects"
         ><Plus size={16} /></button>
@@ -113,7 +113,7 @@ const ConstructionPanel = ({
               </div>
               <div className="template-grid">
                 {CATEGORIES[activeCategory].map(key => (
-                  <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
+                  <button key={key} className="template-card glitch-on-hover" onClick={() => handleAddExact(key)}>
                     <BoxIcon size={18} className="template-icon" />
                     <span style={{ fontSize: '0.6rem' }}>{key.replace('_', ' ')}</span>
                   </button>
@@ -203,8 +203,8 @@ const ConstructionPanel = ({
         )}
       </div>
 
-      <div className="construction-footer">
-        <p>Pro Suite v2.0 - Blender Alternative Edition</p>
+      <div className="construction-footer glow-text-cyan">
+        <p>AETHERFORGE_v2.0 // HOLOGRAPGIC_SYS_ACTIVE</p>
       </div>
     </div>
   );

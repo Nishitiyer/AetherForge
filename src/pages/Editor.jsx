@@ -74,28 +74,45 @@ const Editor = () => {
         onIsltoggle={(active) => setIsSignPanelOpen(active)}
       />
       
+      <div className="aether-hud-scanlines"></div>
+
       <div className="editor-main-area">
-        <EditorSidebar activeMode={activeMode} />
+        <EditorSidebar />
         
         <div className="editor-center-column">
-          <Viewport 
-            sceneObjects={sceneObjects} 
-            setSceneObjects={setSceneObjects} 
-            selectedObjectId={selectedObjectId}
-            setSelectedObjectId={setSelectedObjectId}
-            selectedPartIndex={selectedPartIndex}
-            setSelectedPartIndex={setSelectedPartIndex}
-            transformMode={transformMode}
-            setTransformMode={setTransformMode}
-          />
+          <div className="viewport-container relative hologram-panel">
+            <Viewport 
+              sceneObjects={sceneObjects} 
+              setSceneObjects={setSceneObjects}
+              selectedObjectId={selectedObjectId}
+              setSelectedObjectId={setSelectedObjectId}
+              selectedPartIndex={selectedPartIndex}
+              setSelectedPartIndex={setSelectedPartIndex}
+              transformMode={transformMode}
+              setTransformMode={setTransformMode}
+            />
+            
+            <div className="viewport-hud">
+              <div className="hud-top-left hud-data-flicker">
+                SEC_AUTH: VERIFIED // AF_PRO_v2
+              </div>
+              <div className="hud-top-right">
+                MODE: {activeMode.toUpperCase()}
+              </div>
+              <div className="hud-bottom-left">
+                OBJ_COUNT: {sceneObjects.length} // GRID_SYNC: ACTIVE
+              </div>
+              <div className="hud-bottom-right hud-data-flicker">
+                LATENCY: 12ms // BUFFER: 100%
+              </div>
+            </div>
 
-          <button 
-            className="accessibility-toggle-btn"
-            onClick={() => setIsSignPanelOpen(true)}
-            title="Enable Sign Language Control"
-          >
-            <Camera size={20} />
-          </button>
+            {isSignPanelOpen && (
+              <div className="sign-language-overlay animate-in">
+                <SignLanguagePanel onClose={() => setIsSignPanelOpen(false)} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="editor-right-column">
