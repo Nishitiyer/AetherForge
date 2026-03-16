@@ -38,6 +38,11 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
+// Health check and root route
+app.get('/', (req, res) => {
+  res.json({ status: 'AetherForge Server is Running', version: '1.0.0' });
+});
+
 // Initialize DB if not exists
 if (!fs.existsSync(DB_PATH)) {
   fs.writeFileSync(DB_PATH, JSON.stringify({ users: [] }, null, 2));
