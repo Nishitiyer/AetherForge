@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ModelFactory.js
  * Programmatic construction of 3D models using Three.js primitives.
  * This ensures "exact" models rather than AI-generated approximations.
@@ -55,6 +55,22 @@ export const MODEL_TEMPLATES = {
       scale: [1, 0.2, 0.2],
       color
     }))
+  }),
+
+  SPHERE: (color = '#ffffff') => ({
+    type: 'Sphere',
+    name: 'Sphere',
+    parts: [
+      { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color }
+    ]
+  }),
+
+  ICOSPHERE: (color = '#00f2fe') => ({
+    type: 'IcoSphere',
+    name: 'IcoSphere',
+    parts: [
+      { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 2 }
+    ]
   })
 };
 

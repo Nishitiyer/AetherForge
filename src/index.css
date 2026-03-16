@@ -93,3 +93,46 @@ button {
 .btn-secondary:hover {
   background-color: var(--color-bg-tertiary);
 }
+
+/* Sci-Fi Hologram Animations */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes flicker {
+  0% { opacity: 0.95; }
+  5% { opacity: 0.85; }
+  10% { opacity: 0.95; }
+  15% { opacity: 0.9; }
+  25% { opacity: 0.95; }
+  30% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+.hologram-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 242, 254, 0.2) !important;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.1) !important;
+  animation: flicker 4s infinite;
+}
+
+.hologram-panel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(0, 242, 254, 0.2);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+  animation: scanline 6s linear infinite;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.glow-text-cyan {
+  color: var(--color-accent);
+  text-shadow: 0 0 10px var(--color-accent);
+}

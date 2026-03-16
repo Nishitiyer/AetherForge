@@ -30,18 +30,22 @@ const ConstructionPanel = ({
   };
 
   return (
-    <div className="construction-panel">
+    <div className="construction-panel hologram-panel">
       <div className="panel-header">
         <Hammer size={20} className="text-primary" />
         <h2>Exact Constructor</h2>
       </div>
 
       <div className="construction-section">
-        <div className="section-label">Transform Mode</div>
+        <div className="section-label">Construction Tools</div>
         <div className="transform-toggles">
           <button className={`mode-btn ${transformMode === 'translate' ? 'active' : ''}`} onClick={() => setTransformMode('translate')}>Move</button>
           <button className={`mode-btn ${transformMode === 'rotate' ? 'active' : ''}`} onClick={() => setTransformMode('rotate')}>Rotate</button>
           <button className={`mode-btn ${transformMode === 'scale' ? 'active' : ''}`} onClick={() => setTransformMode('scale')}>Scale</button>
+        </div>
+        <div className="transform-toggles" style={{ marginTop: '0.5rem' }}>
+          <button className={`mode-btn ${transformMode === 'pinch' ? 'active' : ''}`} onClick={() => setTransformMode('pinch')}>Pinch</button>
+          <button className={`mode-btn ${transformMode === 'grab' ? 'active' : ''}`} onClick={() => setTransformMode('grab')}>Grab</button>
         </div>
       </div>
 

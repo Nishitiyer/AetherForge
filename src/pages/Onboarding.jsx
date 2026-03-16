@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Gamepad2, Film, LayoutDashboard, ChevronRight } from 'lucide-react';
 import './Onboarding.css';
@@ -12,6 +12,8 @@ const Onboarding = () => {
   });
   
   const navigate = useNavigate();
+
+  // 'isl asl' clarification: Ensuring AI Assistant labeling is prominent
 
   const handleSelect = (category, value) => {
     setSelections({ ...selections, [category]: value });
