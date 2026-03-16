@@ -69,15 +69,37 @@ const ConstructionPanel = ({
       </div>
 
       <div className="construction-section">
-        <div className="section-label">Exact Templates</div>
+        <div className="section-label">Render Settings</div>
+        <div className="toggle-row">
+          <span>Enable Shadows</span>
+          <input type="checkbox" defaultChecked />
+        </div>
+      </div>
+
+      <div className="construction-section">
+        <div className="section-label">Mesh Primitives</div>
         <div className="template-grid">
-          {Object.keys(MODEL_TEMPLATES).map(key => (
-            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
-              <BoxIcon size={24} className="template-icon" />
-              <span>{key}</span>
-              <Plus size={14} className="add-plus" />
-            </button>
-          ))}
+          {['PLANE', 'Box (Cube)', 'CIRCLE', 'SPHERE', 'ICOSPHERE', 'Cylinder', 'Cone', 'Torus', 'GRID', 'MONKEY'].map(key => {
+            const templateKey = key.includes('(') ? key.split(' ')[0].toUpperCase() : key.toUpperCase();
+            return (
+              <button key={key} className="template-card" onClick={() => handleAddExact(templateKey)}>
+                <BoxIcon size={20} className="template-icon" />
+                <span style={{ fontSize: '0.65rem' }}>{key}</span>
+                <Plus size={12} className="add-plus" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="construction-section">
+        <div className="section-label">Curves & Text</div>
+        <div className="template-grid">
+          <button className="template-card" onClick={() => handleAddExact('TEXT')}>
+            <Palette size={20} className="template-icon" />
+            <span style={{ fontSize: '0.65rem' }}>3D TEXT</span>
+            <Plus size={12} className="add-plus" />
+          </button>
         </div>
       </div>
 

@@ -48,7 +48,12 @@ const Scene = ({
       <OrbitControls makeDefault enabled={!selectedObjectId} />
       
       <Suspense fallback={null}>
-        <Stage intensity={0.5} environment="city" shadows={{ type: 'contact', opacity: 0.2 }} adjustCamera>
+        <Stage 
+          intensity={0.6} 
+          environment="studio" 
+          shadows={{ type: 'contact', opacity: 0.4, blur: 2 }} 
+          adjustCamera
+        >
            {sceneObjects.map((obj) => (
              <group 
                key={obj.id} 
@@ -66,6 +71,8 @@ const Scene = ({
                        position={actualPart.position} 
                        scale={actualPart.scale}
                        rotation={actualPart.rotation || [0, 0, 0]}
+                       castShadow
+                       receiveShadow
                        onClick={(e) => { 
                          e.stopPropagation(); 
                          setSelectedObjectId(obj.id); 
@@ -77,10 +84,13 @@ const Scene = ({
                        {actualPart.type === 'Cylinder' && <cylinderGeometry args={[1, 1, 1, 32]} />}
                        {actualPart.type === 'Cone' && <coneGeometry args={[1, 1, 32]} />}
                        {actualPart.type === 'Torus' && <torusGeometry args={[1, 0.4, 16, 100]} />}
+                       {actualPart.type === 'Plane' && <planeGeometry args={[1, 1]} />}
+                       {actualPart.type === 'Circle' && <circleGeometry args={[1, 32]} />}
                        <meshStandardMaterial 
                          color={actualPart.color} 
-                         roughness={0.2} 
-                         metalness={0.7} 
+                         roughness={0.15} 
+                         metalness={0.8} 
+                         wireframe={actualPart.wireframe}
                          emissive={isSelected ? '#4f46e5' : '#000000'}
                          emissiveIntensity={isSelected ? 0.3 : 0}
                        />
