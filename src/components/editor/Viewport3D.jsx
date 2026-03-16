@@ -1,4 +1,4 @@
-﻿import React, { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, Stage, Environment, ContactShadows, TransformControls } from '@react-three/drei';
 import { applyAnimation } from '../../utils/ModelFactory.jsx';
@@ -85,15 +85,17 @@ const Scene = ({
                          emissiveIntensity={isSelected ? 0.3 : 0}
                        />
                      </mesh>
-                     {isSelected && (
-                       <TransformControls 
-                         mode={transformMode}
-                         onMouseUp={() => {
-                           // In a real app we'd grab the new position from the ref
-                           // For this demo, we'll assume the state updates are handled via interaction
-                         }}
-                       />
-                     )}
+                     {isSelected && ['translate', 'rotate', 'scale'].includes(transformMode) ? (
+                        <TransformControls 
+                          mode={transformMode}
+                          onMouseUp={() => {}}
+                        />
+                      ) : isSelected && ['pinch', 'grab'].includes(transformMode) ? (
+                        <mesh position={actualPart.position}>
+                          <sphereGeometry args={[actualPart.scale[0] * 1.5, 32, 32]} />
+                          <meshBasicMaterial color="#00f2fe" wireframe transparent opacity={0.3} />
+                        </mesh>
+                      ) : null}
                    </React.Fragment>
                  );
                })}
