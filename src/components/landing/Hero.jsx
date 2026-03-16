@@ -1,4 +1,5 @@
-﻿import { Link } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import { Sparkles, Play, Box as BoxIcon } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stage, Grid, Environment, ContactShadows } from '@react-three/drei';
@@ -47,16 +48,18 @@ const Hero = () => {
         {/* Interactive 3D Showcase */}
         <div className="hero-showcase">
           <Canvas camera={{ position: [4, 4, 4], fov: 40 }}>
-            <OrbitControls autoRotate enableZoom={false} autoRotateSpeed={0.5} />
-            <Stage intensity={0.5} environment="city" adjustCamera>
-              <mesh>
-                <boxGeometry args={[1.5, 1.5, 1.5]} />
-                <meshStandardMaterial color="#8b5cf6" roughness={0.1} metalness={1} />
-              </mesh>
-            </Stage>
-            <Grid infiniteGrid fadeDistance={20} cellColor="#4f46e5" sectionColor="#1e293b" />
-            <Environment preset="night" />
-            <ContactShadows position={[0, -1, 0]} opacity={0.4} scale={10} blur={2} />
+            <Suspense fallback={null}>
+              <OrbitControls autoRotate enableZoom={false} autoRotateSpeed={0.5} />
+              <Stage intensity={0.5} environment="city" adjustCamera>
+                <mesh>
+                  <boxGeometry args={[1.5, 1.5, 1.5]} />
+                  <meshStandardMaterial color="#8b5cf6" roughness={0.1} metalness={1} />
+                </mesh>
+              </Stage>
+              <Grid infiniteGrid fadeDistance={20} cellColor="#4f46e5" sectionColor="#1e293b" />
+              <Environment preset="night" />
+              <ContactShadows position={[0, -1, 0]} opacity={0.4} scale={10} blur={2} />
+            </Suspense>
           </Canvas>
           <div className="showcase-label">
             <BoxIcon size={14} /> LIVE 3D ENGINE

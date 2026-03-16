@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing.jsx';
 import Auth from './pages/Auth.jsx';
@@ -18,9 +18,9 @@ import { ChatProvider } from './context/ChatContext.jsx';
 function App() {
   try {
     return (
-      <BrowserRouter>
-        <ChatProvider>
-          <SessionProvider>
+      <ChatProvider>
+        <SessionProvider>
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
@@ -35,9 +35,9 @@ function App() {
               <Route path="/admin" element={<AdminPortal />} />
               <Route path="/creator" element={<CreatorPortal />} />
             </Routes>
-          </SessionProvider>
-        </ChatProvider>
-      </BrowserRouter>
+          </BrowserRouter>
+        </SessionProvider>
+      </ChatProvider>
     );
   } catch (err) {
     console.error('App Crash:', err);
