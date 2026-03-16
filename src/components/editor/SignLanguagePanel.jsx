@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Camera, Wand2, X, Languages } from 'lucide-react';
 import './SignLanguagePanel.css';
 
@@ -6,16 +6,16 @@ const SignLanguagePanel = ({ isOpen, onClose, onTranslation }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [status, setStatus] = useState('Initializing Hand Tracking...');
+  const [hasPermission, setHasPermission] = useState(false);
+  const [status, setStatus] = useState('Waiting for permission...');
   const [mode, setMode] = useState('ASL'); // ASL or ISL
   const [lastGesture, setLastGesture] = useState(null);
   const [gestureCooldown, setGestureCooldown] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      loadMediaPipe();
-    } else {
+    if (!isOpen) {
       stopCamera();
+      setHasPermission(false);
     }
   }, [isOpen]);
 
@@ -170,12 +170,28 @@ const SignLanguagePanel = ({ isOpen, onClose, onTranslation }) => {
       </div>
 
       <div className="camera-viewport">
-        <video ref={videoRef} autoPlay playsInline muted className={isCameraActive ? 'active' : ''}></video>
-        <canvas ref={canvasRef} width="640" height="480" className="tracking-canvas"></canvas>
-        {!isCameraActive && <div className="camera-placeholder"><Camera size={48} opacity={0.2} /></div>}
-        <div className="gesture-overlay">
-          <div className="tracking-skeleton"></div>
-        </div>
+        {!hasPermission ? (
+          <div className="permission-overlay">
+            <Camera size={48} className="text-primary mb-4" />
+            <h3>Camera Permission Required</h3>
+            <p>AetherForge uses your camera for real-time sign language translation. No video data is ever stored.</p>
+            <button 
+              className="btn-primary mt-4" 
+              onClick={() => { setHasPermission(true); loadMediaPipe(); }}
+            >
+              Enable Sign Assist
+            </button>
+          </div>
+        ) : (
+          <>
+            <video ref={videoRef} autoPlay playsInline muted className={isCameraActive ? 'active' : ''}></video>
+            <canvas ref={canvasRef} width="640" height="480" className="tracking-canvas"></canvas>
+            {!isCameraActive && <div className="camera-placeholder"><Camera size={48} opacity={0.2} /></div>}
+            <div className="gesture-overlay">
+              <div className="tracking-skeleton"></div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="panel-status">
