@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Camera, Lock, Clock } from 'lucide-react';
 import EditorSidebar from '../components/editor/EditorSidebar.jsx';
 import EditorToolbar from '../components/editor/EditorToolbar.jsx';
@@ -91,11 +91,12 @@ const Editor = () => {
         <EditorSidebar activeMode={activeMode} />
         
         <button 
-          className="accessibility-toggle-btn"
+          className="accessibility-toggle-btn hologram-panel animate-pulse-glow"
           onClick={() => setIsSignPanelOpen(true)}
-          title="Sign Language Assistant"
+          title="Sign Language Assistant (ASL/ISL)"
         >
-          <Camera size={20} />
+          <Camera size={24} />
+          <span className="toggle-label">SIGN ASSIST</span>
         </button>
 
         <div className="editor-voice-assistant">

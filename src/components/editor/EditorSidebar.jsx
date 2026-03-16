@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { MousePointer2, Move, RotateCcw, Maximize, GitMerge, Edit3, Type, BoxSelect } from 'lucide-react';
 import './EditorSidebar.css';
 
 const EditorSidebar = ({ activeMode }) => {
   return (
-    <aside className="editor-sidebar">
+    <aside className="editor-sidebar hologram-panel">
       <div className="tool-group">
         <button className="tool-btn active" title="Select (V)"><MousePointer2 size={18} /></button>
         <button className="tool-btn" title="Box Select (B)"><BoxSelect size={18} /></button>
