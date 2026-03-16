@@ -7,6 +7,42 @@
   overflow: hidden;
 }
 
+.workspace-tabs-bar {
+  display: flex;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 0 1rem;
+  gap: 0.5rem;
+  height: 32px;
+  align-items: center;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.workspace-tab {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0 0.75rem;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 4px 4px 0 0;
+}
+
+.workspace-tab:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+
+.workspace-tab.active {
+  color: #fff;
+  background: #333;
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
 .accessibility-toggle-btn {
   position: absolute;
   bottom: 24px;

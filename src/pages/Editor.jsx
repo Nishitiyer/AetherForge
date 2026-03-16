@@ -21,7 +21,8 @@ import { assembleFromAI } from '../utils/ModelFactory.jsx';
 import './Editor.css';
 
 const Editor = () => {
-  const [activeMode, setActiveMode] = useState('Animation');
+  const [activeWorkspace, setActiveWorkspace] = useState('Layout');
+  const [activeMode, setActiveMode] = useState('Object Mode'); // Object, Edit, Sculpt
   const [rightPanel, setRightPanel] = useState('AI');
   const [activeModal, setActiveModal] = useState(null);
   const [selectedObjectId, setSelectedObjectId] = useState(null);
@@ -30,6 +31,11 @@ const Editor = () => {
   const [sceneObjects, setSceneObjects] = useState([
     { id: 'initial-model', type: 'Model', position: [0, 0, 0], scale: [1, 1, 1], color: '#8b5cf6' }
   ]);
+
+  const workspaces = [
+    'Layout', 'Modeling', 'Sculpting', 'UV Editing', 'Texture Paint', 
+    'Shading', 'Animation', 'Rendering', 'Compositing', 'Geometry Nodes'
+  ];
   
   const { isExpired, isCreator, orbSettings } = useSession();
   const [isSignPanelOpen, setIsSignPanelOpen] = useState(false);
@@ -79,6 +85,24 @@ const Editor = () => {
   
   return (
     <div className="editor-layout" onMouseMove={handleMouseMove}>
+      <div className="workspace-tabs-bar">
+        {workspaces.map(ws => (
+          <button 
+            key={ws} 
+            className={`workspace-tab ${activeWorkspace === ws ? 'active' : ''}`}
+            onClick={() => {
+              setActiveWorkspace(ws);
+              // Auto-set mode based on workspace
+              if (ws === 'Sculpting') setActiveMode('Sculpt Mode');
+              else if (ws === 'Modeling') setActiveMode('Edit Mode');
+              else setActiveMode('Object Mode');
+            }}
+          >
+            {ws}
+          </button>
+        ))}
+      </div>
+
       <EditorToolbar 
         activeMode={activeMode} 
         setActiveMode={setActiveMode} 

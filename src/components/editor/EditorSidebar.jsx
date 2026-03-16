@@ -1,10 +1,14 @@
 import React from 'react';
-import { MousePointer2, Move, RotateCcw, Maximize, GitMerge, Edit3, Type, BoxSelect } from 'lucide-react';
+import { 
+  MousePointer2, Move, RotateCcw, Maximize, GitMerge, Edit3, Type, 
+  BoxSelect, Eraser, Scissors, LassoSelect, Wand2, Hand, Fingerprint
+} from 'lucide-react';
 import './EditorSidebar.css';
 
 const EditorSidebar = ({ activeMode }) => {
   return (
     <aside className="editor-sidebar hologram-panel">
+      {/* Transformation Tools (Always available or context-sensitive) */}
       <div className="tool-group">
         <button className="tool-btn active" title="Select (V)"><MousePointer2 size={18} /></button>
         <button className="tool-btn" title="Box Select (B)"><BoxSelect size={18} /></button>
@@ -20,19 +24,33 @@ const EditorSidebar = ({ activeMode }) => {
 
       <div className="sidebar-divider"></div>
 
+      {/* Mode Specific Tools */}
       <div className="tool-group">
-        {activeMode === 'Model' && (
+        {activeMode === 'Edit Mode' && (
           <>
             <button className="tool-btn" title="Extrude (E)"><GitMerge size={18} /></button>
+            <button className="tool-btn" title="Inset (I)"><BoxSelect size={18} /></button>
             <button className="tool-btn" title="Bevel (Ctrl+B)"><Edit3 size={18} /></button>
             <button className="tool-btn" title="Loop Cut (Ctrl+R)"><Type size={18} /></button>
+            <button className="tool-btn" title="Knife (K)"><Scissors size={18} /></button>
           </>
         )}
         
-        {activeMode === 'Character' && (
+        {activeMode === 'Sculpt Mode' && (
           <>
-            <button className="tool-btn" title="Pose Mode"><GitMerge size={18} /></button>
-            <button className="tool-btn" title="Weight Paint"><Edit3 size={18} /></button>
+            <button className="tool-btn active" title="Draw (D)"><Edit3 size={18} /></button>
+            <button className="tool-btn" title="Clay"><Wand2 size={18} /></button>
+            <button className="tool-btn" title="Crease"><Scissors size={18} /></button>
+            <button className="tool-btn" title="Grab (G)"><Hand size={18} /></button>
+            <button className="tool-btn" title="Snake Hook"><Fingerprint size={18} /></button>
+            <button className="tool-btn" title="Smooth (Shift)"><Eraser size={18} /></button>
+          </>
+        )}
+
+        {activeMode === 'Object Mode' && (
+          <>
+            <button className="tool-btn" title="Annotate"><Edit3 size={18} /></button>
+            <button className="tool-btn" title="Measure"><Type size={18} /></button>
           </>
         )}
       </div>

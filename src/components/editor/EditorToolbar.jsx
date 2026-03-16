@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Home, Save, Download, Undo, Redo, Settings, Play, Image as ImageIcon } from 'lucide-react';
 import './EditorToolbar.css';
 
 const EditorToolbar = ({ activeMode, setActiveMode, onExportOpen, onSettingsOpen, onAddObject }) => {
-  const modes = ['Model', 'Character', 'Material', 'Animation', 'Environment'];
+  const modes = ['Object Mode', 'Edit Mode', 'Sculpt Mode', 'Vertex Paint', 'Weight Paint', 'Texture Paint'];
 
   return (
     <header className="editor-toolbar">
@@ -12,6 +12,9 @@ const EditorToolbar = ({ activeMode, setActiveMode, onExportOpen, onSettingsOpen
         <Link to="/dashboard" className="toolbar-brand">
           <Box className="brand-icon text-gradient" size={20} />
         </Link>
+        <div className="workspace-indicator">
+          <span>{activeMode.split(' ')[0]} Context</span>
+        </div>
         <div className="toolbar-divider"></div>
         <div className="toolbar-menu">
           <div className="menu-item">
@@ -41,16 +44,16 @@ const EditorToolbar = ({ activeMode, setActiveMode, onExportOpen, onSettingsOpen
       </div>
 
       <div className="toolbar-center">
-        <div className="mode-switcher">
-          {modes.map(mode => (
-            <button 
-              key={mode}
-              className={`mode-btn ${activeMode === mode ? 'active' : ''}`}
-              onClick={() => setActiveMode(mode)}
-            >
-              {mode}
-            </button>
-          ))}
+        <div className="mode-switcher-professional">
+          <select 
+            value={activeMode} 
+            onChange={(e) => setActiveMode(e.target.value)}
+            className="professional-mode-select"
+          >
+            {modes.map(mode => (
+              <option key={mode} value={mode}>{mode}</option>
+            ))}
+          </select>
         </div>
       </div>
 
