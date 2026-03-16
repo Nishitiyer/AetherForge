@@ -10,7 +10,9 @@ const CreatorPortal = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isCreator') === 'true');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try { return typeof window !== 'undefined' && localStorage.getItem('isCreator') === 'true'; } catch (e) { return false; }
+  });
   const [isSignPanelOpen, setIsSignPanelOpen] = useState(false);
   const { orbSettings, setOrbSettings } = useSession();
   const [voices, setVoices] = useState([]);

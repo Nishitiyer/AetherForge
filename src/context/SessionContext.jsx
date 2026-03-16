@@ -23,18 +23,30 @@ export const SessionProvider = ({ children }) => {
     voice: parseInt(getStorageItem('orbVoice', '0')) || 0
   });
 
-  const isCreator = localStorage.getItem('isCreator') === 'true';
+  const isCreator = getStorageItem('isCreator', 'false') === 'true';
 
   useEffect(() => {
     // Save settings
-    localStorage.setItem('orbName', orbSettings.name);
-    localStorage.setItem('orbColor', orbSettings.color);
-    localStorage.setItem('orbAnimation', orbSettings.animation);
-    localStorage.setItem('orbVoice', orbSettings.voice.toString());
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('orbName', orbSettings.name);
+        localStorage.setItem('orbColor', orbSettings.color);
+        localStorage.setItem('orbAnimation', orbSettings.animation);
+        localStorage.setItem('orbVoice', orbSettings.voice.toString());
+      }
+    } catch (e) {
+      console.warn('LocalStorage write failed:', e);
+    }
   }, [orbSettings]);
 
   useEffect(() => {
     if (isCreator) return;
+
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+    } catch (e) {
+      return;
+    }
 
     const today = new Date().toDateString();
     const lastSessionDate = localStorage.getItem('sessionDate');

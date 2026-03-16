@@ -1,11 +1,11 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(() => {
     try {
-      const saved = localStorage.getItem('chatHistory')
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('chatHistory') : null
       return saved ? JSON.parse(saved) : [{ id: 'default', name: 'New Session', messages: [] }]
     } catch (e) {
       console.error('Failed to parse chat history:', e)
@@ -15,7 +15,9 @@ export const ChatProvider = ({ children }) => {
   const [activeChatId, setActiveChatId] = useState('default');
 
   useEffect(() => {
-    localStorage.setItem('chatHistory', JSON.stringify(chats));
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('chatHistory', JSON.stringify(chats)); } catch (e) {}
+    }
   }, [chats]);
 
   const addChat = () => {
