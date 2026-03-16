@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Lock, Users, Mail, Clock, ChevronRight } from 'lucide-react';
 import './AdminPortal.css';
 
@@ -63,7 +63,7 @@ const AdminPortal = () => {
                   type="password" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   required 
                 />
               </div>
