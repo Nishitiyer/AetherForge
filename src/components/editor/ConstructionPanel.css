@@ -2,9 +2,46 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 1.5rem;
-  background: var(--color-surface);
-  border-right: 1px solid var(--glass-border);
+  background: var(--color-bg-secondary);
+  border-left: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.property-tabs {
+  display: flex;
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 40px;
+}
+
+.prop-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.prop-tab:hover {
+  color: var(--color-text);
+  background: rgba(255,255,255,0.05);
+}
+
+.prop-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background: var(--color-bg-secondary);
+}
+
+.property-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
 }
 
 .panel-header {
@@ -272,4 +309,31 @@
   border: none;
   background: transparent;
   cursor: pointer;
+}
+.add-modifier-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.modifier-card {
+  padding: 0.75rem !important;
+  min-height: 60px;
+}
+
+.modifier-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
 }

@@ -14,9 +14,19 @@ const ConstructionPanel = ({
   transformMode,
   setTransformMode
 }) => {
+  const [activeTab, setActiveTab] = useState('Add'); // Add, Modifiers, Object, Scene
+  const [showShadows, setShowShadows] = useState(true);
   const [selectedColor, setSelectedColor] = useState('#8b5cf6');
+  
   const selectedObject = sceneObjects.find(o => o.id === selectedObjectId);
   const selectedPart = selectedObject?.parts?.[selectedPartIndex] || (selectedPartIndex === null ? selectedObject : null);
+
+  const modifiers = [
+    { id: 'Array', icon: <Layers size={14} /> },
+    { id: 'Mirror', icon: <GitMerge size={14} /> },
+    { id: 'Solidify', icon: <Maximize size={14} /> },
+    { id: 'Subdivision', icon: <BoxIcon size={14} /> }
+  ];
 
   const handleAddExact = (templateKey) => {
     const newModel = createModel(templateKey, selectedColor);
@@ -31,10 +41,32 @@ const ConstructionPanel = ({
 
   return (
     <div className="construction-panel hologram-panel">
-      <div className="panel-header">
-        <Hammer size={20} className="text-primary" />
-        <h2>Exact Constructor</h2>
+      <div className="property-tabs">
+        <button 
+          className={`prop-tab ${activeTab === 'Add' ? 'active' : ''}`}
+          onClick={() => setActiveTab('Add')}
+          title="Add Objects"
+        ><Plus size={16} /></button>
+        <button 
+          className={`prop-tab ${activeTab === 'Modifiers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('Modifiers')}
+          title="Modifiers"
+        ><GitMerge size={16} /></button>
+        <button 
+          className={`prop-tab ${activeTab === 'Object' ? 'active' : ''}`}
+          onClick={() => setActiveTab('Object')}
+          title="Object Properties"
+        ><BoxIcon size={16} /></button>
+        <button 
+          className={`prop-tab ${activeTab === 'Scene' ? 'active' : ''}`}
+          onClick={() => setActiveTab('Scene')}
+          title="Render Settings"
+        ><Palette size={16} /></button>
       </div>
+
+      <div className="property-content">
+        {activeTab === 'Add' && (
+          <div className="add-workflow">
 
       <div className="construction-section">
         <div className="section-label">Construction Tools</div>
