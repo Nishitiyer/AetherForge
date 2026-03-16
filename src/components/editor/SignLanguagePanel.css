@@ -136,6 +136,31 @@
   100% { opacity: 0.4; }
 }
 
+.permission-overlay {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  background: rgba(10, 11, 14, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.permission-overlay h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.1rem;
+  color: #00f2fe;
+}
+
+.permission-overlay p {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
 .accessibility-info {
   font-size: 0.6rem;
   color: var(--color-text-muted);

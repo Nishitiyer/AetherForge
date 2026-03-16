@@ -20,6 +20,23 @@
   letter-spacing: -0.5px;
 }
 
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #00f2fe;
+}
+
 .construction-section {
   margin-bottom: 2.5rem;
 }
