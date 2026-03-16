@@ -1,15 +1,26 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const SessionContext = createContext();
 
 export const SessionProvider = ({ children }) => {
   const [sessionTime, setSessionTime] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
+  const getStorageItem = (key, fallback) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(key) || fallback;
+      }
+    } catch (e) {
+      console.warn('LocalStorage unavailable:', e);
+    }
+    return fallback;
+  };
+
   const [orbSettings, setOrbSettings] = useState({
-    name: localStorage.getItem('orbName') || 'Omni',
-    color: localStorage.getItem('orbColor') || '#8b5cf6',
-    animation: localStorage.getItem('orbAnimation') || 'Pulse',
-    voice: parseInt(localStorage.getItem('orbVoice')) || 0
+    name: getStorageItem('orbName', 'Omni'),
+    color: getStorageItem('orbColor', '#8b5cf6'),
+    animation: getStorageItem('orbAnimation', 'Pulse'),
+    voice: parseInt(getStorageItem('orbVoice', '0')) || 0
   });
 
   const isCreator = localStorage.getItem('isCreator') === 'true';
