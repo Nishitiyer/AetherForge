@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Lock, Users, Mail, Clock, ChevronRight } from 'lucide-react';
+import { Shield, Lock, Users, Mail, Clock, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './AdminPortal.css';
 
 const AdminPortal = () => {
@@ -96,7 +97,10 @@ const AdminPortal = () => {
       <main className="admin-main">
         <div className="glass-panel admin-table-container">
           <div className="table-header">
-            <h3>Registered Users</h3>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <h3>Registered Users</h3>
+              <Link to="/editor" className="hologram-btn">Launch Admin Suite</Link>
+            </div>
           </div>
           
           <table className="admin-table">

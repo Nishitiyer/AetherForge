@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box as BoxIcon, Hammer, Palette, Plus, Trash2, Layers } from 'lucide-react';
+import { Box as BoxIcon, Hammer, Palette, Plus, Trash2, Layers, GitMerge, Maximize } from 'lucide-react';
 import { MODEL_TEMPLATES, createModel } from '../../utils/ModelFactory.jsx';
 import './ConstructionPanel.css';
 
@@ -15,8 +15,16 @@ const ConstructionPanel = ({
   setTransformMode
 }) => {
   const [activeTab, setActiveTab] = useState('Add'); // Add, Modifiers, Object, Scene
+  const [activeCategory, setActiveCategory] = useState('Mesh');
   const [showShadows, setShowShadows] = useState(true);
   const [selectedColor, setSelectedColor] = useState('#8b5cf6');
+
+  const CATEGORIES = {
+    Mesh: ['PLANE', 'CUBE', 'CIRCLE', 'UVSPHERE', 'ICOSPHERE', 'CYLINDER', 'CONE', 'TORUS', 'GRID', 'MONKEY', 'TEXT'],
+    Curve: ['BEZIER_CURVE', 'BEZIER_CIRCLE', 'PATH'],
+    Light: ['LIGHT_POINT', 'LIGHT_SUN', 'LIGHT_SPOT', 'LIGHT_AREA'],
+    Other: ['METABALL', 'NURBS_SPHERE', 'EMPTY_PLAIN', 'CAMERA']
+  };
   
   const selectedObject = sceneObjects.find(o => o.id === selectedObjectId);
   const selectedPart = selectedObject?.parts?.[selectedPartIndex] || (selectedPartIndex === null ? selectedObject : null);
@@ -67,190 +75,136 @@ const ConstructionPanel = ({
       <div className="property-content">
         {activeTab === 'Add' && (
           <div className="add-workflow">
-
-      <div className="construction-section">
-        <div className="section-label">Construction Tools</div>
-        <div className="transform-toggles">
-          <button className={`mode-btn ${transformMode === 'translate' ? 'active' : ''}`} onClick={() => setTransformMode('translate')}>Move</button>
-          <button className={`mode-btn ${transformMode === 'rotate' ? 'active' : ''}`} onClick={() => setTransformMode('rotate')}>Rotate</button>
-          <button className={`mode-btn ${transformMode === 'scale' ? 'active' : ''}`} onClick={() => setTransformMode('scale')}>Scale</button>
-        </div>
-        <div className="transform-toggles" style={{ marginTop: '0.5rem' }}>
-          <button className={`mode-btn ${transformMode === 'pinch' ? 'active' : ''}`} onClick={() => setTransformMode('pinch')}>Pinch</button>
-          <button className={`mode-btn ${transformMode === 'grab' ? 'active' : ''}`} onClick={() => setTransformMode('grab')}>Grab</button>
-        </div>
-      </div>
-
-      <div className="construction-section">
-        <div className="section-label">Primitive Color</div>
-        <div className="color-picker-simple">
-          {['#8b5cf6', '#4f46e5', '#ec4899', '#8b4513', '#94a3b8', '#ffffff'].map(c => (
-            <button 
-              key={c} 
-              className={`color-chip ${selectedColor === c ? 'active' : ''}`}
-              style={{ background: c }}
-              onClick={() => setSelectedColor(c)}
-            />
-          ))}
-          <input 
-            type="color" 
-            value={selectedColor} 
-            onChange={(e) => setSelectedColor(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="construction-section">
-        <div className="section-label">Render Settings</div>
-        <div className="toggle-row">
-          <span>Enable Shadows</span>
-          <input type="checkbox" defaultChecked />
-        </div>
-      </div>
-
-      <div className="construction-section">
-        <div className="section-label">Mesh Primitives</div>
-        <div className="template-grid">
-          {['PLANE', 'CUBE', 'CIRCLE', 'UVSPHERE', 'ICOSPHERE', 'CYLINDER', 'CONE', 'TORUS', 'GRID', 'MONKEY'].map(key => (
-            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
-              <BoxIcon size={20} className="template-icon" />
-              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
-              <Plus size={12} className="add-plus" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="construction-section">
-        <div className="section-label">Curves & Text</div>
-        <div className="template-grid">
-          {['BEZIER_CURVE', 'BEZIER_CIRCLE', 'TEXT'].map(key => (
-            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
-              <Palette size={20} className="template-icon" />
-              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
-              <Plus size={12} className="add-plus" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="construction-section">
-        <div className="section-label">Lights & Camera</div>
-        <div className="template-grid">
-          {['LIGHT_POINT', 'LIGHT_SUN', 'CAMERA'].map(key => (
-            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
-              <BoxIcon size={20} className="template-icon" />
-              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
-              <Plus size={12} className="add-plus" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="construction-section">
-        <div className="section-label">Utilities</div>
-        <div className="template-grid">
-          {['EMPTY_AXES'].map(key => (
-            <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
-              <Layers size={20} className="template-icon" />
-              <span style={{ fontSize: '0.65rem' }}>{key.replace('_', ' ')}</span>
-              <Plus size={12} className="add-plus" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="construction-section scene-outliner">
-        <div className="section-label">Scene Hierarchy</div>
-        <div className="outliner-list">
-          {sceneObjects.map((obj, i) => (
-            <div key={obj.id} className="outliner-wrapper">
-              <div 
-                className={`outliner-item ${selectedObjectId === obj.id && selectedPartIndex === null ? 'active' : ''}`}
-                onClick={() => { setSelectedObjectId(obj.id); setSelectedPartIndex(null); }}
-              >
-                <div className="item-info">
-                  <Layers size={14} />
-                  <span>{obj.name || obj.type}</span>
-                </div>
-                <button 
-                  className="delete-item" 
-                  onClick={(e) => { e.stopPropagation(); removeObject(obj.id); }}
-                >
-                  <Trash2 size={14} />
-                </button>
+            <div className="construction-section">
+              <div className="section-label">Construction Tools</div>
+              <div className="transform-toggles">
+                <button className={`mode-btn ${transformMode === 'translate' ? 'active' : ''}`} onClick={() => setTransformMode('translate')}>Move</button>
+                <button className={`mode-btn ${transformMode === 'rotate' ? 'active' : ''}`} onClick={() => setTransformMode('rotate')}>Rotate</button>
+                <button className={`mode-btn ${transformMode === 'scale' ? 'active' : ''}`} onClick={() => setTransformMode('scale')}>Scale</button>
               </div>
-              
-              {/* Nested parts if grouped */}
-              {obj.parts && (
-                <div className="nested-parts">
-                  {obj.parts.map((part, pIdx) => (
-                    <div 
-                      key={pIdx} 
-                      className={`outliner-item nested ${selectedObjectId === obj.id && selectedPartIndex === pIdx ? 'active' : ''}`}
-                      onClick={() => { setSelectedObjectId(obj.id); setSelectedPartIndex(pIdx); }}
-                    >
-                      <div className="item-info">
-                        <BoxIcon size={12} />
-                        <span>{part.type} Part</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          ))}
-        </div>
-      </div>
 
-      {selectedPart && (
-        <div className="construction-section part-editor glass-panel">
-          <div className="section-label">Edit Part: {selectedPart.type}</div>
-          <div className="edit-controls">
-            <div className="edit-row">
-              <label>Color</label>
-              <input 
-                type="color" 
-                value={selectedPart.color} 
-                onChange={(e) => {
-                  const newObjects = sceneObjects.map(o => {
-                    if (o.id === selectedObjectId) {
-                      const newParts = [...o.parts];
-                      newParts[selectedPartIndex] = { ...newParts[selectedPartIndex], color: e.target.value };
-                      return { ...o, parts: newParts };
-                    }
-                    return o;
-                  });
-                  setSceneObjects(newObjects);
-                }} 
-              />
+            <div className="construction-section">
+              <div className="section-label">Primitive Color</div>
+              <div className="color-picker-simple">
+                {['#8b5cf6', '#4f46e5', '#ec4899', '#8b4513', '#94a3b8', '#ffffff'].map(c => (
+                  <button 
+                    key={c} 
+                    className={`color-chip ${selectedColor === c ? 'active' : ''}`}
+                    style={{ background: c }}
+                    onClick={() => setSelectedColor(c)}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="edit-row">
-              <label>Y Pos</label>
-              <input 
-                type="range" min="-2" max="5" step="0.1"
-                value={selectedPart.position[1]} 
-                onChange={(e) => {
-                  const newObjects = sceneObjects.map(o => {
-                    if (o.id === selectedObjectId) {
-                      const newParts = [...o.parts];
-                      const newPos = [...newParts[selectedPartIndex].position];
-                      newPos[1] = parseFloat(e.target.value);
-                      newParts[selectedPartIndex] = { ...newParts[selectedPartIndex], position: newPos };
-                      return { ...o, parts: newParts };
-                    }
-                    return o;
-                  });
-                  setSceneObjects(newObjects);
-                }} 
-              />
+
+            <div className="construction-section">
+              <div className="section-label">Categorized Primitives</div>
+              <div className="category-tabs">
+                {['Mesh', 'Curve', 'Light', 'Other'].map(cat => (
+                  <button 
+                    key={cat} 
+                    className={`cat-tab ${activeCategory === cat ? 'active' : ''}`}
+                    onClick={() => setActiveCategory(cat)}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              <div className="template-grid">
+                {CATEGORIES[activeCategory].map(key => (
+                  <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
+                    <BoxIcon size={18} className="template-icon" />
+                    <span style={{ fontSize: '0.6rem' }}>{key.replace('_', ' ')}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {activeTab === 'Modifiers' && (
+          <div className="modifier-workflow">
+            <div className="construction-section">
+              <div className="section-label">Modifier Stack</div>
+              <button className="add-modifier-btn">
+                Add Modifier <Plus size={14} />
+              </button>
+              <div className="modifier-grid">
+                {modifiers.map(mod => (
+                  <button key={mod.id} className="template-card modifier-card">
+                    {mod.icon}
+                    <span style={{ fontSize: '0.6rem' }}>{mod.id}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Object' && (
+          <div className="object-workflow">
+            <div className="construction-section scene-outliner">
+              <div className="section-label">Scene Hierarchy</div>
+              <div className="outliner-list">
+                {sceneObjects.map((obj) => (
+                  <div key={obj.id} className="outliner-wrapper">
+                    <div 
+                      className={`outliner-item ${selectedObjectId === obj.id ? 'active' : ''}`}
+                      onClick={() => setSelectedObjectId(obj.id)}
+                    >
+                      <div className="item-info">
+                        <Layers size={14} />
+                        <span>{obj.name || obj.type}</span>
+                      </div>
+                      <button className="delete-item" onClick={(e) => { e.stopPropagation(); removeObject(obj.id); }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedPart && (
+              <div className="construction-section part-editor glass-panel">
+                <div className="section-label">Properties: {selectedPart.name || selectedPart.type}</div>
+                <div className="edit-controls">
+                  <div className="edit-row">
+                    <label>Y Position</label>
+                    <input type="range" min="-5" max="5" step="0.1" value={selectedObject.position[1]} onChange={(e) => {
+                      setSceneObjects(sceneObjects.map(o => o.id === selectedObjectId ? { ...o, position: [o.position[0], parseFloat(e.target.value), o.position[2]] } : o));
+                    }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'Scene' && (
+          <div className="scene-workflow">
+            <div className="construction-section">
+              <div className="section-label">Render Settings</div>
+              <div className="toggle-row">
+                <span>Dynamic Shadows</span>
+                <input type="checkbox" checked={showShadows} onChange={(e) => setShowShadows(e.target.checked)} />
+              </div>
+              <div className="toggle-row">
+                <span>Ambient Occlusion</span>
+                <input type="checkbox" defaultChecked />
+              </div>
+              <div className="toggle-row">
+                <span>Bloom Effect</span>
+                <input type="checkbox" defaultChecked />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="construction-footer">
-        <p>Models are built programmatically from exact geometric primitives.</p>
+        <p>Pro Suite v2.0 - Blender Alternative Edition</p>
       </div>
     </div>
   );

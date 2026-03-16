@@ -1,155 +1,130 @@
-import React, { Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Grid, Stage, Environment, ContactShadows, TransformControls } from '@react-three/drei';
-import { applyAnimation } from '../../utils/ModelFactory.jsx';
-import './Viewport.css';
+import React, { Suspense, useRef } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { 
+  OrbitControls, 
+  PerspectiveCamera, 
+  Environment, 
+  ContactShadows, 
+  TransformControls
+} from '@react-three/drei';
 
-const Scene = ({ 
-  activeMode, 
-  sceneObjects, 
-  setSceneObjects,
-  selectedObjectId,
-  setSelectedObjectId,
-  selectedPartIndex,
-  setSelectedPartIndex,
-  transformMode
-}) => {
-  const [localParts, setLocalParts] = React.useState({});
+const MeshObject = ({ obj, isSelected, onClick, transformMode }) => {
+  return (
+    <group position={obj.position} scale={obj.scale}>
+      {obj.parts.map((part, index) => (
+        <mesh 
+          key={index}
+          position={part.position}
+          scale={part.scale}
+          rotation={part.rotation || [0, 0, 0]}
+          castShadow
+          receiveShadow
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(obj.id, index);
+          }}
+        >
+          {part.type === 'Box' && <boxGeometry />}
+          {part.type === 'Sphere' && <sphereGeometry args={[1, part.detail || 32, part.detail || 32]} />}
+          {part.type === 'Cylinder' && <cylinderGeometry />}
+          {part.type === 'Torus' && <torusGeometry args={[1, 0.4, 16, 100, part.arc || Math.PI * 2]} />}
+          {part.type === 'Plane' && <planeGeometry args={[1, 1, part.segments || 1, part.segments || 1]} />}
+          {part.type === 'Cone' && <coneGeometry />}
+          {/* Fallback */}
+          {!['Box', 'Sphere', 'Cylinder', 'Torus', 'Plane', 'Cone'].includes(part.type) && <boxGeometry />}
+          
+          <meshStandardMaterial 
+            color={part.color || '#8b5cf6'} 
+            roughness={part.roughness ?? 0.15}
+            metalness={part.metalness ?? 0.8}
+            emissive={isSelected ? part.color : (part.emissive || '#000')}
+            emissiveIntensity={isSelected ? 0.3 : (part.emissiveIntensity || 0)}
+            wireframe={part.wireframe || false}
+            transparent={part.opacity !== undefined}
+            opacity={part.opacity ?? 1}
+          />
+        </mesh>
+      ))}
+      {isSelected && (
+        <TransformControls mode={transformMode} />
+      )}
+    </group>
+  );
+};
 
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-    const updates = {};
-    sceneObjects.forEach(obj => {
-      if (obj.animation && obj.parts) {
-        updates[obj.id] = applyAnimation(obj.parts, obj.animation, time);
-      }
-    });
-    setLocalParts(updates);
-  });
-
-  const handleTransformChange = (objId, pIdx, newTransform) => {
-    const newObjects = sceneObjects.map(obj => {
-      if (obj.id === objId) {
-        if (pIdx === null) {
-          return { ...obj, ...newTransform };
-        } else {
-          const newParts = [...obj.parts];
-          newParts[pIdx] = { ...newParts[pIdx], ...newTransform };
-          return { ...obj, parts: newParts };
-        }
-      }
-      return obj;
-    });
-    setSceneObjects(newObjects);
-  };
-
+const Scene = ({ sceneObjects, selectedObjectId, setSelectedObjectId, setSelectedPartIndex, transformMode, renderSettings = {} }) => {
   return (
     <>
-      <OrbitControls makeDefault enabled={!selectedObjectId} />
+      <PerspectiveCamera makeDefault position={[12, 12, 12]} />
+      <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
+      
+      <ambientLight intensity={renderSettings.ambientIntensity ?? 0.4} />
+      <spotLight 
+        position={[10, 15, 10]} 
+        angle={0.3} 
+        penumbra={1} 
+        intensity={renderSettings.lightIntensity ?? 2} 
+        castShadow 
+        shadow-mapSize={[2048, 2048]}
+      />
+      
+      <Environment preset={renderSettings.envPreset || "city"} />
       
       <Suspense fallback={null}>
-        <Stage 
-          intensity={0.6} 
-          environment="studio" 
-          shadows={{ type: 'contact', opacity: 0.4, blur: 2 }} 
-          adjustCamera
-        >
-           {sceneObjects.map((obj) => (
-             <group 
-               key={obj.id} 
-               position={obj.position} 
-               scale={obj.scale}
-               onClick={(e) => { e.stopPropagation(); setSelectedObjectId(obj.id); setSelectedPartIndex(null); }}
-             >
-               {(localParts[obj.id] || obj.parts || [obj]).map((part, pIdx) => {
-                 const isSelected = selectedObjectId === obj.id && (obj.parts ? selectedPartIndex === pIdx : true);
-                 const actualPart = obj.parts ? part : obj;
-                 
-                 return (
-                   <React.Fragment key={pIdx}>
-                     <mesh 
-                       position={actualPart.position} 
-                       scale={actualPart.scale}
-                       rotation={actualPart.rotation || [0, 0, 0]}
-                       castShadow
-                       receiveShadow
-                       onClick={(e) => { 
-                         e.stopPropagation(); 
-                         setSelectedObjectId(obj.id); 
-                         if (obj.parts) setSelectedPartIndex(pIdx);
-                       }}
-                     >
-                       {actualPart.type === 'Box' && <boxGeometry args={[1, 1, 1]} />}
-                       {actualPart.type === 'Sphere' && <sphereGeometry args={[1, 32, 32]} />}
-                       {actualPart.type === 'Cylinder' && <cylinderGeometry args={[1, 1, 1, 32]} />}
-                       {actualPart.type === 'Cone' && <coneGeometry args={[1, 1, 32]} />}
-                       {actualPart.type === 'Torus' && <torusGeometry args={[1, 0.4, 16, 100]} />}
-                       {actualPart.type === 'Plane' && <planeGeometry args={[1, 1]} />}
-                       {actualPart.type === 'Circle' && <circleGeometry args={[1, 32]} />}
-                       <meshStandardMaterial 
-                         color={actualPart.color} 
-                         roughness={0.15} 
-                         metalness={0.8} 
-                         wireframe={actualPart.wireframe}
-                         emissive={isSelected ? '#4f46e5' : '#000000'}
-                         emissiveIntensity={isSelected ? 0.3 : 0}
-                       />
-                     </mesh>
-                     {isSelected && ['translate', 'rotate', 'scale'].includes(transformMode) ? (
-                        <TransformControls 
-                          mode={transformMode}
-                          onMouseUp={() => {}}
-                        />
-                      ) : isSelected && ['pinch', 'grab'].includes(transformMode) ? (
-                        <mesh position={actualPart.position}>
-                          <sphereGeometry args={[actualPart.scale[0] * 1.5, 32, 32]} />
-                          <meshBasicMaterial color="#00f2fe" wireframe transparent opacity={0.3} />
-                        </mesh>
-                      ) : null}
-                   </React.Fragment>
-                 );
-               })}
-             </group>
-           ))}
-        </Stage>
+        {sceneObjects.map(obj => (
+          <MeshObject 
+            key={obj.id} 
+            obj={obj} 
+            isSelected={selectedObjectId === obj.id}
+            transformMode={transformMode}
+            onClick={(id, partIdx) => {
+              setSelectedObjectId(id);
+              setSelectedPartIndex(partIdx);
+            }}
+          />
+        ))}
+        
+        {renderSettings.showShadows !== false && (
+          <ContactShadows 
+            position={[0, -0.01, 0]} 
+            opacity={0.6} 
+            scale={40} 
+            blur={2} 
+            far={10} 
+            color="#000000"
+          />
+        )}
+        
+        <gridHelper args={[100, 100, 0x444444, 0x222222]} />
       </Suspense>
-
-      <Grid 
-        infiniteGrid 
-        fadeDistance={50} 
-        fadeStrength={5} 
-        cellSize={1} 
-        sectionSize={5} 
-        sectionColor="#4f46e5" 
-        cellColor="#1e293b" 
-      />
-      
-      <Environment preset="city" />
-      <ContactShadows 
-        position={[0, 0, 0]} 
-        opacity={0.4} 
-        scale={20} 
-        blur={2} 
-        far={4.5} 
-      />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
     </>
   );
 };
 
-const Viewport3D = (props) => {
+const Viewport3D = ({ 
+  sceneObjects, 
+  renderSettings = {},
+  selectedObjectId, 
+  setSelectedObjectId, 
+  selectedPartIndex, 
+  setSelectedPartIndex,
+  transformMode
+}) => {
   return (
-    <div className="viewport-3d-container">
-      <Canvas shadows camera={{ position: [5, 5, 5], fov: 45 }}>
-        <Scene {...props} />
+    <div style={{ width: '100%', height: '100%', background: '#070708', position: 'relative' }}>
+      <Canvas shadows antialias dpr={[1, 2]}>
+        <Scene 
+          sceneObjects={sceneObjects}
+          selectedObjectId={selectedObjectId}
+          setSelectedObjectId={setSelectedObjectId}
+          setSelectedPartIndex={setSelectedPartIndex}
+          transformMode={transformMode}
+          renderSettings={renderSettings}
+        />
       </Canvas>
       
-      <div className="viewport-overlay-ui">
-        <div className="viewport-stats">
-          <span>FPS: 60</span>
-          <span>Polys: 2.4k</span>
-        </div>
+      <div className="viewport-overlay-info glass">
+        <span>{selectedObjectId ? `Editing: ${selectedObjectId}` : 'Scene View'}</span>
       </div>
     </div>
   );

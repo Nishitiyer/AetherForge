@@ -5,88 +5,46 @@
  */
 
 export const MODEL_TEMPLATES = {
-  TABLE: (color = '#8b4513') => ({
-    type: 'Group',
-    name: 'Table',
-    parts: [
-      { type: 'Box', position: [0, 0.75, 0], scale: [2, 0.1, 1.2], color }, // Top
-      { type: 'Box', position: [-0.9, 0.35, -0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 1
-      { type: 'Box', position: [0.9, 0.35, -0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 2
-      { type: 'Box', position: [-0.9, 0.35, 0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 3
-      { type: 'Box', position: [0.9, 0.35, 0.5], scale: [0.1, 0.7, 0.1], color }, // Leg 4
-    ]
-  }),
-
-  CHAIR: (color = '#4b3621') => ({
-    type: 'Group',
-    name: 'Chair',
-    parts: [
-      { type: 'Box', position: [0, 0.45, 0], scale: [0.5, 0.1, 0.5], color }, // Seat
-      { type: 'Box', position: [0, 0.75, -0.2], scale: [0.5, 0.6, 0.05], color }, // Back
-      { type: 'Box', position: [-0.2, 0.2, -0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 1
-      { type: 'Box', position: [0.2, 0.2, -0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 2
-      { type: 'Box', position: [-0.2, 0.2, 0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 3
-      { type: 'Box', position: [0.2, 0.2, 0.2], scale: [0.05, 0.4, 0.05], color }, // Leg 4
-    ]
-  }),
-
-  ROBOT: (color = '#94a3b8') => ({
-    type: 'Group',
-    name: 'Robot',
-    parts: [
-      { type: 'Box', position: [0, 1, 0], scale: [0.6, 0.8, 0.4], color }, // Torso
-      { type: 'Box', position: [0, 1.6, 0], scale: [0.4, 0.4, 0.4], color: '#6366f1' }, // Head
-      { type: 'Sphere', position: [-0.1, 1.65, 0.2], scale: [0.05, 0.05, 0.05], color: '#ffffff', name: 'EyeL' }, // L Eye (Definition)
-      { type: 'Sphere', position: [0.1, 1.65, 0.2], scale: [0.05, 0.05, 0.05], color: '#ffffff', name: 'EyeR' }, // R Eye (Definition)
-      { type: 'Box', position: [-0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color, name: 'ArmL' }, // L Arm
-      { type: 'Box', position: [0.4, 1.1, 0], scale: [0.2, 0.6, 0.2], color, name: 'ArmR' }, // R Arm
-      { type: 'Box', position: [-0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color, name: 'LegL' }, // L Leg
-      { type: 'Box', position: [0.2, 0.3, 0], scale: [0.2, 0.6, 0.2], color, name: 'LegR' }, // R Leg
-    ],
-    animation: { type: 'Idle', amplitude: 0.1, speed: 1 }
-  }),
-
-  STAIRS: (color = '#cbd5e1') => ({
-    type: 'Group',
-    name: 'Stairs',
-    parts: Array.from({ length: 5 }, (_, i) => ({
-      type: 'Box',
-      position: [0, i * 0.2, i * 0.2],
-      scale: [1, 0.2, 0.2],
-      color
-    }))
-  }),
-
-  SPHERE: (color = '#ffffff') => ({
-    type: 'Sphere',
-    name: 'Sphere',
-    parts: [
-      { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color }
-    ]
-  }),
-
-  ICOSPHERE: (color = '#00f2fe') => ({
-    type: 'IcoSphere',
-    name: 'IcoSphere',
-    parts: [
-      { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 2 }
-    ]
-  }),
-  
-  PLANE: (color = '#94a3b8') => ({
+  CUBE: (color = '#8b5cf6') => ({
     type: 'Mesh',
-    name: 'Plane',
-    parts: [
-      { type: 'Plane', position: [0, 0, 0], scale: [2, 2, 1], color, rotation: [-Math.PI / 2, 0, 0] }
-    ]
+    name: 'Cube',
+    parts: [{ type: 'Box', position: [0, 0, 0], scale: [1, 1, 1], color }]
   }),
 
-  CIRCLE: (color = '#94a3b8') => ({
+  UVSPHERE: (color = '#ffffff') => ({
     type: 'Mesh',
-    name: 'Circle',
-    parts: [
-      { type: 'Circle', position: [0, 0, 0], scale: [1, 1, 1], color, rotation: [-Math.PI / 2, 0, 0] }
-    ]
+    name: 'UV Sphere',
+    parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 32 }]
+  }),
+
+  ICOSPHERE: (color = '#ffffff') => ({
+    type: 'Mesh',
+    name: 'Ico Sphere',
+    parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, isIco: true, detail: 2 }]
+  }),
+
+  CYLINDER: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Cylinder',
+    parts: [{ type: 'Cylinder', position: [0, 0, 0], scale: [1, 1, 1], color }]
+  }),
+
+  CONE: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Cone',
+    parts: [{ type: 'Cone', position: [0, 0, 0], scale: [1, 1, 1], color }]
+  }),
+
+  TORUS: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Torus',
+    parts: [{ type: 'Torus', position: [0, 0, 0], scale: [1, 1, 1], color }]
+  }),
+
+  GRID: (color = '#475569') => ({
+    type: 'Mesh',
+    name: 'Grid',
+    parts: [{ type: 'Plane', position: [0, 0, 0], scale: [2, 2, 1], color, segments: 10, rotation: [-Math.PI / 2, 0, 0] }]
   }),
 
   MONKEY: (color = '#8b5cf6') => ({
@@ -102,105 +60,76 @@ export const MODEL_TEMPLATES = {
     ]
   }),
 
-  GRID: (color = '#475569') => ({
-    type: 'Mesh',
-    name: 'Grid',
-    parts: [
-      { type: 'Plane', position: [0, 0, 0], scale: [5, 5, 1], color, wireframe: true, rotation: [-Math.PI / 2, 0, 0] }
-    ]
-  }),
-
-  TEXT: (color = '#ffffff') => ({
-    type: 'Mesh',
-    name: '3D Text',
-    parts: [
-      { type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color }
-    ]
-  }),
-
-  CUBE: (color = '#8b5cf6') => ({
-    type: 'Mesh',
-    name: 'Cube',
-    parts: [
-      { type: 'Box', position: [0, 0, 0], scale: [1, 1, 1], color }
-    ]
-  }),
-
-  UVSPHERE: (color = '#ffffff') => ({
-    type: 'Mesh',
-    name: 'UV Sphere',
-    parts: [
-      { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 32 }
-    ]
-  }),
-
-  CYLINDER: (color = '#94a3b8') => ({
-    type: 'Mesh',
-    name: 'Cylinder',
-    parts: [
-      { type: 'Cylinder', position: [0, 0, 0], scale: [1, 1, 1], color }
-    ]
-  }),
-
-  CONE: (color = '#94a3b8') => ({
-    type: 'Mesh',
-    name: 'Cone',
-    parts: [
-      { type: 'Cone', position: [0, 0, 0], scale: [1, 1, 1], color }
-    ]
-  }),
-
-  TORUS: (color = '#94a3b8') => ({
-    type: 'Mesh',
-    name: 'Torus',
-    parts: [
-      { type: 'Torus', position: [0, 0, 0], scale: [1, 1, 1], color }
-    ]
-  }),
-
-  // Curve Objects (Visual Placeholders)
+  // Curve Objects
   BEZIER_CURVE: (color = '#00f2fe') => ({
     type: 'Curve',
     name: 'Bezier Curve',
-    parts: [
-      { type: 'Torus', position: [0, 0, 0], scale: [1, 0.05, 1], color, rotation: [0, 0, 0] } // Mockup
-    ]
+    parts: [{ type: 'Torus', position: [0, 0, 0], scale: [1, 0.05, 1], color, arc: Math.PI / 2 }]
   }),
 
   BEZIER_CIRCLE: (color = '#00f2fe') => ({
     type: 'Curve',
     name: 'Bezier Circle',
-    parts: [
-      { type: 'Torus', position: [0, 0, 0], scale: [1, 0.02, 1], color, rotation: [-Math.PI / 2, 0, 0] }
-    ]
+    parts: [{ type: 'Torus', position: [0, 0, 0], scale: [1, 0.02, 1], color }]
+  }),
+
+  PATH: (color = '#00f2fe') => ({
+    type: 'Curve',
+    name: 'Path',
+    parts: [{ type: 'Box', position: [0, 0, 0], scale: [2, 0.01, 0.01], color }]
+  }),
+
+  // Surface
+  NURBS_SPHERE: (color = '#0ea5e9') => ({
+    type: 'Surface',
+    name: 'NURBS Sphere',
+    parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, opacity: 0.8 }]
+  }),
+
+  // Metaballs
+  METABALL: (color = '#f59e0b') => ({
+    type: 'Metaball',
+    name: 'Metaball',
+    parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, isMeta: true }]
+  }),
+
+  // Text
+  TEXT: (color = '#ffffff') => ({
+    type: 'Mesh',
+    name: 'Text',
+    parts: [{ type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color, isText: true }]
   }),
 
   // Light Objects
   LIGHT_POINT: (color = '#ffcc00') => ({
     type: 'Light',
     name: 'Point Light',
-    parts: [
-      { type: 'Sphere', position: [0, 0, 0], scale: [0.1, 0.1, 0.1], color, emissive: color, emissiveIntensity: 2 }
-    ]
+    parts: [{ type: 'Sphere', position: [0, 0, 0], scale: [0.1, 0.1, 0.1], color, emissive: color, emissiveIntensity: 2 }]
   }),
 
   LIGHT_SUN: (color = '#ffffff') => ({
     type: 'Light',
     name: 'Sun Light',
-    parts: [
-      { type: 'Cylinder', position: [0, 0, 0], scale: [0.05, 1, 0.05], color, emissive: color, emissiveIntensity: 1 }
-    ]
+    parts: [{ type: 'Cylinder', position: [0, 2, 0], scale: [0.05, 1, 0.05], color, emissive: color, emissiveIntensity: 1 }]
   }),
 
-  // Empty & Utilities
-  EMPTY_AXES: () => ({
+  LIGHT_SPOT: (color = '#ffffff') => ({
+    type: 'Light',
+    name: 'Spot Light',
+    parts: [{ type: 'Cone', position: [0, 2, 0], scale: [0.2, 0.4, 0.2], color, emissive: color, emissiveIntensity: 1 }]
+  }),
+
+  LIGHT_AREA: (color = '#ffffff') => ({
+    type: 'Light',
+    name: 'Area Light',
+    parts: [{ type: 'Plane', position: [0, 2, 0], scale: [1, 1, 1], color, emissive: color, emissiveIntensity: 0.8 }]
+  }),
+
+  // Empty
+  EMPTY_PLAIN: () => ({
     type: 'Empty',
-    name: 'Empty Axes',
-    parts: [
-      { type: 'Box', position: [0, 0, 0], scale: [1, 0.01, 0.01], color: '#fff' },
-      { type: 'Box', position: [0, 0, 0], scale: [0.01, 1, 0.01], color: '#fff' },
-      { type: 'Box', position: [0, 0, 0], scale: [0.01, 0.01, 1], color: '#fff' },
-    ]
+    name: 'Empty',
+    parts: [{ type: 'Box', position: [0, 0, 0], scale: [0.1, 0.1, 0.1], color: '#ffffff', opacity: 0.5, wireframe: true }]
   }),
 
   CAMERA: () => ({
@@ -210,7 +139,7 @@ export const MODEL_TEMPLATES = {
       { type: 'Box', position: [0, 0, 0], scale: [0.5, 0.3, 0.4], color: '#444' },
       { type: 'Cone', position: [0, 0, 0.3], scale: [0.2, 0.3, 0.2], color: '#222', rotation: [Math.PI / 2, 0, 0] }
     ]
-  })
+  }),
 };
 
 

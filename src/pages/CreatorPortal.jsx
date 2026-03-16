@@ -59,9 +59,14 @@ const CreatorPortal = () => {
               <Zap size={32} className="text-primary" style={{marginBottom: '1rem'}} />
               <h3>AetherForge Pro Suite</h3>
               <p>Everything you need: AI Voice Control, Sign Accessibility, Real-time Collaboration, and the full Professional Editor.</p>
-              <button className="btn-primary" style={{width: '100%', padding: '1.25rem', marginTop: '1.5rem'}} onClick={() => navigate('/download')}>
-                Install Professional Suite
-              </button>
+              <div style={{display: 'flex', gap: '1rem', width: '100%', marginTop: '1.5rem'}}>
+                <button className="btn-primary" style={{flex: 1, padding: '1rem'}} onClick={() => navigate('/editor')}>
+                   Open Workspace
+                </button>
+                <button className="btn-secondary" style={{flex: 1, padding: '1rem'}} onClick={() => navigate('/download')}>
+                  Install Desktop
+                </button>
+              </div>
             </div>
           </div>
 

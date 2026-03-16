@@ -16,39 +16,28 @@ import { SessionProvider } from './context/SessionContext.jsx';
 import { ChatProvider } from './context/ChatContext.jsx';
 
 function App() {
-  try {
-    return (
-      <ChatProvider>
-        <SessionProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/editor" element={<Editor />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/billing" element={<Billing />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/auth-selection" element={<AuthSelection />} />
-              <Route path="/download" element={<Download />} />
-              <Route path="/admin" element={<AdminPortal />} />
-              <Route path="/creator" element={<CreatorPortal />} />
-            </Routes>
-          </BrowserRouter>
-        </SessionProvider>
-      </ChatProvider>
-    );
-  } catch (err) {
-    console.error('App Crash:', err);
-    return (
-      <div style={{ padding: '40px', background: '#0f1115', color: '#ff4444', height: '100vh' }}>
-        <h2>âš ï¸ AetherForge Runtime Error</h2>
-        <p>{err.message}</p>
-        <button onClick={() => location.reload()}>Retry</button>
-      </div>
-    );
-  }
+  return (
+    <ChatProvider>
+      <SessionProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/editor" element={<Editor />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/auth-selection" element={<AuthSelection />} />
+            <Route path="/download" element={<Download />} />
+            <Route path="/admin" element={<AdminPortal />} />
+            <Route path="/creator" element={<CreatorPortal />} />
+          </Routes>
+        </BrowserRouter>
+      </SessionProvider>
+    </ChatProvider>
+  );
 }
 
 export default App;

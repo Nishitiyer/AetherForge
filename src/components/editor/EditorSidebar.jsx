@@ -1,7 +1,6 @@
-import React from 'react';
 import { 
   MousePointer2, Move, RotateCcw, Maximize, GitMerge, Edit3, Type, 
-  BoxSelect, Eraser, Scissors, LassoSelect, Wand2, Hand, Fingerprint
+  Box, Eraser, Scissors, Lasso, Wand2, Hand, Fingerprint
 } from 'lucide-react';
 import './EditorSidebar.css';
 
@@ -11,7 +10,7 @@ const EditorSidebar = ({ activeMode }) => {
       {/* Transformation Tools (Always available or context-sensitive) */}
       <div className="tool-group">
         <button className="tool-btn active" title="Select (V)"><MousePointer2 size={18} /></button>
-        <button className="tool-btn" title="Box Select (B)"><BoxSelect size={18} /></button>
+        <button className="tool-btn" title="Box Select (B)"><Box size={18} /></button>
       </div>
       
       <div className="sidebar-divider"></div>
@@ -29,7 +28,7 @@ const EditorSidebar = ({ activeMode }) => {
         {activeMode === 'Edit Mode' && (
           <>
             <button className="tool-btn" title="Extrude (E)"><GitMerge size={18} /></button>
-            <button className="tool-btn" title="Inset (I)"><BoxSelect size={18} /></button>
+            <button className="tool-btn" title="Inset (I)"><Box size={18} /></button>
             <button className="tool-btn" title="Bevel (Ctrl+B)"><Edit3 size={18} /></button>
             <button className="tool-btn" title="Loop Cut (Ctrl+R)"><Type size={18} /></button>
             <button className="tool-btn" title="Knife (K)"><Scissors size={18} /></button>
