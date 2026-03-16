@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'; // Initialized State
+import React, { useState } from 'react'; // Initialized State
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Github, Globe, ArrowRight, ShieldCheck } from 'lucide-react';
 import './Auth.css';
@@ -106,7 +106,7 @@ const Auth = () => {
               <Lock size={18} className="input-icon" />
               <input 
                 type="password" 
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" 
+                placeholder="••••••••" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
