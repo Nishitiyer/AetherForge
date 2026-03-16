@@ -3,7 +3,8 @@
   flex-direction: column;
   height: 100%;
   padding: 1.5rem;
-  background: var(--color-bg);
+  background: var(--color-surface);
+  border-right: 1px solid var(--glass-border);
 }
 
 .panel-header {
@@ -65,18 +66,24 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1.25rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   cursor: pointer;
   position: relative;
-  transition: all 0.3s;
+  transition: var(--transition-smooth);
 }
 
 .template-card:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(99, 102, 241, 0.05);
   border-color: var(--color-primary);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px -10px var(--color-primary-glow);
+}
+
+.template-card:hover .template-icon {
+  color: var(--color-primary);
+  filter: drop-shadow(0 0 8px var(--color-primary-glow));
 }
 
 .template-card span {
@@ -169,23 +176,24 @@
   padding: 0.6rem;
   font-size: 0.75rem;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-smooth);
   color: var(--color-text-muted);
 }
 
 .mode-btn.active {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   color: white;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+  border-color: transparent;
+  box-shadow: 0 4px 15px var(--color-primary-glow);
 }
 
 .mode-btn:hover:not(.active) {
   background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
 }
 
 .outliner-item.active {

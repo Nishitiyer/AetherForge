@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Box as BoxIcon, Hammer, Palette, Plus, Trash2, Layers } from 'lucide-react';
 import { MODEL_TEMPLATES, createModel } from '../../utils/ModelFactory.jsx';
 import './ConstructionPanel.css';
@@ -69,7 +69,7 @@ const ConstructionPanel = ({
         <div className="template-grid">
           {Object.keys(MODEL_TEMPLATES).map(key => (
             <button key={key} className="template-card" onClick={() => handleAddExact(key)}>
-              <BoxIcon size={24} />
+              <BoxIcon size={24} className="template-icon" />
               <span>{key}</span>
               <Plus size={14} className="add-plus" />
             </button>

@@ -48,7 +48,11 @@ const FeatureGrid = () => {
         
         <div className="feature-grid">
           {features.map((feature, index) => (
-            <div key={index} className="feature-card glass-panel">
+            <div 
+              key={index} 
+              className="feature-card glass-panel"
+              style={{ animation: `fadeInUp 0.8s ease-out ${0.2 + index * 0.1}s backwards` }}
+            >
               <div className="feature-icon-wrapper">
                 {feature.icon}
               </div>
