@@ -71,6 +71,51 @@ export const MODEL_TEMPLATES = {
     parts: [
       { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color, detail: 2 }
     ]
+  }),
+  
+  PLANE: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Plane',
+    parts: [
+      { type: 'Plane', position: [0, 0, 0], scale: [2, 2, 1], color, rotation: [-Math.PI / 2, 0, 0] }
+    ]
+  }),
+
+  CIRCLE: (color = '#94a3b8') => ({
+    type: 'Mesh',
+    name: 'Circle',
+    parts: [
+      { type: 'Circle', position: [0, 0, 0], scale: [1, 1, 1], color, rotation: [-Math.PI / 2, 0, 0] }
+    ]
+  }),
+
+  MONKEY: (color = '#8b5cf6') => ({
+    type: 'Group',
+    name: 'Suzanne',
+    parts: [
+      { type: 'Sphere', position: [0, 0, 0], scale: [0.6, 0.5, 0.4], color }, // Head
+      { type: 'Sphere', position: [-0.4, 0.1, 0.1], scale: [0.2, 0.2, 0.1], color }, // Ear L
+      { type: 'Sphere', position: [0.4, 0.1, 0.1], scale: [0.2, 0.2, 0.1], color }, // Ear R
+      { type: 'Sphere', position: [-0.15, 0.1, 0.3], scale: [0.1, 0.1, 0.1], color: '#fff', name: 'EyeL' }, // Eye L
+      { type: 'Sphere', position: [0.15, 0.1, 0.3], scale: [0.1, 0.1, 0.1], color: '#fff', name: 'EyeR' }, // Eye R
+      { type: 'Box', position: [0, -0.1, 0.3], scale: [0.2, 0.1, 0.2], color: '#d1d5db' }, // Snout
+    ]
+  }),
+
+  GRID: (color = '#475569') => ({
+    type: 'Mesh',
+    name: 'Grid',
+    parts: [
+      { type: 'Plane', position: [0, 0, 0], scale: [5, 5, 1], color, wireframe: true, rotation: [-Math.PI / 2, 0, 0] }
+    ]
+  }),
+
+  TEXT: (color = '#ffffff') => ({
+    type: 'Mesh',
+    name: '3D Text',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [1.5, 0.5, 0.1], color } // Placeholder for actual text geometry
+    ]
   })
 };
 
