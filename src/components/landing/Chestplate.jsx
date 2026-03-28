@@ -1,119 +1,124 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box, Cylinder, Torus, Sphere, Float, MeshDistortMaterial } from '@react-three/drei';
+import { Box, Cylinder, Torus, Sphere, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
 const MK50_RED = "#990000";
 const MK50_GOLD = "#ffd700";
 const MK50_SILVER = "#e5e7eb";
-const DARK_METAL = "#1a1a1e";
 
-const ScupltedPlate = ({ position, rotation, scale, color = MK50_RED, segments = 1 }) => {
-  return (
-    <group position={position} rotation={rotation} scale={scale}>
-      {/* Main Plate Body */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial 
-          color={color} 
-          metalness={1} 
-          roughness={0.15} 
-          envMapIntensity={2} 
-        />
-      </mesh>
-      {/* Metallic Trim/Edge */}
-      <mesh position={[0, 0, 0.06]} scale={[1.05, 1.05, 0.1]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={MK50_SILVER} metalness={1} roughness={0.1} />
-      </mesh>
-    </group>
-  );
-};
+// Helper for curved armor plates
+const CurvedPlate = ({ radius, height, theta, color, metalness = 1, roughness = 0.2, position = [0, 0, 0], rotation = [0, 0, 0] }) => (
+  <mesh position={position} rotation={rotation}>
+    <cylinderGeometry args={[radius, radius, height, 32, 1, true, 0, theta]} />
+    <meshPhysicalMaterial 
+      color={color} 
+      metalness={metalness} 
+      roughness={roughness} 
+      clearcoat={1}
+      clearcoatRoughness={0.1}
+      side={THREE.DoubleSide}
+    />
+  </mesh>
+);
 
 const Chestplate = ({ isOpen, children }) => {
   const groupRef = useRef();
-  const platesRef = useRef([]);
-
-  // mk50 inspired v-shape layout
-  const armorLayout = useMemo(() => [
-    // Top Collar Bones (Red)
-    { pos: [-1.5, 3.2, 0], rot: [0.1, 0, 0.3], scale: [2, 0.6, 0.2], color: MK50_RED },
-    { pos: [1.5, 3.2, 0], rot: [0.1, 0, -0.3], scale: [2, 0.6, 0.2], color: MK50_RED },
-    
-    // Main Chest V-Plates (Large Red)
-    { pos: [-1.2, 1.8, 0.4], rot: [0.2, 0.1, 0.5], scale: [1.8, 2.5, 0.3], color: MK50_RED },
-    { pos: [1.2, 1.8, 0.4], rot: [0.2, -0.1, -0.5], scale: [1.8, 2.5, 0.3], color: MK50_RED },
-    
-    // Inward Gold Accents
-    { pos: [-0.9, 1.5, 0.5], rot: [0.3, 0.2, 0.6], scale: [0.6, 2, 0.1], color: MK50_GOLD },
-    { pos: [0.9, 1.5, 0.5], rot: [0.3, -0.2, -0.6], scale: [0.6, 2, 0.1], color: MK50_GOLD },
-    
-    // Side Latals (Silver/Red)
-    { pos: [-2.5, 0, 0.2], rot: [0, 0.3, 0.1], scale: [1, 3.5, 0.2], color: MK50_RED },
-    { pos: [2.5, 0, 0.2], rot: [0, -0.3, -0.1], scale: [1, 3.5, 0.2], color: MK50_RED },
-    
-    // Lower Ab-Plates (V-Shaped)
-    { pos: [-1.0, -2.0, 0.4], rot: [-0.2, 0, -0.4], scale: [1.5, 1.2, 0.2], color: MK50_RED },
-    { pos: [1.0, -2.0, 0.4], rot: [-0.2, 0, 0.4], scale: [1.5, 1.2, 0.2], color: MK50_RED },
-  ], []);
+  
+  // Refs for animation
+  const lPlateRef = useRef();
+  const rPlateRef = useRef();
+  const topCollarRef = useRef();
+  const coreHousingRef = useRef();
 
   useFrame((state, delta) => {
     const t = isOpen ? 1 : 0;
-    const lerpSpeed = 7;
+    const lerpSpeed = 6;
     
-    platesRef.current.forEach((plate, i) => {
-      if (!plate) return;
-      const layout = armorLayout[i];
-      const dir = layout.pos[0] > 0 ? 1 : -1;
-      
-      const targetX = layout.pos[0] + (t * 2.5 * dir);
-      const targetY = layout.pos[1] + (t * 1.5);
-      const targetRotY = layout.rot[1] + (t * 0.8 * dir);
-      
-      plate.position.x = THREE.MathUtils.lerp(plate.position.x, targetX, delta * lerpSpeed);
-      plate.position.y = THREE.MathUtils.lerp(plate.position.y, targetY, delta * lerpSpeed);
-      plate.rotation.y = THREE.MathUtils.lerp(plate.rotation.y, targetRotY, delta * lerpSpeed);
-    });
+    if (lPlateRef.current) {
+      lPlateRef.current.position.x = THREE.MathUtils.lerp(lPlateRef.current.position.x, -1.5 - (t * 2), delta * lerpSpeed);
+      lPlateRef.current.rotation.y = THREE.MathUtils.lerp(lPlateRef.current.rotation.y, 0.4 - (t * 0.4), delta * lerpSpeed);
+    }
+    if (rPlateRef.current) {
+      rPlateRef.current.position.x = THREE.MathUtils.lerp(rPlateRef.current.position.x, 1.5 + (t * 2), delta * lerpSpeed);
+      rPlateRef.current.rotation.y = THREE.MathUtils.lerp(rPlateRef.current.rotation.y, -0.4 + (t * 0.4), delta * lerpSpeed);
+    }
+    if (topCollarRef.current) {
+      topCollarRef.current.position.y = THREE.MathUtils.lerp(topCollarRef.current.position.y, 2.5 + (t * 1.5), delta * lerpSpeed);
+    }
   });
 
   return (
     <group ref={groupRef}>
-      {/* 1. ARC REACTOR COMPARTMENT */}
-      <group>
-        {/* Outer Circular Rim */}
-        <Torus args={[2.0, 0.15, 16, 60]} rotation={[0, 0, Math.PI / 2]}>
-          <meshStandardMaterial color={MK50_SILVER} metalness={1} roughness={0.05} />
+      {/* 1. CENTRAL ARC REACTOR SYSTEM (Fixed Position) */}
+      <group ref={coreHousingRef}>
+        {/* Main circular housing with structural depth */}
+        <Torus args={[2.0, 0.12, 16, 100]} rotation={[0, 0, 0]}>
+          <meshPhysicalMaterial color={MK50_SILVER} metalness={1} roughness={0.05} />
+        </Torus>
+        <Torus args={[2.2, 0.05, 12, 100]} position={[0, 0, -0.1]}>
+          <meshStandardMaterial color="#444" emissive="#00d4ff" emissiveIntensity={0.5} />
         </Torus>
         
-        {/* Inner Light Chamber */}
-        <Sphere args={[1.9, 32, 16]} scale={[1, 1, 0.1]} position={[0, 0, -0.2]}>
-          <meshBasicMaterial color="#001122" />
-        </Sphere>
-        
-        {/* Triangular Core Housing (MK50 Style) */}
-        <Torus args={[1.2, 0.08, 3, 3]} rotation={[0, 0, Math.PI / 2]}>
-          <meshStandardMaterial color={MK50_GOLD} emissive="#00d4ff" emissiveIntensity={3} />
-        </Torus>
+        {/* Honeycomb backing pattern (simulated with torus segments) */}
+        <group rotation={[0, 0, Math.PI / 6]} position={[0, 0, -0.3]}>
+           {[0, 1, 2].map(i => (
+             <Torus key={i} args={[1.5, 0.02, 3, 3]} rotation={[0, 0, (i * Math.PI) / 1.5]}>
+               <meshBasicMaterial color={MK50_GOLD} />
+             </Torus>
+           ))}
+        </group>
       </group>
 
-      {/* 2. ARMORED ASSEMBLY */}
-      <group>
-        {armorLayout.map((layout, i) => (
-          <group key={i} ref={el => platesRef.current[i] = el} position={layout.pos} rotation={layout.rot}>
-            <ScupltedPlate scale={layout.scale} color={layout.color} />
-          </group>
-        ))}
+      {/* 2. DYNAMIC ARMOR PLATES (MK50 "V" Flow) */}
+      
+      {/* LEFT ASSEMBLY */}
+      <group ref={lPlateRef} position={[-1.5, 0.5, 0.5]} rotation={[0, 0.4, 0]}>
+        {/* Primary Red Chest Plate (Curved) */}
+        <CurvedPlate radius={4} height={4} theta={Math.PI / 3} color={MK50_RED} position={[1.8, 0, -3.5]} rotation={[0, -Math.PI/2, 0]} />
+        {/* Gold Accent Plate */}
+        <Box args={[1, 3, 0.1]} position={[0, -0.5, 0.2]} rotation={[0, 0, 0.2]}>
+          <meshPhysicalMaterial color={MK50_GOLD} metalness={1} roughness={0.1} />
+        </Box>
+        {/* Mechanical Detail */}
+        <Cylinder args={[0.05, 0.05, 3.5]} position={[-0.4, 0, 0.1]} rotation={[0, 0, 0.1]}>
+          <meshStandardMaterial color={MK50_SILVER} metalness={1} />
+        </Cylinder>
       </group>
 
-      {/* 3. CORE VOICE ORB (Arc Reactor) */}
-      <group position={[0, 0, 0.5]} scale={1.2}>
+      {/* RIGHT ASSEMBLY */}
+      <group ref={rPlateRef} position={[1.5, 0.5, 0.5]} rotation={[0, -0.4, 0]}>
+        {/* Primary Red Chest Plate (Curved) */}
+        <CurvedPlate radius={4} height={4} theta={Math.PI / 3} color={MK50_RED} position={[-1.8, 0, -3.5]} rotation={[0, Math.PI/2 + Math.PI/6, 0]} />
+        {/* Gold Accent Plate */}
+        <Box args={[1, 3, 0.1]} position={[0, -0.5, 0.2]} rotation={[0, 0, -0.2]}>
+          <meshPhysicalMaterial color={MK50_GOLD} metalness={1} roughness={0.1} />
+        </Box>
+        {/* Mechanical Detail */}
+        <Cylinder args={[0.05, 0.05, 3.5]} position={[0.4, 0, 0.1]} rotation={[0, 0, -0.1]}>
+          <meshStandardMaterial color={MK50_SILVER} metalness={1} />
+        </Cylinder>
+      </group>
+
+      {/* TOP COLLAR / TRAPS */}
+      <group ref={topCollarRef} position={[0, 2.8, 0.2]}>
+        <Box args={[3.5, 0.6, 0.2]} rotation={[0.2, 0, 0]}>
+          <meshPhysicalMaterial color={MK50_RED} metalness={1} roughness={0.15} />
+        </Box>
+        <Box args={[1.5, 0.4, 0.1]} position={[0, 0.4, 0.1]} color={MK50_GOLD}>
+          <meshPhysicalMaterial color={MK50_GOLD} metalness={1} />
+        </Box>
+      </group>
+
+      {/* 3. ARC REACTOR CORE (Voice Orb) */}
+      <group position={[0, 0, 0.6]} scale={1.2}>
         {children}
       </group>
 
-      {/* Lighting for Realism */}
-      <pointLight position={[2, 2, 5]} intensity={10} color="#fff" />
-      <pointLight position={[-2, -2, 5]} intensity={5} color={MK50_RED} />
-      <spotLight position={[0, 10, 0]} intensity={2} angle={0.5} penumbra={1} castShadow />
+      {/* Cinematic Lighting Atmosphere */}
+      <spotLight position={[10, 10, 10]} intensity={1.5} angle={0.15} penumbra={1} castShadow />
+      <pointLight position={[0, 0, 2]} intensity={2} color="#00d4ff" />
+      <pointLight position={[5, -5, -2]} intensity={0.5} color={MK50_GOLD} />
     </group>
   );
 };
