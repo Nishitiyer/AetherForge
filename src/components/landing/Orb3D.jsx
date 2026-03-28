@@ -52,14 +52,23 @@ const Orb3D = ({ config, isListening }) => {
           />
         </Sphere>
 
-        {/* Inner Core */}
-        <Sphere args={[0.8, 32, 32]} ref={innerRef}>
-          <MeshWobbleMaterial
+        {/* Inner Core - Triangular MK50 Element */}
+        <Torus args={[0.9, 0.1, 3, 3]} rotation={[0, 0, Math.PI / 2]} ref={innerRef}>
+          <meshStandardMaterial
             color={config.secondaryColor}
-            speed={config.pulseSpeed * 1.5}
-            factor={0.6}
             emissive={config.color}
-            emissiveIntensity={5}
+            emissiveIntensity={10}
+            metalness={1}
+            roughness={0}
+          />
+        </Torus>
+
+        {/* Central Pulsating Sphere */}
+        <Sphere args={[0.4, 32, 32]}>
+          <meshStandardMaterial 
+            color="#fff" 
+            emissive={config.color} 
+            emissiveIntensity={20} 
           />
         </Sphere>
 
