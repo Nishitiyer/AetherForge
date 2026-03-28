@@ -12,6 +12,7 @@ import AdminPortal from './pages/AdminPortal.jsx';
 import CreatorPortal from './pages/CreatorPortal.jsx';
 import AuthSelection from './pages/AuthSelection.jsx';
 import Download from './pages/Download.jsx';
+import OrbSelection from './pages/OrbSelection.jsx';
 import { SessionProvider } from './context/SessionContext.jsx';
 import { ChatProvider } from './context/ChatContext.jsx';
 
@@ -31,6 +32,7 @@ function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/auth-selection" element={<AuthSelection />} />
             <Route path="/download" element={<Download />} />
+            <Route path="/orb-selection" element={<OrbSelection />} />
             <Route path="/admin" element={<AdminPortal />} />
             <Route path="/creator" element={<CreatorPortal />} />
           </Routes>

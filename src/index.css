@@ -1,16 +1,17 @@
 :root {
-  --color-bg: #0f1115;
-  --color-bg-secondary: #1a1d24;
-  --color-bg-tertiary: #252932;
-  --color-text: #e0e2e6;
-  --color-text-muted: #8b92a5;
-  --color-primary: #3b82f6;
-  --color-accent: #8b5cf6;
-  --color-accent-glow: rgba(139, 92, 246, 0.4);
+  --color-bg: #050507;
+  --color-bg-secondary: #0c0c0e;
+  --color-bg-tertiary: #141417;
+  --color-text: #f8fafc;
+  --color-text-muted: #64748b;
+  --color-primary: #00d4ff;
+  --color-secondary: #818cf8;
+  --color-accent: #a855f7;
+  --color-accent-glow: rgba(168, 85, 247, 0.4);
   --color-hologram: #00f2fe;
   --color-hologram-glow: rgba(0, 242, 254, 0.3);
-  --color-neon-pink: #ec4899;
-  --color-border: #2e323f;
+  --color-border: rgba(255, 255, 255, 0.05);
+  --color-border-bright: rgba(0, 212, 255, 0.2);
   
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   --border-radius-sm: 4px;

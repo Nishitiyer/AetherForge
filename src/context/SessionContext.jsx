@@ -3,8 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const SessionContext = createContext();
 
 export const SessionProvider = ({ children }) => {
-  const [sessionTime, setSessionTime] = useState(0);
-  const [isExpired, setIsExpired] = useState(false);
   const getStorageItem = (key, fallback) => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -16,53 +14,54 @@ export const SessionProvider = ({ children }) => {
     return fallback;
   };
 
+  const [userType, setUserType] = useState(getStorageItem('userType', 'USER')); // USER, CREATOR, ADMIN
+  const [isOrbSelected, setIsOrbSelected] = useState(getStorageItem('isOrbSelected', 'false') === 'true');
+  const [selectedOrbId, setSelectedOrbId] = useState(getStorageItem('selectedOrbId', 'Nova'));
+  
   const [orbSettings, setOrbSettings] = useState({
     name: getStorageItem('orbName', 'Omni'),
-    color: getStorageItem('orbColor', '#8b5cf6'),
+    color: getStorageItem('orbColor', '#00d4ff'),
     animation: getStorageItem('orbAnimation', 'Pulse'),
     voice: parseInt(getStorageItem('orbVoice', '0')) || 0
   });
 
-  const isCreator = getStorageItem('isCreator', 'false') === 'true';
+  const [sessionTime, setSessionTime] = useState(0);
+  const [isExpired, setIsExpired] = useState(false);
+
+  const CREATOR_KEY = "Lalitha76!";
+
+  // Persistence
+  useEffect(() => {
+    localStorage.setItem('userType', userType);
+    localStorage.setItem('isOrbSelected', isOrbSelected.toString());
+    localStorage.setItem('selectedOrbId', selectedOrbId);
+    localStorage.setItem('orbName', orbSettings.name);
+    localStorage.setItem('orbColor', orbSettings.color);
+    localStorage.setItem('orbAnimation', orbSettings.animation);
+    localStorage.setItem('orbVoice', orbSettings.voice.toString());
+  }, [userType, isOrbSelected, selectedOrbId, orbSettings]);
 
   useEffect(() => {
-    // Save settings
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('orbName', orbSettings.name);
-        localStorage.setItem('orbColor', orbSettings.color);
-        localStorage.setItem('orbAnimation', orbSettings.animation);
-        localStorage.setItem('orbVoice', orbSettings.voice.toString());
-      }
-    } catch (e) {
-      console.warn('LocalStorage write failed:', e);
-    }
-  }, [orbSettings]);
-
-  useEffect(() => {
-    if (isCreator) return;
-
-    try {
-      if (typeof window === 'undefined' || !window.localStorage) return;
-    } catch (e) {
+    if (userType === 'CREATOR' || userType === 'ADMIN') {
+      setIsExpired(false);
       return;
     }
 
     const today = new Date().toDateString();
     const lastSessionDate = localStorage.getItem('sessionDate');
+    const startTime = parseInt(localStorage.getItem('sessionStart')) || Date.now();
     
     if (lastSessionDate !== today) {
       localStorage.setItem('sessionDate', today);
-      localStorage.setItem('sessionStart', Date.now());
+      localStorage.setItem('sessionStart', Date.now().toString());
       setIsExpired(false);
     }
 
-    const startTime = localStorage.getItem('sessionStart') || Date.now();
-    
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setSessionTime(elapsed);
       
+      // 2 hour session for free users
       if (elapsed >= 7200) {
         setIsExpired(true);
         clearInterval(interval);
@@ -70,18 +69,32 @@ export const SessionProvider = ({ children }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isCreator]);
+  }, [userType]);
 
-  const resetSession = () => {
-    localStorage.removeItem('sessionStart');
-    setSessionTime(0);
-    setIsExpired(false);
+  const loginAsCreator = (key) => {
+    if (key === CREATOR_KEY) {
+      setUserType('CREATOR');
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    setUserType('USER');
+    setIsOrbSelected(false);
+    localStorage.clear();
+    window.location.href = '/';
   };
 
   return (
     <SessionContext.Provider value={{ 
-      sessionTime, isExpired, isCreator, resetSession, 
-      orbSettings, setOrbSettings 
+      userType, setUserType,
+      isOrbSelected, setIsOrbSelected,
+      selectedOrbId, setSelectedOrbId,
+      orbSettings, setOrbSettings,
+      sessionTime, isExpired,
+      loginAsCreator, logout,
+      CREATOR_KEY
     }}>
       {children}
     </SessionContext.Provider>

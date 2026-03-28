@@ -1,34 +1,33 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mic, MicOff, Volume2, Sparkles, Globe } from 'lucide-react';
+import { ORB_MODES } from '../../data/orbs.js';
 import './VoiceOrb.css';
 
 const VoiceOrb = ({ onTranscription, settings }) => {
   const [isListening, setIsListening] = useState(false);
   const [pulseScale, setPulseScale] = useState(1);
   const recognitionRef = useRef(null);
-  const synthRef = useRef(window.speechSynthesis);
-
-  const speak = (text) => {
-    if (!synthRef.current) return;
-    const voices = synthRef.current.getVoices();
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (voices[settings.voice]) {
-      utterance.voice = voices[settings.voice];
-    }
-    synthRef.current.speak(utterance);
-  };
+  
+  // Find the current orb config based on the settings/id
+  const orbConfig = ORB_MODES.find(o => o.id === settings.id) || ORB_MODES[0];
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.interimResults = true;
 
       recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        onTranscription(transcript);
-        setIsListening(false);
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        
+        if (event.results[0].isFinal) {
+          onTranscription(transcript);
+          setIsListening(false);
+        }
       };
 
       recognitionRef.current.onerror = () => setIsListening(false);
@@ -40,8 +39,8 @@ const VoiceOrb = ({ onTranscription, settings }) => {
     let interval;
     if (isListening) {
       interval = setInterval(() => {
-        setPulseScale(1 + Math.random() * 0.4);
-      }, 100);
+        setPulseScale(1 + Math.random() * 0.2);
+      }, 50);
     } else {
       setPulseScale(1);
     }
@@ -58,23 +57,33 @@ const VoiceOrb = ({ onTranscription, settings }) => {
   };
 
   return (
-    <div className="voice-orb-container">
+    <div className="voice-orb-wrapper">
       <div 
-        className={`voice-orb ${isListening ? 'listening' : ''} anim-${settings.animation.toLowerCase()}`}
+        className={`premium-orb ${isListening ? 'listening' : ''}`}
         style={{ 
-          transform: `scale(${pulseScale})`,
-          background: `conic-gradient(from 180deg at 50% 50%, ${settings.color} 0deg, #000 360deg)`
+          '--orb-color': orbConfig.color,
+          '--orb-secondary': orbConfig.secondaryColor,
+          transform: `scale(${pulseScale})`
         }}
         onClick={toggleListening}
       >
-        <div className="orb-inner"></div>
-        <div 
-          className="orb-glow" 
-          style={{ background: settings.color }}
-        ></div>
-        {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+        <div className="orb-ring-outer"></div>
+        <div className="orb-ring-inner"></div>
+        <div className="orb-core">
+          {isListening ? <Mic size={24} className="mic-active" /> : <Mic size={24} />}
+        </div>
+        
+        {/* Multilingual Glow Indicators */}
+        <div className="multilingual-indicator">
+          <Globe size={10} />
+          <span>MULTI_LANG_ACTIVE</span>
+        </div>
       </div>
-      <div className="orb-label">{isListening ? 'Listening...' : settings.name}</div>
+      
+      <div className="orb-status-text">
+        <span className="orb-name">{orbConfig.name}</span>
+        <span className="orb-action">{isListening ? 'ANALYZING_SPEECH...' : 'CLICK_TO_COMMAND'}</span>
+      </div>
     </div>
   );
 };
