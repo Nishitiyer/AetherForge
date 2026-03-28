@@ -104,52 +104,57 @@ const Hero = ({ isSelectionMode = false, onConfirm }) => {
         </div>
 
         {/* Center Canvas Area */}
-        <div className="center-stage">
-          <div className="canvas-container">
-            <Canvas shadows>
-              <Suspense fallback={null}>
-                <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={45} />
-                <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI/2.5} maxPolarAngle={Math.PI/2} />
-                
-                <Chestplate isOpen={isOpen}>
-                  <Orb3D config={currentOrb} isListening={isListening} />
-                </Chestplate>
+          <div className="center-stage">
+            <div className="selection-arrows">
+              <button className="nav-arrow left" onClick={handlePrev}>
+                <ChevronLeft size={48} />
+              </button>
+              <button className="nav-arrow right" onClick={handleNext}>
+                <ChevronRight size={48} />
+              </button>
+            </div>
 
-                <Environment preset="night" />
-                <ContactShadows position={[0, -3.5, 0]} opacity={0.4} scale={20} blur={2.5} far={10} color="#000000" />
-                
-                <ambientLight intensity={0.2} />
-                <pointLight position={[10, 10, 10]} intensity={1} color={currentOrb.color} />
-              </Suspense>
-            </Canvas>
-          </div>
+            <div className="canvas-container">
+              <Canvas shadows>
+                <Suspense fallback={null}>
+                  <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={45} />
+                  <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={Math.PI/2.5} maxPolarAngle={Math.PI/2} />
+                  
+                  <Chestplate isOpen={isOpen}>
+                    <Orb3D key={currentOrb.id} config={currentOrb} isListening={isListening} />
+                  </Chestplate>
 
-          {/* Interactive HUD Elements */}
-          <div className="hud-overlay">
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={currentOrb.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="orb-info-hud"
-              >
-                <div className="orb-title-row">
-                  <h2 style={{ color: currentOrb.color }}>{currentOrb.name}</h2>
-                  <span className="orb-aura">{currentOrb.aura}</span>
-                </div>
-                <p className="orb-desc">{currentOrb.description}</p>
-                <div className="orb-stats">
-                  <div className="stat-pill"><Globe size={12} /> MULTILINGUAL_ACTIVE</div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                  <Environment preset="night" />
+                  <ContactShadows position={[0, -4, 0]} opacity={0.4} scale={20} blur={2.5} far={10} color="#000000" />
+                  
+                  <ambientLight intensity={0.2} />
+                </Suspense>
+              </Canvas>
+            </div>
 
-            <div className="keyboard-hint">
-              <ChevronLeft size={14} /> USE ARROW KEYS TO BROWSE CORES <ChevronRight size={14} />
+            {/* Interactive HUD Elements */}
+            <div className="hud-overlay">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={currentOrb.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="orb-info-hud"
+                >
+                  <div className="orb-title-row">
+                    <h2 style={{ color: currentOrb.color }}>{currentOrb.name}</h2>
+                    <span className="orb-aura">{currentOrb.aura}</span>
+                  </div>
+                  <p className="orb-desc">{currentOrb.description}</p>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="keyboard-hint mt-4">
+                <span className="key-tag">LEFT_ARROW</span> OR <span className="key-tag">RIGHT_ARROW</span> TO BROWSE CORES
+              </div>
             </div>
           </div>
-        </div>
 
         {/* Right Action Panel */}
         <div className="side-panel right-panel text-right">

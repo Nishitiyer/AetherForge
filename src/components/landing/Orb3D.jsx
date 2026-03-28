@@ -65,7 +65,7 @@ const Orb3D = ({ config, isListening }) => {
 
         {/* Energy Particles */}
         <Points ref={particlesRef}>
-          <bufferGeometry>
+          <bufferGeometry key={config.particleCount}>
             <bufferAttribute
               attach="attributes-position"
               count={particlePositions.length / 3}
