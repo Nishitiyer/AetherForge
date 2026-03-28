@@ -1,9 +1,24 @@
 import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
-import { Environment, ContactShadows, PerspectiveCamera, OrbitControls, Bloom, EffectComposer } from '@react-three/drei';
-import { Environment, ContactShadows, PerspectiveCamera, OrbitControls } from '@react-three/drei';
-import { ChevronRight, ChevronLeft, Mic, Shield, Cpu, Palette } from 'lucide-react';
+import { 
+  Environment, 
+  ContactShadows, 
+  PerspectiveCamera, 
+  OrbitControls, 
+  Float,
+  BakeShadows
+} from '@react-three/drei';
+import { 
+  ChevronRight, 
+  ChevronLeft, 
+  Mic, 
+  Shield, 
+  Cpu, 
+  Palette, 
+  Globe,
+  Zap
+} from 'lucide-react';
 import Chestplate from './Chestplate.jsx';
 import Orb3D from './Orb3D.jsx';
 import { ORB_MODES } from '../../data/orbs.js';
