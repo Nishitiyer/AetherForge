@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Sphere, MeshDistortMaterial, MeshWobbleMaterial, Points, PointMaterial } from '@react-three/drei';
+import { Float, Sphere, Torus, MeshDistortMaterial, MeshWobbleMaterial, Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 
 const Orb3D = ({ config, isListening }) => {
