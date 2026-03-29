@@ -36,6 +36,7 @@ import GestureOverlay from '../components/editor/GestureOverlay.jsx';
 import GesturePanel from '../components/editor/GesturePanel.jsx';
 import { useSession } from '../context/SessionContext.jsx';
 import ActiveVoiceAssistant from '../components/editor/ActiveVoiceAssistant.jsx';
+import OrbAssistantSidebar from '../components/editor/OrbAssistantSidebar.jsx';
 import './Editor.css';
 
 const WORKSPACES = [
@@ -158,10 +159,14 @@ const Editor = () => {
           </div>
         </section>
 
-        {/* Right Sidebar (Outliner & Properties) */}
-        <aside className="properties-shelf">
-          {/* Outliner (Top Half) */}
-          <div className="outliner-panel">
+        {/* Right Sidebar (Orb Assistant + Outliner & Properties) */}
+        <aside className="properties-shelf" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', gap: '0' }}>
+          {/* Orb Assistant Sidebar */}
+          <div style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,.06)', minHeight: 0, flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+            <OrbAssistantSidebar onAddObject={handleAddObject} />
+          </div>
+          {/* Outliner (Below) */}
+          <div className="outliner-panel" style={{ flexShrink: 0 }}>
             <div className="panel-header">
               <Database size={14} />
               <span>Outliner</span>
