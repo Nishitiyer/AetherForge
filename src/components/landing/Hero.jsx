@@ -138,7 +138,7 @@ const Hero = ({ onConfirm }) => {
 
          {/* CENTER: The 3D Render (40-50% width visual) */}
          <div className="v6-render-stage">
-           <Canvas shadows camera={{ position: [0, 0, 16], fov: 35 }}>
+           <Canvas shadows camera={{ position: [0, 1, 22], fov: 42 }}>
              <Suspense fallback={null}>
                <OrbitControls 
                  enableZoom={false} 
@@ -151,8 +151,8 @@ const Hero = ({ onConfirm }) => {
                <ChestReactorAssembly animState={animState}>
                  <Orb3D key={currentOrb.id} config={currentOrb} animState={animState} isExiting={isExiting} />
                </ChestReactorAssembly>
-               <Environment preset="night" />
-               <ContactShadows position={[0, -5, 0]} opacity={0.6} scale={30} blur={3} color="#000000" />
+               <Environment preset="city" />
+               <ContactShadows position={[0, -6, 0]} opacity={0.5} scale={30} blur={3} color="#000000" />
              </Suspense>
            </Canvas>
 
