@@ -105,7 +105,11 @@ const Editor = () => {
       {/* 2. Main Workspace Layout */}
       <main className="editor-grid">
         {/* Left Toolbar (Vertical) */}
-        <EditorSidebar activeMode={activeMode} />
+        <EditorSidebar 
+          activeMode={activeMode} 
+          isGestureActive={isGestureActive}
+          setIsGestureActive={setIsGestureActive}
+        />
 
         {/* Central Area (Viewport) */}
         <section className="viewport-zone">

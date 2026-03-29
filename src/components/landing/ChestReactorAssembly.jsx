@@ -3,305 +3,231 @@ import { useFrame } from '@react-three/fiber';
 import { Box, Cylinder, Torus, Extrude } from '@react-three/drei';
 import * as THREE from 'three';
 
-// V6 Premium Cinematic Materials
 const COLORS = {
-  CANDY_RED: "#7a0000",      // Metallic automotive outer shell
-  CHAMPAGNE_GOLD: "#d4af37", // Internal accents and housing
-  GUNMETAL: "#121214",       // Structural frame
-  TITANIUM: "#2c2c30",       // Actuators
-  CYAN_GLOW: "#00e5ff",      // Core energy bleed
+  CANDY_RED: "#7a0000",
+  CHAMPAGNE_GOLD: "#d4af37",
+  GUNMETAL: "#121214",
+  TITANIUM: "#2c2c30",
+  CYAN_GLOW: "#00e5ff",
 };
 
-/* --- PRECISION HARD-SURFACE ARCHITECTURE --- */
-
-// Reusable Armor Plate with heavy beveling for realism
-const ArmorPlate = ({ shape, position, rotation, color, thickness, bevel, mirror }) => (
+// Intricate Mechanical Support Arm (replaces the giant shells)
+const SupportRib = ({ position, rotation, mirror }) => (
   <group position={position} rotation={rotation} scale={[mirror ? -1 : 1, 1, 1]}>
-    <Extrude args={[shape, { depth: thickness, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 32 }]}>
-      <meshPhysicalMaterial 
-        color={color} 
-        metalness={0.95} 
-        roughness={0.15} 
-        clearcoat={1.0} 
-        clearcoatRoughness={0.1} 
-      />
-    </Extrude>
-  </group>
-);
-
-// Mechanical Frame Rib
-const FrameRib = ({ position, rotation }) => (
-  <group position={position} rotation={rotation}>
-    <Box args={[0.5, 0.2, 2.0]}>
-      <meshPhysicalMaterial color={COLORS.GUNMETAL} metalness={0.9} roughness={0.4} />
+    {/* Main Strut */}
+    <Box args={[1.5, 6.0, 0.4]} position={[1.8, 0, 0]}>
+      <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.9} roughness={0.3} />
     </Box>
-    <Cylinder args={[0.1, 0.1, 2.1]} rotation={[Math.PI/2, 0, 0]} position={[0, 0.2, 0]}>
-      <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.95} roughness={0.2} />
+    {/* Red Armor Accent */}
+    <Box args={[0.5, 4.0, 0.5]} position={[2.6, 0, 0.1]}>
+      <meshPhysicalMaterial color={COLORS.CANDY_RED} metalness={0.95} roughness={0.15} clearcoat={1.0} />
+    </Box>
+    {/* Hydraulic Connector */}
+    <Cylinder args={[0.15, 0.15, 2.0]} rotation={[0, 0, Math.PI/2]} position={[0.8, 2, -0.1]}>
+      <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.2} />
+    </Cylinder>
+    <Cylinder args={[0.15, 0.15, 2.0]} rotation={[0, 0, Math.PI/2]} position={[0.8, -2, -0.1]}>
+      <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.2} />
     </Cylinder>
   </group>
 );
 
-// Sequenced Iris Blade
-const IrisBlade = ({ rotation, animState }) => {
+// Overlapping Iris Blades for realistic aperture
+const HeavyIrisBlade = ({ rotation, animState }) => {
   const meshRef = useRef();
   
   const shape = useMemo(() => {
     const s = new THREE.Shape();
-    s.moveTo(0, 0);
-    s.lineTo(1.4, 0);
-    s.lineTo(1.7, 0.8);
-    s.lineTo(0.4, 1.3);
+    s.moveTo(0, -0.2);
+    s.lineTo(1.8, -0.2);
+    s.lineTo(2.2, 0.8);
+    s.lineTo(0.5, 1.4);
     s.closePath();
     return s;
   }, []);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
-    let target = 0; // 0 = closed
+    let target = 0; // closed
     if (animState === 'initialize_open' || animState === 'settle_open' || animState === 'idle_active') target = 1;
-    if (animState === 'orb_swap') target = 0.5; // partial close
+    if (animState === 'orb_swap') target = 0.5;
 
-    const uZero = meshRef.current.userData.progress || 0;
-    const p = THREE.MathUtils.lerp(uZero, target, delta * 5.0);
+    const p = THREE.MathUtils.lerp(meshRef.current.userData.progress || 0, target, delta * 6.0);
     meshRef.current.userData.progress = p;
     
-    // Rotate and shift outwards
-    meshRef.current.rotation.z = p * (-Math.PI / 3);
-    meshRef.current.position.x = p * 1.0;
+    // Retract outward and rotate into the housing
+    meshRef.current.position.x = p * 1.5;
+    meshRef.current.rotation.z = p * (-Math.PI / 4);
   });
 
   return (
     <group rotation={[0, 0, rotation]}>
       <mesh ref={meshRef} position={[0, 0, 0]}>
-        <extrudeGeometry args={[shape, { depth: 0.1, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2 }]} />
-        <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={1} roughness={0.3} />
+        <extrudeGeometry args={[shape, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3 }]} />
+        <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.9} roughness={0.4} />
       </mesh>
     </group>
   );
 };
 
-// Main V6 ChestReactorAssembly
+// The True Centerpiece Machine
 const ChestReactorAssembly = ({ animState, children }) => {
-  // Kinematic References
-  const topFlapRef = useRef();
-  const leftOuterRef = useRef();
-  const rightOuterRef = useRef();
-  const leftInnerRef = useRef();
-  const rightInnerRef = useRef();
+  const stateRef = useRef({ phase: 0 });
+  
+  const crownRef = useRef();
+  const leftRibRef = useRef();
+  const rightRibRef = useRef();
   const pedestalRef = useRef();
   const chamberRingRef = useRef();
   const glowRef = useRef();
+  const lowerJawRef = useRef();
 
-  // Unified controller state
-  const stateRef = useRef({ phase: 0 }); // 0 to 1 open status
-
-  /* --- TRUE ANATOMICAL CAD SHAPES --- */
-  
-  // 1. Outer Pectoral Plate (The wide Torso shoulder wrap)
-  const outerPectoralShape = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(2.0, -1.0);
-    s.lineTo(4.5, -0.2);
-    s.bezierCurveTo(5.2, 1.5, 5.5, 4.0, 4.8, 6.2); // Outer shoulder
-    s.lineTo(2.5, 6.8); // Upper shoulder connection
-    s.bezierCurveTo(1.8, 4.0, 1.8, 1.5, 2.0, -1.0); // Inner boundary
-    return s;
-  }, []);
-
-  // 2. Inner Armor Segment (Near Core)
-  const innerSegmentShape = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(0.8, -1.8);
-    s.lineTo(2.1, -1.1);
-    s.bezierCurveTo(1.9, 1.5, 1.9, 4.0, 2.6, 6.6);
-    s.lineTo(1.2, 6.0);
-    s.bezierCurveTo(0.8, 4.5, 0.6, 2.5, 0.8, -1.8);
-    return s;
-  }, []);
-
-  // 3. Upper Sternum Flap (Collar)
-  const topFlapShape = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(-2.2, 0);
-    s.lineTo(2.2, 0);
-    s.lineTo(1.6, 1.8);
-    s.lineTo(-1.6, 1.8);
-    s.closePath();
-    return s;
-  }, []);
-
-  /* --- FINITE STATE MACHINE KINEMATICS --- */
   useFrame((state, delta) => {
-    const lerpSpeed = 4.0;
-    
-    // Determine target openness based on animState
     let target = 0;
     if (animState === 'initialize_open' || animState === 'settle_open' || animState === 'idle_active') target = 1;
-    if (animState === 'orb_swap') target = 0.3; // retract partially during swap
+    if (animState === 'orb_swap') target = 0.4;
     
-    const p = THREE.MathUtils.lerp(stateRef.current.phase, target, delta * lerpSpeed);
+    // Snappy, mechanical lerp
+    const p = THREE.MathUtils.lerp(stateRef.current.phase, target, delta * 4.5);
     stateRef.current.phase = p;
 
-    // 1. Flap Hinge
-    if (topFlapRef.current) {
-      topFlapRef.current.rotation.x = -p * 2.2; 
-      topFlapRef.current.position.y = 5.8 + (p * 0.5); 
-    }
-
-    // 2. Outer Pectoral Plates (Swing outward)
-    if (leftOuterRef.current) {
-      leftOuterRef.current.position.x = -p * 1.5;
-      leftOuterRef.current.rotation.y = -p * 0.2;
-    }
-    if (rightOuterRef.current) {
-      rightOuterRef.current.position.x = p * 1.5;
-      rightOuterRef.current.rotation.y = p * 0.2; // slight angle out
-    }
-
-    // 3. Inner Armor Segments (Retract laterally)
-    if (leftInnerRef.current) leftInnerRef.current.position.x = -p * 0.8;
-    if (rightInnerRef.current) rightInnerRef.current.position.x = p * 0.8;
-
-    // 4. Chamber Ring Constant Idle + Swap Spin
-    if (chamberRingRef.current) {
-        if (animState === 'orb_swap') {
-             chamberRingRef.current.rotation.z += delta * 4; // fast spin over
-        } else if (animState === 'idle_active' || animState === 'settle_open') {
-             chamberRingRef.current.rotation.z += delta * 0.5; // active idle
-        } else {
-             chamberRingRef.current.rotation.z = p * (Math.PI / 4); // open spin
-        }
-    }
-
-    // 5. Core Pedestal Dynamic Elevation
-    if (pedestalRef.current) {
-        let pedTarget = -1.5;
-        if (animState === 'initialize_open' || animState === 'settle_open' || animState === 'idle_active') pedTarget = 0;
-        if (animState === 'orb_swap') pedTarget = -1.2; // sink down to swap
-        pedestalRef.current.position.z = THREE.MathUtils.lerp(pedestalRef.current.position.z, pedTarget, delta * 3.5);
+    // 1. Extreme Crown Lift
+    if (crownRef.current) {
+      crownRef.current.position.y = 4.0 + (p * 1.5);
+      crownRef.current.rotation.x = -p * 0.4; // Tilts back
     }
     
-    // 6. Chamber Glow Intensity
+    // 2. Lower Jaw Drop
+    if (lowerJawRef.current) {
+      lowerJawRef.current.position.y = -3.5 - (p * 1.0);
+      lowerJawRef.current.rotation.x = p * 0.2;
+    }
+
+    // 3. Side Ribs Retract laterally
+    if (leftRibRef.current) leftRibRef.current.position.x = -p * 0.8;
+    if (rightRibRef.current) rightRibRef.current.position.x = p * 0.8;
+
+    // 4. Chamber Ring Fast Spin
+    if (chamberRingRef.current) {
+      if (animState === 'orb_swap') chamberRingRef.current.rotation.z += delta * 6;
+      else if (target > 0) chamberRingRef.current.rotation.z += delta * 0.8;
+      else chamberRingRef.current.rotation.z = p * Math.PI;
+    }
+
+    // 5. Powerful Pedestal Strike
+    if (pedestalRef.current) {
+      let pedTarget = -2.5; // Deep inside
+      if (target === 1) pedTarget = 0; // Fully locked forward
+      if (animState === 'orb_swap') pedTarget = -1.8;
+      pedestalRef.current.position.z = THREE.MathUtils.lerp(pedestalRef.current.position.z, pedTarget, delta * 5.0);
+    }
+
+    // 6. Chamber Glow
     if (glowRef.current) {
-        let intensityTarget = 2; // idle closed
-        if (animState === 'initialize_open') intensityTarget = 15; // massive flash
-        if (animState === 'settle_open' || animState === 'idle_active') intensityTarget = 6;
-        if (animState === 'orb_swap') intensityTarget = 2;
-        glowRef.current.intensity = THREE.MathUtils.lerp(glowRef.current.intensity, intensityTarget, delta * 6);
+      let intensityTarget = 1;
+      if (animState === 'initialize_open') intensityTarget = 20; // Flash!
+      if (target === 1) intensityTarget = 8;
+      if (animState === 'orb_swap') intensityTarget = 2;
+      glowRef.current.intensity = THREE.MathUtils.lerp(glowRef.current.intensity, intensityTarget, delta * 8);
     }
   });
 
   return (
-    <group position={[0, -2.8, 0]}>
-      {/* 1. INTERNAL FRAME (Heavy Gunmetal Chassis) */}
-      <group position={[0, 3, -1.8]}>
-        <Box args={[2.0, 10, 0.6]} position={[0, 0, 0]}>
-          <meshPhysicalMaterial color={COLORS.GUNMETAL} metalness={0.9} roughness={0.6} />
-        </Box>
-        {[-3.5, -1.5, 1.5, 3.5].map((y, i) => (
-          <React.Fragment key={i}>
-            <FrameRib position={[-2.6, y, 0.2]} rotation={[0, 0, 0.15]} />
-            <FrameRib position={[2.6, y, 0.2]} rotation={[0, 0, -0.15]} />
-          </React.Fragment>
-        ))}
-        {/* Pistons */}
-        <Cylinder args={[0.15, 0.15, 9, 24]} position={[-3.2, 0, -0.2]} rotation={[0, 0, 0.2]}>
-           <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.95} roughness={0.2} />
-        </Cylinder>
-        <Cylinder args={[0.15, 0.15, 9, 24]} position={[3.2, 0, -0.2]} rotation={[0, 0, -0.2]}>
-           <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.95} roughness={0.2} />
-        </Cylinder>
+    <group position={[0, -0.5, 0]}>
+      {/* 1. THE CENTRAL MACHINE (Heavy Vertical Column) */}
+      <group position={[0, 0, -1.0]}>
+         {/* Main Reactor Block */}
+         <Box args={[4.2, 8.0, 1.5]} position={[0, 0, 0]}>
+            <meshPhysicalMaterial color={COLORS.GUNMETAL} metalness={0.95} roughness={0.5} />
+         </Box>
+         {/* Internal Power Rails */}
+         <Cylinder args={[0.3, 0.3, 8.2, 16]} position={[-1.2, 0, 0.8]}>
+            <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.2} />
+         </Cylinder>
+         <Cylinder args={[0.3, 0.3, 8.2, 16]} position={[1.2, 0, 0.8]}>
+            <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.2} />
+         </Cylinder>
       </group>
 
-      {/* 2. CENTRAL REACTOR HOUSING */}
-      <group position={[0, 3.2, 0]}>
-        {/* Deep Recessed Chamber */}
-        <Cylinder args={[3.4, 3.6, 2.5, 48, 1, false]} rotation={[Math.PI/2, 0, 0]} position={[0, 0, -0.6]}>
-          <meshPhysicalMaterial color={COLORS.GUNMETAL} metalness={1} roughness={0.5} side={THREE.DoubleSide} />
-        </Cylinder>
-        
-        {/* Inner Rotating Tech Ring */}
-        <group ref={chamberRingRef} position={[0, 0, 0.4]}>
-          <Torus args={[2.7, 0.1, 16, 64]}>
-             <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.15} />
-          </Torus>
-          {/* Engineered Gear Teeth */}
-          {[...Array(16)].map((_, i) => (
-             <Box key={i} args={[0.2, 0.6, 0.3]} position={[Math.sin((i/16)*Math.PI*2)*2.7, Math.cos((i/16)*Math.PI*2)*2.7, 0]} rotation={[0, 0, -(i/16)*Math.PI*2]}>
-                 <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={1} />
-             </Box>
-          ))}
-        </group>
+      {/* 2. EMBEDDED CHAMBER */}
+      <group position={[0, 0.5, 0]}>
+         {/* Deep Cavity Housing */}
+         <Cylinder args={[3.2, 3.2, 2.0, 64]} rotation={[Math.PI/2, 0, 0]} position={[0, 0, -1.0]}>
+            <meshPhysicalMaterial color={COLORS.GUNMETAL} metalness={1} roughness={0.6} side={THREE.DoubleSide} />
+         </Cylinder>
 
-        {/* 8-Blade Mechanical Iris */}
-        <group position={[0, 0, 0.6]}>
-          {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-            <IrisBlade key={i} rotation={(i * Math.PI * 2) / 8} animState={animState} />
-          ))}
-        </group>
+         {/* Chamber Track Ring */}
+         <group ref={chamberRingRef} position={[0, 0, 0]}>
+            <Torus args={[2.5, 0.15, 16, 64]}>
+               <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.9} roughness={0.2} />
+            </Torus>
+            {[...Array(12)].map((_, i) => (
+               <Box key={i} args={[0.1, 0.8, 0.4]} position={[Math.sin((i/12)*Math.PI*2)*2.5, Math.cos((i/12)*Math.PI*2)*2.5, 0]} rotation={[0, 0, -(i/12)*Math.PI*2]}>
+                   <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={1} roughness={0.3} />
+               </Box>
+            ))}
+         </group>
 
-        {/* Dynamic Core Pedestal Mount */}
-        <group ref={pedestalRef} position={[0, 0, -1.5]}>
-            {children}
-            {/* Magnetic Suspension Collar */}
-            <Cylinder args={[1.5, 1.7, 0.9, 48]} rotation={[Math.PI/2, 0, 0]} position={[0, 0, -0.45]}>
-                <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={1} roughness={0.25} />
-            </Cylinder>
-            {/* Telescoping Sub-Shaft */}
-            <Cylinder args={[0.8, 0.8, 2.0, 32]} rotation={[Math.PI/2, 0, 0]} position={[0, 0, -1.8]}>
-                <meshPhysicalMaterial color={COLORS.GUNMETAL} metalness={0.9} roughness={0.4} />
-            </Cylinder>
-        </group>
+         {/* Mechanical Iris */}
+         <group position={[0, 0, 0.3]}>
+            {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+              <HeavyIrisBlade key={i} rotation={(i * Math.PI * 2) / 8} animState={animState} />
+            ))}
+         </group>
+
+         {/* Core Pedestal (The true mounting bracket) */}
+         <group ref={pedestalRef} position={[0, 0, -2.5]}>
+             <group position={[0, 0, 0.5]}>
+               {children}
+             </group>
+             {/* The physical mount locking ring */}
+             <Torus args={[1.6, 0.1, 16, 64]} position={[0, 0, 0.2]}>
+                 <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.1} />
+             </Torus>
+             <Cylinder args={[1.2, 1.6, 1.5, 32]} rotation={[Math.PI/2, 0, 0]} position={[0, 0, -0.6]}>
+                 <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.9} roughness={0.5} />
+             </Cylinder>
+         </group>
       </group>
 
-      {/* 3. CHEST ASSEMBLY: ANATOMICAL LAYERS */}
+      {/* 3. ARMOR & SUPPORT (No large red doors) */}
       
-      {/* Outer Left Pectoral */}
-      <group ref={leftOuterRef} position={[0, 0, 1.4]}>
-        <ArmorPlate shape={outerPectoralShape} position={[0, 0, 0]} color={COLORS.CANDY_RED} thickness={1.2} bevel={0.2} mirror={false} />
-        <ArmorPlate shape={outerPectoralShape} position={[0.2, 0.2, 1.1]} color={COLORS.CHAMPAGNE_GOLD} thickness={0.15} bevel={0.06} mirror={false} />
+      {/* Lateral Support Ribs */}
+      <group ref={leftRibRef} position={[0, 0, 0]}>
+         <SupportRib position={[-1.0, 0.5, 0.5]} rotation={[0, -0.1, 0]} mirror={false} />
       </group>
-      
-      {/* Outer Right Pectoral */}
-      <group ref={rightOuterRef} position={[0, 0, 1.4]}>
-        <ArmorPlate shape={outerPectoralShape} position={[0, 0, 0]} color={COLORS.CANDY_RED} thickness={1.2} bevel={0.2} mirror={true} />
-        <ArmorPlate shape={outerPectoralShape} position={[-0.2, 0.2, 1.1]} color={COLORS.CHAMPAGNE_GOLD} thickness={0.15} bevel={0.06} mirror={true} />
+      <group ref={rightRibRef} position={[0, 0, 0]}>
+         <SupportRib position={[1.0, 0.5, 0.5]} rotation={[0, 0.1, 0]} mirror={true} />
       </group>
 
-      {/* Inner Left Armor Segment */}
-      <group ref={leftInnerRef} position={[0, 0, 1.0]}>
-         <ArmorPlate shape={innerSegmentShape} position={[0, 0, 0]} color={COLORS.TITANIUM} thickness={0.6} bevel={0.1} mirror={false} />
-         {/* Detail accents */}
-         <Box args={[0.2, 2.0, 0.2]} position={[-1.6, 2, 0.6]}>
-             <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.2} />
+      {/* Upper Mechanical Crown */}
+      <group ref={crownRef} position={[0, 4.0, 1.0]}>
+         <Box args={[3.8, 1.5, 1.2]}>
+            <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.9} roughness={0.2} />
+         </Box>
+         <Box args={[4.0, 0.4, 1.4]} position={[0, -0.4, 0.1]}>
+            <meshPhysicalMaterial color={COLORS.CANDY_RED} metalness={0.95} roughness={0.15} clearcoat={1.0} />
+         </Box>
+         <Box args={[1.0, 0.8, 1.5]} position={[0, 0.2, 0.2]}>
+            <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.1} />
          </Box>
       </group>
 
-      {/* Inner Right Armor Segment */}
-      <group ref={rightInnerRef} position={[0, 0, 1.0]}>
-         <ArmorPlate shape={innerSegmentShape} position={[0, 0, 0]} color={COLORS.TITANIUM} thickness={0.6} bevel={0.1} mirror={true} />
-         <Box args={[0.2, 2.0, 0.2]} position={[1.6, 2, 0.6]}>
-             <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.2} />
+      {/* Lower Sternum Jaw */}
+      <group ref={lowerJawRef} position={[0, -3.5, 1.0]}>
+         <Box args={[3.2, 1.5, 1.0]}>
+            <meshPhysicalMaterial color={COLORS.TITANIUM} metalness={0.9} roughness={0.2} />
+         </Box>
+         <Box args={[3.4, 0.3, 1.1]} position={[0, 0.4, 0.1]}>
+            <meshPhysicalMaterial color={COLORS.CANDY_RED} metalness={0.95} roughness={0.15} clearcoat={1.0} />
          </Box>
       </group>
 
-      {/* 4. UPPER STERNUM FLAP */}
-      <group position={[0, 6.0, 1.6]}>
-        <group ref={topFlapRef}>
-            <ArmorPlate shape={topFlapShape} position={[0, -1.8, 0]} color={COLORS.CANDY_RED} thickness={0.8} bevel={0.15} mirror={false} />
-            <Cylinder args={[0.3, 0.3, 4.6, 32]} rotation={[0, 0, Math.PI/2]} position={[0, 0, 0.4]}>
-                <meshPhysicalMaterial color={COLORS.CHAMPAGNE_GOLD} metalness={1} roughness={0.15} />
-            </Cylinder>
-        </group>
-      </group>
-
-      {/* 5. CINEMATIC PRODUCT LIGHTING */}
-      <ambientLight intensity={0.5} />
-      <spotLight position={[-20, 15, -5]} intensity={6.0} angle={0.5} penumbra={1} color="#ffffff" castShadow />
-      <spotLight position={[20, 5, -10]} intensity={5.0} angle={0.5} penumbra={1} color="#ffe0b2" castShadow />
-      <directionalLight position={[0, 20, 15]} intensity={4.5} castShadow shadow-mapSize={[2048, 2048]} />
-      <directionalLight position={[0, -15, 10]} intensity={1.5} color={COLORS.CANDY_RED} />
-      <pointLight ref={glowRef} position={[0, 3.2, 2.5]} intensity={2} distance={15} decay={2} color={COLORS.CYAN_GLOW} />
+      {/* 4. PREMIUM SCENE LIGHTING */}
+      <ambientLight intensity={0.4} />
+      <spotLight position={[-10, 20, 15]} intensity={8.0} angle={0.4} penumbra={1} color="#ffffff" castShadow shadow-mapSize={[2048, 2048]} />
+      <spotLight position={[15, -10, 10]} intensity={4.0} angle={0.6} penumbra={0.8} color="#ffe0b2" castShadow />
+      <pointLight ref={glowRef} position={[0, 0.5, 2.0]} intensity={1} distance={20} decay={2} color={COLORS.CYAN_GLOW} />
     </group>
   );
 };
