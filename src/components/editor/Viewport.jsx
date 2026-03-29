@@ -12,7 +12,8 @@ const Viewport = ({
   selectedPartIndex,
   setSelectedPartIndex,
   transformMode,
-  gestureData
+  gestureData,
+  selectedOrbId
 }) => {
   const [viewType, setViewType] = useState('Perspective');
   const [shading, setShading] = useState('Rendered');
@@ -54,6 +55,7 @@ const Viewport = ({
         setSelectedPartIndex={setSelectedPartIndex}
         transformMode={transformMode}
         gestureData={gestureData}
+        selectedOrbId={selectedOrbId}
       />
 
       {/* Viewport Navigation Overlay */}

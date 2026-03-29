@@ -10,47 +10,75 @@ import {
   Float,
   Sphere as DreiSphere
 } from '@react-three/drei';
+import AssistantOrb from '../common/AssistantOrb.jsx';
 import { useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise, Vignette, SSAO, ToneMapping } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 const GestureHand = ({ gestureData, selectedObjectId, sceneObjects, setSceneObjects, lastGesturePos }) => {
-  useFrame(() => {
-    if (!gestureData || !gestureData.landmarks || gestureData.gesture !== 'PINCH' || !selectedObjectId) {
+  useFrame((state, delta) => {
+    if (!gestureData || !gestureData.landmarks || !selectedObjectId) {
       lastGesturePos.current = null;
       return;
     }
 
-    const indexTip = gestureData.landmarks[8];
-    const currentPos = { x: (indexTip.x - 0.5) * 20, y: (0.5 - indexTip.y) * 20 };
+    // 1. PINCH -> TRANSLATE
+    if (gestureData.gesture === 'PINCH') {
+      const indexTip = gestureData.landmarks[8];
+      const currentPos = { x: (indexTip.x - 0.5) * 20, y: (0.5 - indexTip.y) * 20 };
 
-    if (lastGesturePos.current) {
-      const dx = currentPos.x - lastGesturePos.current.x;
-      const dy = currentPos.y - lastGesturePos.current.y;
+      if (lastGesturePos.current) {
+        const dx = currentPos.x - lastGesturePos.current.x;
+        const dy = currentPos.y - lastGesturePos.current.y;
 
-      setSceneObjects(prev => prev.map(obj => {
-        if (obj.id === selectedObjectId) {
-          return {
-            ...obj,
-            position: [
-              obj.position[0] + dx,
-              obj.position[1] + dy,
-              obj.position[2]
-            ]
-          };
-        }
-        return obj;
-      }));
+        setSceneObjects(prev => prev.map(obj => {
+          if (obj.id === selectedObjectId) {
+            return {
+              ...obj,
+              position: [
+                obj.position[0] + dx,
+                obj.position[1] + dy,
+                obj.position[2]
+              ]
+            };
+          }
+          return obj;
+        }));
+      }
+      lastGesturePos.current = currentPos;
     }
-    lastGesturePos.current = currentPos;
+
+    // 2. PALM_OPEN -> ROTATION ANIMATION (AUTO)
+    if (gestureData.gesture === 'PALM_OPEN') {
+       setSceneObjects(prev => prev.map(obj => {
+         if (obj.id === selectedObjectId) {
+           return { ...obj, animation: 'SPIN' };
+         }
+         return obj;
+       }));
+    }
   });
 
   return null;
 };
 
 const MeshObject = ({ obj, isSelected, onClick, transformMode }) => {
+  const meshRef = useRef();
+
+  useFrame((state, delta) => {
+    if (!meshRef.current) return;
+    
+    if (obj.animation === 'SPIN') {
+      meshRef.current.rotation.y += delta * 2;
+    }
+    if (obj.animation === 'PULSE') {
+      const s = 1 + Math.sin(state.clock.elapsedTime * 5) * 0.1;
+      meshRef.current.scale.set(s, s, s);
+    }
+  });
+
   return (
-    <group position={obj.position} scale={obj.scale}>
+    <group ref={meshRef} position={obj.position} scale={obj.scale}>
       {obj.parts.map((part, index) => (
         <mesh 
           key={index}
@@ -87,9 +115,6 @@ const MeshObject = ({ obj, isSelected, onClick, transformMode }) => {
           />
         </mesh>
       ))}
-      {isSelected && (
-        <TransformControls mode={transformMode} size={0.6} />
-      )}
     </group>
   );
 };
@@ -101,14 +126,43 @@ const Viewport3D = ({
   setSelectedObjectId, 
   setSelectedPartIndex,
   transformMode,
-  gestureData
+  gestureData,
+  selectedOrbId
 }) => {
   const lastGesturePos = useRef(null);
+  const [isAIActive, setIsAIActive] = React.useState(false);
+
+  // Listen for AI commands from AIPanel
+  React.useEffect(() => {
+    const handleAI = (e) => {
+      const { action, type, color } = e.detail;
+      setIsAIActive(true);
+      setTimeout(() => setIsAIActive(false), 2000); // 2 second pulse on action
+      
+      setSceneObjects(prev => prev.map(obj => {
+        if (obj.id === selectedObjectId) {
+          if (action === 'ANIMATE') return { ...obj, animation: type };
+          if (action === 'MATERIAL') {
+            return {
+              ...obj,
+              parts: obj.parts.map(p => ({ ...p, color }))
+            };
+          }
+        }
+        return obj;
+      }));
+    };
+    window.addEventListener('aether-ai-command', handleAI);
+    return () => window.removeEventListener('aether-ai-command', handleAI);
+  }, [selectedObjectId, setSceneObjects]);
+
+  const selectedObj = sceneObjects.find(o => o.id === selectedObjectId);
 
   return (
     <div className="viewport-3d-canvas-root">
       <Canvas 
          shadows 
+         legacy={true}
          gl={{ 
            antialias: false, 
            powerPreference: "high-performance",
@@ -121,7 +175,7 @@ const Viewport3D = ({
       >
         <color attach="background" args={['#1a1a1a']} />
         
-        <Suspense fallback={null}>
+        {/* <Suspense fallback={null}> */}
           <PerspectiveCamera makeDefault position={[10, 10, 10]} fov={45} />
           <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
           
@@ -134,7 +188,7 @@ const Viewport3D = ({
           />
           
           {/* High-Performance Lighting */}
-          <ambientLight intensity={0.2} />
+          <ambientLight intensity={0.5} />
           <spotLight 
             position={[10, 15, 10]} 
             angle={0.3} 
@@ -161,6 +215,13 @@ const Viewport3D = ({
                 }}
               />
             ))}
+            {selectedObj && (
+              <TransformControls 
+                object={sceneObjects.find(o => o.id === selectedObjectId)} 
+                mode={transformMode} 
+                size={0.6} 
+              />
+            )}
           </group>
           
           <ContactShadows 
@@ -174,27 +235,11 @@ const Viewport3D = ({
           
           <gridHelper args={[100, 100, "#222", "#111"]} />
           
-          {/* Post-Processing Pipeline */}
-          <EffectComposer disableNormalPass>
-            <Bloom 
-              luminanceThreshold={1} 
-              mipmapBlur 
-              intensity={0.5} 
-              radius={0.4} 
-            />
-            <SSAO 
-              intensity={10}
-              radius={0.1}
-              luminanceInfluence={0.5}
-              color="#000000"
-            />
-            <ToneMapping middleGrey={0.8} maxLuminance={16.0} />
-            <Noise opacity={0.02} />
-            <Vignette eskil={false} offset={0.1} darkness={1.1} />
-          </EffectComposer>
-
+          {/* AI VOICE ASSISTANT (Holographic Orb) */}
+          <AssistantOrb orbId={selectedOrbId} active={isAIActive} />
+          
           <BakeShadows />
-        </Suspense>
+        {/* </Suspense> */}
       </Canvas>
       
       <style>{`

@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
@@ -11,9 +11,7 @@ if (!rootElement) {
   const root = ReactDOM.createRoot(rootElement)
   try {
     root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
+      <App />
     )
   } catch (err) {
     rootElement.innerHTML = `<div style="padding: 20px; color: white;"><h1>Oops! Something went wrong.</h1><pre>${err.message}</pre></div>`

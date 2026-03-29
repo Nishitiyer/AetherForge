@@ -54,7 +54,13 @@ const useHands = (active) => {
               Math.pow(middleTip.y - wrist.y, 2)
             );
             
+            // 3. Thumbs Up (Thumb up, others closed)
+            const thumbUp = lms[4].y < lms[3].y && lms[3].y < lms[2].y;
+            const indexClosed = lms[8].y > lms[6].y;
+            const middleClosed = lms[12].y > lms[10].y;
+            
             if (palmDist > 0.4) setGesture('PALM_OPEN');
+            else if (thumbUp && indexClosed && middleClosed) setGesture('THUMBS_UP');
             else setGesture('NONE');
           }
         } else {

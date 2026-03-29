@@ -1,101 +1,96 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Sphere, Torus, MeshDistortMaterial, MeshWobbleMaterial, Points, PointMaterial } from '@react-three/drei';
+import { Sphere, Torus, Float, PointLight } from '@react-three/drei';
 import * as THREE from 'three';
 
 const Orb3D = ({ config, isListening }) => {
-  const meshRef = useRef();
-  const innerRef = useRef();
-  const particlesRef = useRef();
+  const outerRingRef = useRef();
+  const innerRingRef = useRef();
+  const nucleusRef = useRef();
+  const lightRef = useRef();
 
-  const particlePositions = useMemo(() => {
-    const positions = new Float32Array(config.particleCount * 3);
-    for (let i = 0; i < config.particleCount; i++) {
-      const theta = THREE.MathUtils.randFloatSpread(360);
-      const phi = THREE.MathUtils.randFloatSpread(360);
-      positions[i * 3] = 1.2 * Math.sin(theta) * Math.cos(phi);
-      positions[i * 3 + 1] = 1.2 * Math.sin(theta) * Math.sin(phi);
-      positions[i * 3 + 2] = 1.2 * Math.cos(theta);
-    }
-    return positions;
-  }, [config]);
-
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const time = state.clock.getElapsedTime();
-    if (meshRef.current) {
-      meshRef.current.rotation.y = time * 0.5 * config.pulseSpeed;
-      meshRef.current.rotation.z = time * 0.3;
+    
+    if (outerRingRef.current) {
+      outerRingRef.current.rotation.y += delta * 1.5;
+      outerRingRef.current.rotation.z += delta * 0.5;
     }
-    if (innerRef.current) {
-      const s = 1 + Math.sin(time * config.pulseSpeed * 2) * (isListening ? 0.2 : 0.05);
-      innerRef.current.scale.set(s, s, s);
+    if (innerRingRef.current) {
+      innerRingRef.current.rotation.x -= delta * 2;
+      innerRingRef.current.rotation.y += delta * 1;
     }
-    if (particlesRef.current) {
-      particlesRef.current.rotation.y -= 0.002 * config.pulseSpeed;
+    if (nucleusRef.current) {
+      nucleusRef.current.scale.setScalar(
+        1 + Math.sin(time * (isListening ? 10 : 2)) * 0.05
+      );
+    }
+    if (lightRef.current) {
+      lightRef.current.intensity = 15 + Math.sin(time * 3) * 5;
     }
   });
 
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-      <group>
-        {/* Outer Aura */}
-        <Sphere args={[1.5, 32, 32]} ref={meshRef}>
-          <MeshDistortMaterial
-            color={config.color}
-            speed={config.pulseSpeed}
-            distort={0.4}
-            radius={1}
-            transparent
-            opacity={0.3}
-            emissive={config.color}
-            emissiveIntensity={2}
-          />
-        </Sphere>
-
-        {/* Inner Core - Triangular MK50 Element */}
-        <Torus args={[0.9, 0.1, 3, 3]} rotation={[0, 0, Math.PI / 2]} ref={innerRef}>
-          <meshStandardMaterial
-            color={config.secondaryColor}
-            emissive={config.color}
-            emissiveIntensity={10}
+    <group>
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        {/* 1. CORE NUCLEUS */}
+        <Sphere ref={nucleusRef} args={[0.8, 64, 64]}>
+          <meshStandardMaterial 
+            color={config.color} 
+            emissive={config.color} 
+            emissiveIntensity={isListening ? 10 : 2} 
             metalness={1}
             roughness={0}
           />
-        </Torus>
-
-        {/* Central Pulsating Sphere */}
-        <Sphere args={[0.4, 32, 32]}>
-          <meshStandardMaterial 
-            color="#fff" 
-            emissive={config.color} 
-            emissiveIntensity={20} 
-          />
         </Sphere>
 
-        {/* Energy Particles */}
-        <Points ref={particlesRef}>
-          <bufferGeometry key={config.particleCount}>
-            <bufferAttribute
-              attach="attributes-position"
-              count={particlePositions.length / 3}
-              array={particlePositions}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <PointMaterial
-            transparent
-            color={config.color}
-            size={0.05}
-            sizeAttenuation={true}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </Points>
+        {/* 2. ATMOSPHERIC SHELL */}
+        <Sphere args={[1.2, 32, 32]}>
+           <meshPhysicalMaterial 
+             color={config.color} 
+             transparent 
+             opacity={0.15} 
+             roughness={0.1} 
+             metalness={0.9} 
+             clearcoat={1} 
+             transmission={0.8} 
+             thickness={1}
+           />
+        </Sphere>
 
-        {/* Radial Glow Light */}
-        <pointLight intensity={10} distance={5} color={config.color} />
-      </group>
-    </Float>
+        {/* 3. ROTATING TECHNICAL RINGS */}
+        <group ref={outerRingRef}>
+          <Torus args={[1.6, 0.03, 16, 100]}>
+            <meshStandardMaterial color={config.color} emissive={config.color} emissiveIntensity={5} />
+          </Torus>
+          {/* Segmented Detail Bits */}
+          {[0, 1, 2, 3].map(i => (
+             <group key={i} rotation={[0, 0, (i * Math.PI) / 2]}>
+               <mesh position={[1.6, 0, 0]}>
+                  <boxGeometry args={[0.1, 0.4, 0.1]} />
+                  <meshStandardMaterial color="#fff" emissive="#fff" />
+               </mesh>
+             </group>
+          ))}
+        </group>
+
+        <group ref={innerRingRef} rotation={[Math.PI / 2, 0, 0]}>
+          <Torus args={[1.4, 0.02, 16, 100]}>
+            <meshStandardMaterial color={config.color} emissive={config.color} />
+          </Torus>
+        </group>
+
+        {/* 4. VOLUMETRIC GLOW */}
+        <pointLight ref={lightRef} color={config.color} intensity={15} distance={10} decay={2} />
+        
+        {/* 5. MOUNTING INTERFACE (Internal) */}
+        <group position={[0, -0.8, 0]}>
+           <Torus args={[0.6, 0.05, 12, 48]} rotation={[Math.PI/2, 0, 0]}>
+              <meshStandardMaterial color="#222" metalness={1} />
+           </Torus>
+        </group>
+      </Float>
+    </group>
   );
 };
 

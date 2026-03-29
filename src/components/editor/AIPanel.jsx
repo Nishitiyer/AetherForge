@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { 
   Send, 
   Sparkles, 
@@ -52,16 +53,38 @@ const AIPanel = ({ activeMode, onAddObject }) => {
     
     addMessage(activeChat.id, { type: 'user', content: prompt });
     
-    // Simulate AI response for the demo
+    const p = prompt.toLowerCase();
+    
+    // Simulate AI response
     setTimeout(() => {
-      addMessage(activeChat.id, { 
-        type: 'system', 
-        content: `Analyzing prompt: "${prompt}" using ${selectedModel} engine. Applying ${generationSettings.topologyQuality} topology at ${generationSettings.materialFidelity} resolution. Object generation in progress...` 
-      });
+      let response = `Analyzing prompt: "${prompt}"...`;
       
-      if (prompt.toLowerCase().includes('create') || prompt.toLowerCase().includes('generate')) {
-        onAddObject('Box'); // Fallback to primitive for demo
+      if (p.includes('create') || p.includes('add') || p.includes('generate')) {
+        let type = 'Box';
+        if (p.includes('sphere')) type = 'Sphere';
+        if (p.includes('torus')) type = 'Torus';
+        if (p.includes('cylinder')) type = 'Cylinder';
+        
+        onAddObject(type);
+        response = `Generating a ${type} primitive using ${selectedModel} engine. Positioning at origin.`;
+      } else if (p.includes('animate') || p.includes('spin') || p.includes('pulse')) {
+        // Logic for triggering animation in Viewport3D via a custom event or prop
+        window.dispatchEvent(new CustomEvent('aether-ai-command', { 
+          detail: { action: 'ANIMATE', type: p.includes('spin') ? 'SPIN' : 'PULSE' } 
+        }));
+        response = `Initiating neural animation sequence: ${p.includes('spin') ? 'Orbital Rotation' : 'Core Pulsation'}.`;
+      } else if (p.includes('color') || p.includes('material')) {
+        let color = '#00d4ff';
+        if (p.includes('red')) color = '#ff0000';
+        if (p.includes('gold')) color = '#ffd700';
+        
+        window.dispatchEvent(new CustomEvent('aether-ai-command', { 
+          detail: { action: 'MATERIAL', color } 
+        }));
+        response = `Recalibrating specialized material shaders. Applying ${color} pigment.`;
       }
+      
+      addMessage(activeChat.id, { type: 'system', content: response });
     }, 1000);
 
     setPrompt('');
@@ -143,7 +166,16 @@ const AIPanel = ({ activeMode, onAddObject }) => {
         </div>
 
         <div className="voice-input-zone relative">
-          <VoiceOrb settings={orbSettings} onTranscription={(text) => setPrompt(text)} />
+          <VoiceOrb 
+            settings={orbSettings} 
+            onTranscription={(text) => {
+              setPrompt(text);
+              // Trigger immediate reaction pulse in 3D
+              window.dispatchEvent(new CustomEvent('aether-ai-command', { 
+                detail: { action: 'PROCESSING' } 
+              }));
+            }} 
+          />
           <button 
             className="change-orb-btn absolute top-0 right-0 p-2 text-slate-500 hover:text-cyan-400"
             onClick={handleChangeOrb}

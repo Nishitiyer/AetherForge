@@ -93,50 +93,16 @@ const Editor = () => {
   return (
     <div className="aether-editor-root">
       {/* 1. Global Header / Workspace Bar */}
-      <header className="aether-header">
-        <div className="header-left">
-          <div className="logo-icon">AF</div>
-          <div className="menu-bar">
-            <span>File</span>
-            <span>Edit</span>
-            <span>Render</span>
-            <span>Window</span>
-            <span>Help</span>
-          </div>
-        </div>
-        <div className="header-center">
-          <div className="workspace-tabs">
-            {WORKSPACES.map(ws => (
-              <button 
-                key={ws}
-                className={`ws-tab ${activeWorkspace === ws ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace(ws)}
-              >
-                {ws}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="header-right">
-          <button className="header-btn"><Share2 size={14} /></button>
-          <button className="header-btn"><Settings size={14} /></button>
-          <div className="user-avatar">AD</div>
-        </div>
-      </header>
+      <EditorToolbar 
+        activeMode={activeMode} 
+        setActiveMode={setActiveMode} 
+        onIsltoggle={setIsGestureActive} 
+      />
 
       {/* 2. Main Workspace Layout */}
       <main className="editor-grid">
         {/* Left Toolbar (Vertical) */}
-        <aside className="tool-shelf">
-          <button className="tool-btn active"><MousePointer2 size={18} /></button>
-          <button className="tool-btn"><Move size={18} /></button>
-          <button className="tool-btn"><RotateCw size={18} /></button>
-          <button className="tool-btn"><Maximize size={18} /></button>
-          <div className="tool-divider"></div>
-          <button className="tool-btn"><Scissors size={18} /></button>
-          <button className="tool-btn"><PenTool size={18} /></button>
-          <button className="tool-btn"><Plus size={18} /></button>
-        </aside>
+        <EditorSidebar activeMode={activeMode} />
 
         {/* Central Area (Viewport) */}
         <section className="viewport-zone">
@@ -166,6 +132,7 @@ const Editor = () => {
               transformMode={transformMode}
               setTransformMode={setTransformMode}
               gestureData={{ gesture, landmarks }}
+              selectedOrbId={useSession().selectedOrbId}
             />
             
             <GestureOverlay videoRef={videoRef} landmarks={landmarks} active={isGestureActive} />
