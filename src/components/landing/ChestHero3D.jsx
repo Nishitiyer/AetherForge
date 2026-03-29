@@ -1,159 +1,99 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Environment, MeshTransmissionMaterial, ContactShadows, RoundedBox } from '@react-three/drei';
+import { Float, Environment, MeshTransmissionMaterial, Stars, MeshWobbleMaterial, MeshDistortMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 
-export function ChestHero3D({ orb, isOpen }) {
-  const group = useRef();
-  const leftArmor = useRef();
-  const rightArmor = useRef();
-  const [animationProgress, setAnimationProgress] = useState(0);
+export function ChestHero3D({ orb }) {
+  const coreRef   = useRef();
+  const shellRef  = useRef();
+  const ringsRef  = useRef();
+  const mantleRef = useRef();
 
-  // Premium Materials
-  const armorRed = useMemo(() => new THREE.MeshStandardMaterial({ 
-    color: '#911d1d', metalness: 0.95, roughness: 0.1, 
-    emissive: '#400000', emissiveIntensity: 0.1 
-  }), []);
-  
-  const armorGold = useMemo(() => new THREE.MeshStandardMaterial({ 
-    color: '#d4af37', metalness: 1, roughness: 0.05,
-    emissive: '#2a1a00', emissiveIntensity: 0.05
-  }), []);
+  const accentColor = orb?.accent ?? '#22d3ee';
 
-  const internalFrame = useMemo(() => new THREE.MeshStandardMaterial({ 
-    color: '#1a1a1a', metalness: 0.8, roughness: 0.4 
-  }), []);
+  const matRing = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: '#ffffff', metalness: 1, roughness: 0.05,
+    emissive: accentColor, emissiveIntensity: 1.5, clearcoat: 1.0,
+  }), [accentColor]);
 
-  const reactorGlow = useMemo(() => new THREE.MeshStandardMaterial({
-    color: orb.accent, emissive: orb.accent, emissiveIntensity: 5, transparent: true, opacity: 0.95
-  }), [orb.accent]);
-
-  useFrame((state, delta) => {
-    const target = isOpen ? 1 : 0;
-    const speed = 4.0;
-    const nextProgress = THREE.MathUtils.lerp(animationProgress, target, delta * speed);
-    setAnimationProgress(nextProgress);
-
-    if (leftArmor.current) {
-      leftArmor.current.position.x = -0.65 - (nextProgress * 0.75);
-      leftArmor.current.position.z = nextProgress * 0.25;
-      leftArmor.current.rotation.y = -nextProgress * 0.15;
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (coreRef.current) {
+      coreRef.current.rotation.y += 0.04;
+      coreRef.current.rotation.z += 0.02;
     }
-    if (rightArmor.current) {
-      rightArmor.current.position.x = 0.65 + (nextProgress * 0.75);
-      rightArmor.current.position.z = nextProgress * 0.25;
-      rightArmor.current.rotation.y = nextProgress * 0.15;
+    if (mantleRef.current) {
+      mantleRef.current.rotation.y -= 0.01;
+      mantleRef.current.scale.setScalar(0.95 + Math.sin(t * 2) * 0.04);
+    }
+    if (shellRef.current) {
+      shellRef.current.rotation.x = Math.sin(t * 0.3) * 0.2;
+      shellRef.current.rotation.z = Math.cos(t * 0.3) * 0.2;
+    }
+    if (ringsRef.current) {
+      ringsRef.current.children.forEach((ring, i) => {
+        ring.rotation.x += 0.007 * (i + 1);
+        ring.rotation.y += 0.012 * (i + 2);
+      });
     }
   });
 
   return (
-    <group ref={group} scale={1.1} position={[0, -0.6, 0]}>
-      <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.4}>
-        
-        {/* UPPER COLLAR / TRAPEZIUS FRAME */}
-        <mesh position={[0, 1.4, -0.4]} rotation={[0.1, 0, 0]}>
-          <boxGeometry args={[2.0, 0.4, 0.6]} />
-          <primitive object={internalFrame} attach="material" />
-        </mesh>
-        <mesh position={[0, 1.6, -0.5]}>
-          <boxGeometry args={[1.2, 0.2, 0.4]} />
-          <primitive object={armorGold} attach="material" />
+    <group scale={1.3}>
+      <Float speed={3} rotationIntensity={0.7} floatIntensity={0.7}>
+
+        {/* Inner Plasma Core (Distorted) */}
+        <mesh ref={coreRef}>
+          <icosahedronGeometry args={[0.28, 4]} />
+          <MeshDistortMaterial
+            color={accentColor} speed={4} distort={0.5} radius={1}
+            emissive={accentColor} emissiveIntensity={3}
+          />
         </mesh>
 
-        {/* LEFT PECTORAL ASSEMBLY */}
-        <group ref={leftArmor} position={[-0.65, 0.5, 0]}>
-          {/* Main Anatomical Plate */}
-          <RoundedBox args={[1.3, 1.9, 0.3]} radius={0.12} softness={0.05}>
-            <primitive object={armorGold} attach="material" />
-          </RoundedBox>
-          {/* Upper Pectoral Detail */}
-          <RoundedBox args={[1.0, 0.8, 0.1]} radius={0.05} position={[-0.1, 0.4, 0.18]}>
-            <primitive object={armorRed} attach="material" />
-          </RoundedBox>
-          {/* Lower Detail Layer */}
-          <RoundedBox args={[0.4, 1.2, 0.15]} radius={0.08} position={[-0.4, -0.2, 0.15]}>
-            <primitive object={armorRed} attach="material" />
-          </RoundedBox>
-          {/* Mechanical Internal Seal */}
-          <mesh position={[0.6, 0, -0.1]}>
-             <boxGeometry args={[0.1, 1.6, 0.2]} />
-             <primitive object={internalFrame} attach="material" />
+        {/* Neural Mantle (Wobble) */}
+        <mesh ref={mantleRef}>
+          <sphereGeometry args={[0.44, 48, 48]} />
+          <MeshWobbleMaterial factor={0.5} speed={2}
+            color={accentColor} wireframe opacity={0.12} transparent />
+        </mesh>
+
+        {/* Outer Glass Shell */}
+        <mesh ref={shellRef}>
+          <sphereGeometry args={[0.62, 64, 64]} />
+          <MeshTransmissionMaterial
+            backside samples={8} thickness={0.35}
+            chromaticAberration={0.12} anisotropicBlur={0.8}
+            distortion={0.7} distortionScale={0.5}
+            temporalDistortion={0.15} ior={1.4}
+            color={accentColor} attenuationDistance={1}
+            attenuationColor={accentColor} roughness={0} transmission={1}
+          />
+        </mesh>
+
+        {/* Orbiting Rings */}
+        <group ref={ringsRef}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.82, 0.008, 16, 100]} />
+            <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={5} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2.2, 0.2, 0]}>
+            <torusGeometry args={[1.0, 0.012, 24, 120]} />
+            <primitive object={matRing} attach="material" />
+          </mesh>
+          <mesh rotation={[Math.PI / 4, -0.4, 0]}>
+            <torusGeometry args={[1.15, 0.004, 16, 120]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.15} />
           </mesh>
         </group>
 
-        {/* RIGHT PECTORAL ASSEMBLY */}
-        <group ref={rightArmor} position={[0.65, 0.5, 0]}>
-          {/* Main Anatomical Plate */}
-          <RoundedBox args={[1.3, 1.9, 0.3]} radius={0.12} softness={0.05}>
-            <primitive object={armorGold} attach="material" />
-          </RoundedBox>
-          {/* Upper Pectoral Detail */}
-          <RoundedBox args={[1.0, 0.8, 0.1]} radius={0.05} position={[0.1, 0.4, 0.18]}>
-            <primitive object={armorRed} attach="material" />
-          </RoundedBox>
-          {/* Lower Detail Layer */}
-          <RoundedBox args={[0.4, 1.2, 0.15]} radius={0.08} position={[0.4, -0.2, 0.15]}>
-            <primitive object={armorRed} attach="material" />
-          </RoundedBox>
-          {/* Mechanical Internal Seal */}
-          <mesh position={[-0.6, 0, -0.1]}>
-             <boxGeometry args={[0.1, 1.6, 0.2]} />
-             <primitive object={internalFrame} attach="material" />
-          </mesh>
-        </group>
-
-        {/* FIXED STERNUM CENTERLINE (Stays centered behind the split) */}
-        <mesh position={[0, 0.5, -0.2]}>
-          <boxGeometry args={[0.15, 2.0, 0.3]} />
-          <primitive object={internalFrame} attach="material" />
-        </mesh>
-
-        {/* REACTOR CORE (ARC REACTOR CORE) */}
-        <group position={[0, 0.5, -0.3]}>
-          {/* Housing Bezel */}
-          <mesh rotation={[Math.PI/2, 0, 0]}>
-             <torusGeometry args={[0.6, 0.08, 32, 100]} />
-             <primitive object={armorGold} attach="material" />
-          </mesh>
-          <mesh rotation={[Math.PI/2, 0, 0]} position={[0, 0, -0.1]}>
-             <cylinderGeometry args={[0.6, 0.6, 0.2, 48]} />
-             <primitive object={internalFrame} attach="material" />
-          </mesh>
-
-          {/* AI VOICE ORB (Core) */}
-          <mesh position={[0, 0, 0.35]}>
-             <sphereGeometry args={[0.3, 64, 64]} />
-             <primitive object={reactorGlow} attach="material" />
-          </mesh>
-          
-          {/* Protective Glass Cover */}
-          <mesh position={[0, 0, 0.4]}>
-             <sphereGeometry args={[0.34, 64, 64]} />
-             <MeshTransmissionMaterial 
-               backside samples={16} thickness={0.05} anisotropicBlur={0.1}
-               distortion={0.5} distortionScale={0.5} temporalDistortion={0.1}
-             />
-          </mesh>
-
-          {/* Structural Detail Inside Chamber */}
-          <mesh position={[0, 0, -0.1]} rotation={[Math.PI/2, 0, 0]}>
-             <torusGeometry args={[0.4, 0.02, 16, 64]} />
-             <primitive object={armorGold} attach="material" />
-          </mesh>
-        </group>
-
-        {/* LOWER ABDOMINAL / TORSO PLATE */}
-        <RoundedBox args={[1.8, 0.6, 0.4]} radius={0.1} position={[0, -0.8, -0.2]}>
-          <primitive object={armorGold} attach="material" />
-        </RoundedBox>
-
+        <Stars radius={5} depth={50} count={400} factor={4} fade speed={1} />
       </Float>
 
-      {/* Cinematic Lighting */}
-      <spotLight position={[5, 10, 10]} angle={0.25} penumbra={1} intensity={1} color={orb.accent} />
-      <pointLight position={[-10, 5, -10]} intensity={0.5} color="#ffffff" />
-      <Environment preset="studio" />
-      <ContactShadows opacity={0.6} scale={10} blur={2.4} far={4} />
+      <spotLight position={[8, 8, 8]}   angle={0.15} penumbra={1} intensity={8}  color={accentColor} />
+      <pointLight position={[-2, 1, 2]} intensity={4} color="#ffffff" />
+      <pointLight position={[0, -2, 0]} intensity={3} color={accentColor} />
+      <Environment preset="city" />
     </group>
   );
 }

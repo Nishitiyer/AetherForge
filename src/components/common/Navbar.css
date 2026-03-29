@@ -1,55 +1,139 @@
+/* AetherForge Premium Navbar Lock - Pass 1 Redo */
+
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 72px;
+  height: 80px;
   z-index: 1000;
-  border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
+  background: rgba(9, 9, 10, 0.7);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
 }
 
 .navbar-container {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
-  height: 100%;
+  padding: 0 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+/* ── Left Zone: Brand ── */
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  gap: 12px;
+  text-decoration: none;
+  flex: 1;
 }
 
-.brand-icon {
-  width: 24px;
-  height: 24px;
+.brand-logo-hex {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #1e1e20, #09090a);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stark-cyan, #06b6d4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
+.brand-name {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+/* ── Center Zone: Navigation ── */
 .navbar-links {
   display: flex;
-  gap: 2rem;
+  align-items: center;
+  gap: 32px;
+  flex: 2;
+  justify-content: center;
 }
 
-.navbar-links a {
-  color: var(--color-text-muted);
-  font-weight: 500;
-  transition: var(--transition);
+.nav-item {
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.navbar-links a:hover {
-  color: var(--color-text);
+.nav-item:hover {
+  color: #fff;
+  transform: translateY(-1px);
 }
 
+.nav-item.creator-mode {
+  color: var(--stark-gold, #d4af37);
+  opacity: 0.8;
+}
+
+.nav-item.creator-mode:hover {
+  opacity: 1;
+}
+
+/* ── Right Zone: Actions ── */
 .navbar-actions {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.nav-btn-secondary {
+  color: #fff;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s;
+}
+
+.nav-btn-secondary:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.nav-btn-primary {
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 10px 22px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+  transition: all 0.2s;
+}
+
+.nav-btn-primary:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(255,255,255,0.2);
 }
