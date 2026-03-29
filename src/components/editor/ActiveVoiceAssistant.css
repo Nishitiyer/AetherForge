@@ -1,0 +1,46 @@
+/* ActiveVoiceAssistant.css */
+.active-assistant-widget {
+  position: absolute;
+  bottom: 80px; 
+  right: 280px; /* Just to the left of the Outliner/Properties right shelf */
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assistant-canvas-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: visible;
+  position: relative;
+  z-index: 2;
+  pointer-events: none; /* Let the wrapper handle clicks */
+}
+
+.assistant-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+.active-assistant-widget.listening {
+  transform: scale(1.1);
+  animation: pulse-widget 2s infinite ease-in-out;
+}
+
+@keyframes pulse-widget {
+  0% { transform: scale(1.1); }
+  50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(0, 229, 255, 0.2); }
+  100% { transform: scale(1.1); }
+}

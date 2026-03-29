@@ -21,7 +21,8 @@ import {
   Cpu,
   Mic,
   Clapperboard,
-  Waves
+  Waves,
+  Webcam
 } from 'lucide-react';
 import EditorToolbar from '../components/editor/EditorToolbar.jsx';
 import EditorSidebar from '../components/editor/EditorSidebar.jsx';
@@ -32,7 +33,9 @@ import AIPanel from '../components/editor/AIPanel.jsx';
 import Timeline from '../components/editor/Timeline.jsx';
 import useHands from '../hooks/useHands.js';
 import GestureOverlay from '../components/editor/GestureOverlay.jsx';
+import GesturePanel from '../components/editor/GesturePanel.jsx';
 import { useSession } from '../context/SessionContext.jsx';
+import ActiveVoiceAssistant from '../components/editor/ActiveVoiceAssistant.jsx';
 import './Editor.css';
 
 const WORKSPACES = [
@@ -94,8 +97,8 @@ const Editor = () => {
     <div className="aether-editor-root">
       {/* 1. Global Header / Workspace Bar */}
       <EditorToolbar 
-        activeMode={activeMode} 
-        setActiveMode={setActiveMode} 
+        activeWorkspace={activeWorkspace} 
+        setActiveWorkspace={setActiveWorkspace} 
         onIsltoggle={setIsGestureActive} 
       />
 
@@ -108,10 +111,17 @@ const Editor = () => {
         <section className="viewport-zone">
           <div className="viewport-header">
             <div className="mode-selector">
-              <button className="mode-btn">
-                <span>{activeMode}</span>
-                <ChevronDown size={14} />
-              </button>
+              <select 
+                className="professional-mode-select"
+                value={activeMode}
+                onChange={(e) => setActiveMode(e.target.value)}
+                style={{
+                   background: 'transparent', color: '#fff', border: 'none', outline: 'none',
+                   fontSize: '12px', fontFamily: 'Inter', fontWeight: 600, cursor: 'pointer'
+                }}
+              >
+                {MODES.map(m => <option key={m} value={m} style={{color: '#000'}}>{m}</option>)}
+              </select>
             </div>
             <div className="viewport-overlays-toggle">
               <button className="view-btn"><Eye size={14} /></button>
@@ -197,8 +207,13 @@ const Editor = () => {
                 <Clapperboard size={14} />
               </button>
               <button className="prop-tab"><Layers size={14} /></button>
-              <button className="prop-tab"><Palette size={14} /></button>
-              <button className="prop-tab"><Workflow size={14} /></button>
+              <button 
+                className={`prop-tab ${rightPanel === 'Gesture' ? 'active' : ''}`}
+                onClick={() => setRightPanel('Gesture')}
+                title="Gesture Tracking"
+              >
+                <Webcam size={14} />
+              </button>
             </div>
             <div className="inspector-content">
               {rightPanel === 'Properties' ? (
@@ -212,6 +227,12 @@ const Editor = () => {
                   setSelectedPartIndex={setSelectedPartIndex}
                   transformMode={transformMode}
                   setTransformMode={setTransformMode}
+                />
+              ) : rightPanel === 'Gesture' ? (
+                <GesturePanel 
+                  isGestureActive={isGestureActive} 
+                  setIsGestureActive={setIsGestureActive} 
+                  gestureData={{ gesture, landmarks }}
                 />
               ) : (
                 <RenderSettings />
@@ -235,9 +256,7 @@ const Editor = () => {
       </footer>
 
       {/* 4. Technical Floating Overlays */}
-      <div className="floating-ai-trigger" onClick={() => setIsAIPanelOpen(!isAIPanelOpen)}>
-        <Cpu size={20} />
-      </div>
+      <ActiveVoiceAssistant isListening={isAIPanelOpen} onClick={() => setIsAIPanelOpen(!isAIPanelOpen)} />
       
       {isAIPanelOpen && (
         <div className="floating-ai-panel glass-panel">

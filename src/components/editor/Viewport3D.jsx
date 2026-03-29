@@ -235,9 +235,6 @@ const Viewport3D = ({
           
           <gridHelper args={[100, 100, "#222", "#111"]} />
           
-          {/* AI VOICE ASSISTANT (Holographic Orb) */}
-          <AssistantOrb orbId={selectedOrbId} active={isAIActive} />
-          
           <BakeShadows />
         {/* </Suspense> */}
       </Canvas>
