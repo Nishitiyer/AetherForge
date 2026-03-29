@@ -186,11 +186,19 @@ export default function Hero() {
                   <span className="status-label">Armor Frame</span>
                   <span className="status-value">MK85_EXO</span>
                 </div>
-                <div className="status-item">
-                  <span className="status-label">Port Status</span>
-                  <span className="status-value cyan">Locked</span>
-                </div>
               </div>
+            </div>
+
+            {/* PRIMARY ACTION BUTTON */}
+            <div className="hero-deploy-zone">
+               <button 
+                className="btn-stark-deploy"
+                onClick={() => window.location.href='/editor'}
+               >
+                 <Zap size={16} />
+                 DEPLOY_CORE_WORKSPACE
+               </button>
+               <p className="deploy-hint">Initialize {activeOrb.name} architecture in spatial environment.</p>
             </div>
 
             <div className="stark-info-card">
