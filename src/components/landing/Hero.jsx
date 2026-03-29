@@ -1,173 +1,235 @@
-import React, { useEffect, useMemo, useState, useCallback, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { Canvas } from "@react-three/fiber";
-import { Sparkles, ChevronLeft, ChevronRight, Mic, MicOff, Camera, Play, Pause, PanelLeft, PanelRight } from "lucide-react";
-import { useSession } from "../../context/SessionContext";
+import { 
+  Sparkles, 
+  Cpu, 
+  Zap, 
+  Globe, 
+  Settings, 
+  ChevronRight, 
+  Shield, 
+  Activity,
+  Box,
+  Layers
+} from "lucide-react";
 import { ChestHero3D } from "./ChestHero3D";
+import { Canvas } from "@react-three/fiber";
 import "./Hero.css";
 
-// ─── ORB DATA ────────────────────────────────────────────────────────────────
 const ORBS = [
-  { id: "nova",     name: "Nova Core",     accent: "#fbbf24", glow: "rgba(251,191,36,.6)",  desc: "Cinematic lighting, hero composition, showcase rendering, and photoreal presentation.", personality: "Cinematic Director" },
-  { id: "sentinel", name: "Sentinel Core", accent: "#22d3ee", glow: "rgba(34,211,238,.6)",  desc: "Technical analysis, scene structure, optimization, and precision-driven workflows.",    personality: "Technical Architect" },
-  { id: "echo",     name: "Echo Core",     accent: "#e879f9", glow: "rgba(232,121,249,.6)", desc: "Multilingual voice-native prompting, guidance, and conversational creation control.",  personality: "Voice Companion" },
-  { id: "forge",    name: "Forge Core",    accent: "#fb923c", glow: "rgba(251,146,60,.6)",  desc: "Asset building, blockout, production modeling, and creation-heavy workflows.",          personality: "Build Engineer" },
-  { id: "prism",    name: "Prism Core",    accent: "#2dd4bf", glow: "rgba(45,212,191,.6)",  desc: "Style exploration, visual variations, material experiments, and design studies.",       personality: "Style Explorer" },
-  { id: "quantum",  name: "Quantum Core",  accent: "#bae6fd", glow: "rgba(186,230,253,.6)", desc: "Simulation, procedural workflows, experimental systems, and advanced pipelines.",       personality: "Quantum Systems" },
+  {
+    id: "nova",
+    name: "Nova Core",
+    accent: "#fbbf24",
+    desc: "Cinematic lighting, hero composition, and photoreal presentation.",
+    personality: "Cinematic Director",
+    status: "Ready"
+  },
+  {
+    id: "sentinel",
+    name: "Sentinel Core",
+    accent: "#22d3ee",
+    desc: "Technical analysis, scene structure, and precision workflows.",
+    personality: "Technical Architect",
+    status: "Active"
+  },
+  {
+    id: "echo",
+    name: "Echo Core",
+    accent: "#e879f9",
+    desc: "Voice-native prompting and conversational creation control.",
+    personality: "Voice Companion",
+    status: "Standby"
+  },
+  {
+    id: "prism",
+    name: "Prism Core",
+    accent: "#818cf8",
+    desc: "Creative catalyst for color theory and aesthetic refinement.",
+    personality: "Creative Catalyst",
+    status: "Optimization"
+  },
+  {
+    id: "quantum",
+    name: "Quantum Core",
+    accent: "#34d399",
+    desc: "Performance tuning and high-frequency creative geometry.",
+    personality: "Efficiency Engine",
+    status: "Active"
+  }
 ];
 
-function OrbCore({ orb, size = 60, active = true }) {
+export default function Hero() {
+  const [selectedOrbId, setSelectedOrbId] = useState("sentinel");
+  const [isHeroOpen, setIsHeroOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedOrb");
+    if (saved) setSelectedOrbId(saved);
+  }, []);
+
+  const handleOrbSelect = (id) => {
+    setSelectedOrbId(id);
+    localStorage.setItem("selectedOrb", id);
+    setIsHeroOpen(true);
+    setTimeout(() => setIsHeroOpen(false), 3000);
+  };
+
+  const activeOrb = ORBS.find(o => o.id === selectedOrbId) || ORBS[1];
+
   return (
-    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
-      <motion.div className="absolute inset-0 rounded-full"
-        style={{ boxShadow: `0 0 ${size*0.4}px ${orb.glow}, inset 0 0 ${size*0.2}px ${orb.glow}`, border: `1.5px solid ${orb.glow}` }}
-        animate={{ scale: active ? [1, 1.1, 1] : 1, opacity: active ? [0.7, 1, 0.7] : 0.4 }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <div className="absolute inset-[30%] rounded-full" style={{ background: `radial-gradient(circle at 35% 35%, #fff, ${orb.accent} 40%, #000 80%)` }} />
+    <div className="hero-root">
+      <div className="hero-bg-ambience" />
+      <div className="hero-grid-pattern" />
+
+      <main className="hero-main-grid">
+        
+        {/* LEFT PANEL: CORE LIBRARY */}
+        <aside className="hero-side-panel left">
+          <div className="panel-header-group">
+            <div className="eyebrow-label">
+              <Layers size={14} />
+              IDENT_SYNC_REGISTRY
+            </div>
+            <h1 className="hero-title">
+              Select <br/><span className="muted">Active Heart</span>
+            </h1>
+          </div>
+
+          <div className="orb-card-list">
+            {ORBS.map((orb) => (
+              <div 
+                key={orb.id}
+                className={`orb-card ${selectedOrbId === orb.id ? 'selected' : ''}`}
+                onClick={() => handleOrbSelect(orb.id)}
+              >
+                <div className="orb-icon-wrapper">
+                   <div className="orb-glow-dot" style={{ backgroundColor: orb.accent, boxShadow: `0 0 15px ${orb.accent}` }} />
+                </div>
+                <div className="orb-content">
+                  <div className="orb-title-row">
+                    <span className="orb-name">{orb.name}</span>
+                    <span className="orb-status-tag">{orb.status}</span>
+                  </div>
+                  <p className="orb-personality-label">{orb.personality}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="panel-footer-meta">
+            <div className="meta-sync">
+               <div className="sync-dot" />
+               <span>LINK_STABLE_0.8.4</span>
+            </div>
+            <Settings size={14} className="meta-icon" />
+          </div>
+        </aside>
+
+        {/* CENTER PANEL: STARK HERO */}
+        <section className="hero-center-stage">
+          <div className="viewport-hud-label">
+             <div className="hud-dot" />
+             Spatial Interface // Verified
+          </div>
+
+          <div className="hero-canvas-wrapper" onClick={() => setIsHeroOpen(!isHeroOpen)}>
+            <Canvas camera={{ position: [0, 0, 4.5], fov: 40 }}>
+              <ChestHero3D orb={activeOrb} isOpen={isHeroOpen} />
+            </Canvas>
+          </div>
+
+          <div className="hero-action-console">
+             <div className="console-icon">
+                <Box size={28} />
+             </div>
+             <div className="console-content">
+                <p className="console-label">Logic Input</p>
+                <p className="console-hint">"Initialize spatial constructor via {activeOrb.name}..."</p>
+             </div>
+             <button 
+              className="btn-enter-workspace"
+              onClick={() => window.location.href='/editor'}
+             >
+               ENTER_WORKSPACE
+             </button>
+          </div>
+        </section>
+
+        {/* RIGHT PANEL: SYSTEM TELEMETRY */}
+        <aside className="hero-side-panel right">
+          <div className="status-container">
+            <div className="status-section">
+              <div className="status-title-row">
+                <Activity size={16} className="stark-cyan" />
+                <h3 className="section-title">Telemetry_Sync</h3>
+              </div>
+              <div className="status-grid">
+                <div className="status-item">
+                  <span className="status-label">Active Core</span>
+                  <span className="status-value" style={{ color: activeOrb.accent }}>{activeOrb.name}</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Stability</span>
+                  <span className="status-value green">99.8%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="status-section">
+              <div className="status-title-row">
+                <Shield size={16} className="stark-gold" />
+                <h3 className="section-title">Hardware_Link</h3>
+              </div>
+              <div className="status-grid">
+                <div className="status-item">
+                  <span className="status-label">Armor Frame</span>
+                  <span className="status-value">MK85_EXO</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Port Status</span>
+                  <span className="status-value cyan">Locked</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="stark-info-card">
+               <div className="card-header">
+                  <Zap size={18} className="stark-cyan" />
+                  <span className="card-title">Spatial Awareness</span>
+               </div>
+               <p className="card-desc">
+                 Gesture recognition engine ready. Deploy to workspace to initialize holographic hand tracking.
+               </p>
+            </div>
+          </div>
+        </aside>
+
+      </main>
+
+      <style>{`
+        .panel-header-group { margin-bottom: 20px; }
+        .orb-status-tag { font-size: 8px; font-family: 'JetBrains Mono', monospace; opacity: 0.2; }
+        .orb-personality-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-top: 4px; }
+        .panel-footer-meta { margin-top: auto; padding-top: 32px; border-top: 1px solid var(--stark-border); display: flex; justify-content: space-between; align-items: center; }
+        .meta-sync { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.1); }
+        .sync-dot { width: 4px; height: 4px; border-radius: 50%; background: #34d399; }
+        .meta-icon { color: rgba(255,255,255,0.05); cursor: pointer; }
+        .hero-canvas-wrapper { width: 100%; height: 100%; }
+        .console-content { flex-grow: 1; }
+        .console-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.2); text-transform: uppercase; margin-bottom: 2px; }
+        .console-hint { font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.6); italic; }
+        .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.3); }
+        .stark-cyan { color: var(--stark-cyan); }
+        .stark-gold { color: var(--stark-gold); }
+        .status-value.green { color: #34d399; }
+        .status-value.cyan { color: var(--stark-cyan); }
+        .stark-info-card { padding: 24px; border-radius: 28px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); margin-top: 40px; }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .card-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; }
+        .card-desc { font-size: 11px; line-height: 1.6; color: rgba(255,255,255,0.4); font-weight: 500; }
+        .hero-title br { display: block; content: ""; margin-top: 8px; }
+      `}</style>
     </div>
   );
 }
-
-const Hero = () => {
-  const navigate = useNavigate();
-  const { setSelectedOrbId, setIsOrbSelected, setOrbSettings } = useSession();
-
-  const [selectedOrbId, setSelectedOrbIdLocal] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("aetherforge:selectedOrb")) || "nova"; } catch { return "nova"; }
-  });
-  const [heroState, setHeroState] = useState("idle_closed");
-
-  const orb = useMemo(() => ORBS.find(o => o.id === selectedOrbId) || ORBS[0], [selectedOrbId]);
-
-  const next = useCallback(() => {
-    setHeroState("orb_swap");
-    const idx = ORBS.findIndex(o => o.id === selectedOrbId);
-    setSelectedOrbIdLocal(ORBS[(idx + 1) % ORBS.length].id);
-  }, [selectedOrbId]);
-
-  const prev = useCallback(() => {
-    setHeroState("orb_swap");
-    const idx = ORBS.findIndex(o => o.id === selectedOrbId);
-    setSelectedOrbIdLocal(ORBS[(idx - 1 + ORBS.length) % ORBS.length].id);
-  }, [selectedOrbId]);
-
-  useEffect(() => {
-    if (heroState === "orb_swap" || heroState === "initialize_open") {
-      const t = setTimeout(() => setHeroState("idle_active"), 800);
-      return () => clearTimeout(t);
-    }
-  }, [heroState]);
-
-  const handleEnterWorkspace = () => {
-    setSelectedOrbId(orb.id);
-    setOrbSettings({ color: orb.accent, name: orb.name });
-    setIsOrbSelected(true);
-    navigate("/editor");
-  };
-
-  return (
-    <div className="hero-v9-root">
-      {/* NAVBAR */}
-      <header className="v9-navbar">
-        <div className="v9-brand">
-          <Sparkles className="h-6 w-6 text-yellow-500" />
-          <span>AetherForge</span>
-        </div>
-        <nav className="v9-nav-links">
-          {["Features", "Workflows", "Pricing", "Gallery"].map(l => <a key={l}>{l}</a>)}
-        </nav>
-        <div className="v9-nav-cta">
-          <button className="v8-btn-ghost">Log In</button>
-          <button className="v8-btn-primary">Get Started</button>
-        </div>
-      </header>
-
-      {/* THREE-COLUMN GRID */}
-      <div className="v9-grid-layout">
-        
-        {/* LEFT — Core Library */}
-        <aside className="v9-panel v9-left">
-          <div className="v8-panel-label">Core Library</div>
-          <div className="v8-orb-list">
-            {ORBS.map(o => (
-              <button key={o.id} 
-                onClick={() => { setHeroState("orb_swap"); setSelectedOrbIdLocal(o.id); }}
-                className={`v8-orb-row ${selectedOrbId === o.id ? "v8-orb-row-active" : ""}`}
-                style={selectedOrbId === o.id ? { borderColor: o.accent + "88", background: o.accent + "11" } : {}}
-              >
-                <OrbCore orb={o} size={40} active={selectedOrbId === o.id} />
-                <div className="flex flex-col ml-2">
-                  <span className="v8-orb-row-name">{o.name}</span>
-                  <span className="v8-orb-row-type">{o.personality}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* CENTER — 3D Hero */}
-        <main className="v9-center">
-          <div className="v8-headline-block">
-            <div className="v8-eyebrow" style={{ color: orb.accent }}>Intelligence Integrated</div>
-            <h1 className="v8-headline">Direct Spatial 3D Creation Powered by AI Cores</h1>
-            <p className="v8-orb-desc" style={{ marginTop: '12px' }}>
-              Initialize the MK85-inspired chest reactor and select the intelligence core that defines your worldbuilding experience.
-            </p>
-          </div>
-
-          <div className="v9-hero-stage">
-            <button onClick={prev} className="v8-nav-arrow left"><ChevronLeft /></button>
-            <button onClick={next} className="v8-nav-arrow right"><ChevronRight /></button>
-            
-            <div className="v9-canvas-container">
-              <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }}>
-                <Suspense fallback={null}>
-                  <ChestHero3D orb={orb} isOpen={heroState !== "idle_closed"} />
-                </Suspense>
-              </Canvas>
-            </div>
-          </div>
-
-          <div className="v8-orb-info">
-            <div className="v8-orb-name" style={{ color: orb.accent }}>{orb.name}</div>
-            <p className="v8-orb-desc">{orb.desc}</p>
-          </div>
-
-          <div className="v8-action-row">
-            <button onClick={() => setHeroState("initialize_open")} className="v8-btn-init" style={{ borderColor: orb.accent }}>
-              Initialize Suit
-            </button>
-            <button onClick={handleEnterWorkspace} className="v8-btn-enter" style={{ background: `linear-gradient(135deg, ${orb.accent}, #000 80%)`, color: '#fff', border: `1px solid ${orb.accent}` }}>
-              Enter Workspace →
-            </button>
-          </div>
-        </main>
-
-        {/* RIGHT — System Status */}
-        <aside className="v9-panel v9-right">
-          <div className="v8-panel-label">System Status</div>
-          <div className="v8-status-row">
-            <span>Core State</span>
-            <span style={{ color: orb.accent, fontWeight: 'bold' }}>{heroState.toUpperCase()}</span>
-          </div>
-          <div className="v8-status-row">
-            <span>Neural Link</span>
-            <span className="text-green-400">Stable</span>
-          </div>
-          <div className="v8-status-card">
-            <div className="v8-status-personality" style={{ color: orb.accent }}>{orb.personality}</div>
-            <p className="v8-status-hint">This core will act as your spatial assistant, bridging voice and gesture into the 3D viewport.</p>
-          </div>
-          <div className="flex justify-center mt-6">
-            <OrbCore orb={orb} size={100} active={heroState !== "idle_closed"} />
-          </div>
-        </aside>
-
-      </div>
-    </div>
-  );
-};
-
-export default Hero;

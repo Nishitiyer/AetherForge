@@ -1,243 +1,304 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Layers, 
-  Settings, 
-  Play, 
-  ChevronDown, 
-  Search, 
-  HelpCircle, 
-  Database, 
-  PenTool, 
-  MousePointer2, 
-  Move, 
-  Bot,
-  Scissors,
-  Maximize,
-  Move,
-  RotateCw,
-  Plus,
-  Grid3X3,
+import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Mic,
+  MicOff,
+  Camera,
+  Play,
+  Pause,
+  PanelLeft,
+  PanelRight,
+  Monitor,
+  Cpu,
+  Box,
+  Move3D,
+  PencilRuler,
+  SlidersHorizontal,
   Wand2,
-  Database,
+  Layers3,
+  Settings,
+  Grid3X3,
+  Bot,
   Search,
-  ChevronDown
-} from 'lucide-react';
-import EditorToolbar from '../components/editor/EditorToolbar.jsx';
-import EditorSidebar from '../components/editor/EditorSidebar.jsx';
-import Viewport from '../components/editor/Viewport.jsx';
-import ConstructionPanel from '../components/editor/ConstructionPanel.jsx';
-import RenderSettings from '../components/editor/RenderSettings.jsx';
-import AIPanel from '../components/editor/AIPanel.jsx';
-import Timeline from '../components/editor/Timeline.jsx';
-import useHands from '../hooks/useHands.js';
-import GestureOverlay from '../components/editor/GestureOverlay.jsx';
-import GesturePanel from '../components/editor/GesturePanel.jsx';
-import { useSession } from '../context/SessionContext.jsx';
-import ActiveVoiceAssistant from '../components/editor/ActiveVoiceAssistant.jsx';
-import OrbAssistantSidebar from '../components/editor/OrbAssistantSidebar.jsx';
-import './Editor.css';
+  MessageSquare,
+  Zap,
+  Hand,
+  Activity,
+  Shield,
+} from "lucide-react";
+import "./Editor.css";
+import { useHands } from "../hooks/useHands";
+import { GestureOverlay } from "../components/editor/GestureOverlay";
 
 const WORKSPACES = [
-  'Layout', 'Modeling', 'Sculpting', 'UV Editing', 'Texture Paint', 
-  'Shading', 'Animation', 'Rendering', 'Compositing', 'Geometry Nodes',
-  'Simulation', 'AI Generate', 'Gesture Build', 'Voice Build'
+  "Layout", "Modeling", "Sculpting", "UV Editing", "Texture Paint", 
+  "Shading", "Animation", "Rendering", "Compositing", "Geometry Nodes", 
+  "Simulation", "AI Generate", "Gesture Build", "Voice Build"
 ];
 
-const MODES = [
-  'Object Mode', 'Edit Mode', 'Sculpt Mode', 'Vertex Paint', 
-  'Weight Paint', 'Texture Paint', 'Pose Mode'
+const QUICK_ACTIONS = [
+  { id: "create", name: "Create Object", icon: Box },
+  { id: "material", name: "Add Material", icon: Layers3 },
+  { id: "optimize", name: "Optimize Mesh", icon: Zap },
+  { id: "animate", name: "Animate", icon: Play },
+  { id: "camera", name: "Add Camera", icon: Camera },
+  { id: "light", name: "Add Light", icon: Sparkles },
+  { id: "refine", name: "Refine Topology", icon: Grid3X3 },
+  { id: "env", name: "Generate Environment", icon: Wand2 },
 ];
 
-const MODE_TOOLS = [
-  { icon: Move, label: 'Move' },
-  { icon: RotateCw, label: 'Rotate' },
-  { icon: Maximize, label: 'Scale' },
-  { icon: MousePointer2, label: 'Select' },
-];
+const ORBS = {
+  nova: { name: "Nova Core", personality: "Cinematic Director", accent: "#fbbf24" },
+  sentinel: { name: "Sentinel Core", personality: "Technical Architect", accent: "#22d3ee" },
+  echo: { name: "Echo Core", personality: "Voice Companion", accent: "#e879f9" },
+  prism: { name: "Prism Core", personality: "Creative Catalyst", accent: "#818cf8" },
+  quantum: { name: "Quantum Core", personality: "Efficiency Engine", accent: "#34d399" },
+};
 
-const MODELING_TOOLS = [
-  { icon: Scissors, label: 'Extrude' },
-  { icon: Plus, label: 'Inset' },
-  { icon: Grid3X3, label: 'Loop Cut' },
-  { icon: Wand2, label: 'Subdivide' },
-];
-
-const Editor = () => {
-  const [activeWorkspace, setActiveWorkspace] = useState('Layout');
-  const [activeMode, setActiveMode] = useState('Object Mode');
-  const [sceneObjects, setSceneObjects] = useState([
-    { 
-      id: 'startup-cube', 
-      type: 'Mesh', 
-      name: 'Startup Cube',
-      parts: [{ type: 'Box', position: [0, 0, 0], scale: [1, 1, 1], color: '#888888', metalness: 0.5, roughness: 0.5 }],
-      position: [0, 0, 0], 
-      scale: [1, 1, 1] 
-    }
+export default function Editor() {
+  const [activeWorkspace, setActiveWorkspace] = useState("Modeling");
+  const [selectedOrbId, setSelectedOrbId] = useState("sentinel");
+  const [isGestureEnabled, setIsGestureEnabled] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatHistory, setChatHistory] = useState([
+    { role: "assistant", content: "Active Intelligence initialized. System at 100%. Gesture controls ready for spatial manipulation." }
   ]);
 
-  const [selectedObjectId, setSelectedObjectId] = useState('startup-cube');
-  const [selectedPartIndex, setSelectedPartIndex] = useState(0);
-  const [transformMode, setTransformMode] = useState('translate');
-  const [rightPanel, setRightPanel] = useState('Properties');
-  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
-  const [isGestureActive, setIsGestureActive] = useState(false);
-  
-  const { gesture, landmarks, videoRef } = useHands(isGestureActive);
-  const { isOrbSelected, userType } = useSession();
-  const navigate = useNavigate();
+  const { videoRef, landmarks, gesture, confidence } = useHands();
 
   useEffect(() => {
-    if (!isOrbSelected && userType === 'USER') {
-      navigate('/orb-selection');
-    }
-  }, [isOrbSelected, userType, navigate]);
+    const savedOrb = localStorage.getItem("selectedOrb");
+    if (savedOrb) setSelectedOrbId(savedOrb);
+  }, []);
 
-  const addObject = (type) => {
-    const newObj = {
-      id: `obj-${Math.random().toString(36).substr(2, 9)}`,
-      type: 'Mesh',
-      name: `${type} ${sceneObjects.length + 1}`,
-      parts: [{ type: type === 'Model' ? 'Box' : type, position: [0, 0, 0], scale: [1, 1, 1], color: '#888888', metalness: 0.5, roughness: 0.5 }],
-      position: [0, 2, 0],
-      scale: [1, 1, 1]
-    };
-    setSceneObjects([...sceneObjects, newObj]);
-    setSelectedObjectId(newObj.id);
+  const orb = ORBS[selectedOrbId] || ORBS.sentinel;
+
+  const handleSend = () => {
+    if (!chatInput.trim()) return;
+    const newHistory = [...chatHistory, { role: "user", content: chatInput }];
+    setChatHistory(newHistory);
+    setChatInput("");
+    
+    setTimeout(() => {
+      setChatHistory(prev => [...prev, { 
+        role: "assistant", 
+        content: `Spatial processing underway for "${chatInput}". Adjusting viewport telemetry via ${orb.name}.` 
+      }]);
+    }, 1000);
   };
 
   return (
-    <div className="aether-editor-root">
-      {/* 1. Global Header / Workspace Bar (Blender-style) */}
-      <header className="aether-header">
-        <div className="header-left">
-          <div className="logo-icon">AF</div>
-          <div className="menu-bar">
-            <span>File</span><span>Edit</span><span>Render</span><span>Window</span><span>Help</span>
-          </div>
-        </div>
-        
-        <div className="workspace-tabs">
-          {WORKSPACES.map(ws => (
-            <button key={ws} onClick={() => setActiveWorkspace(ws)} className={`ws-tab ${activeWorkspace === ws ? 'active' : ''}`}>
+    <div className="editor-root">
+      
+      {/* GLOBAL HEADER / WORKSPACES */}
+      <header className="ed-global-header">
+        <div className="ed-workspace-nav">
+          {WORKSPACES.map((ws) => (
+            <button
+              key={ws}
+              className={`ws-tab ${activeWorkspace === ws ? "active" : ""}`}
+              onClick={() => setActiveWorkspace(ws)}
+            >
               {ws}
             </button>
           ))}
         </div>
-
-        <div className="header-right">
-          <button className="header-btn"><Search size={14} /></button>
-          <div className="user-avatar">NI</div>
+        
+        <div className="ed-header-right">
+          <div className="flex items-center gap-2 text-[12px] text-[#8e8e93]">
+            <Monitor size={14} />
+            <span>Standard Render</span>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-[#252529] flex items-center justify-center cursor-pointer hover:bg-[#2c2c31]">
+            <Settings size={16} />
+          </div>
         </div>
       </header>
 
-      {/* 2. Main Workspace Layout */}
-      <main className="editor-grid">
-        {/* Left Tool Shelf */}
-        <aside className="tool-shelf">
-          {MODE_TOOLS.map(t => (
-            <button key={t.label} className="tool-btn" title={t.label}>
-              <t.icon size={18} />
-            </button>
-          ))}
-          <div className="tool-divider" />
-          {MODELING_TOOLS.map(t => (
-            <button key={t.label} className="tool-btn" title={t.label}>
-              <t.icon size={18} />
-            </button>
-          ))}
+      <main className="ed-main-container">
+        
+        {/* LEFT TOOL SHELF */}
+        <aside className="ed-tool-shelf">
+          <ToolIcon icon={Move3D} active />
+          <ToolIcon icon={PencilRuler} />
+          <ToolIcon icon={Grid3X3} />
+          <ToolIcon icon={Layers3} />
+          <ToolIcon icon={SlidersHorizontal} />
+          <div style={{ flexGrow: 1 }} />
+          <ToolIcon icon={Search} />
+          <ToolIcon icon={Bot} />
         </aside>
 
-        {/* Central Viewport Area */}
-        <section className="viewport-zone">
+        {/* CENTRAL VIEWPORT */}
+        <section className="ed-viewport-section">
+          {/* Viewport Header */}
           <div className="viewport-header">
-            <div className="mode-selector">
-              <select className="professional-mode-select" value={activeMode} onChange={e => setActiveMode(e.target.value)}>
-                {MODES.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+            <div className="flex items-center gap-4 text-[12px] text-[#8e8e93]">
+              <span className="text-white font-medium">Object Mode</span>
+              <span>View</span>
+              <span>Select</span>
+              <span>Add</span>
+              <span>Object</span>
             </div>
-            <div className="viewport-overlays-toggle">
-              {['Wire', 'Solid', 'Mat', 'Render'].map(v => (
-                <button key={v} className="view-btn">{v}</button>
-              ))}
-            </div>
-          </div>
-          
-          <div className="viewport-canvas-wrapper">
-             <Viewport 
-               activeMode={activeMode}
-               sceneObjects={sceneObjects} 
-               setSceneObjects={setSceneObjects}
-               selectedObjectId={selectedObjectId}
-               setSelectedObjectId={setSelectedObjectId}
-               selectedPartIndex={selectedPartIndex}
-               setSelectedPartIndex={setSelectedPartIndex}
-               transformMode={transformMode}
-               setTransformMode={setTransformMode}
-               gestureData={{ gesture, landmarks }}
-             />
-             <GestureOverlay videoRef={videoRef} landmarks={landmarks} active={isGestureActive} />
-          </div>
-
-          <div className="viewport-footer">
-            <span>(1) Startup Cube | Verts: 8 | Faces: 6 | Tris: 12</span>
-            <span>Mem: 48.2 MB | FPS: 120</span>
-          </div>
-        </section>
-
-        {/* Right Sidebar — Orb Assistant + Outliner */}
-        <aside className="properties-shelf">
-          <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <OrbAssistantSidebar onAddObject={addObject} />
-          </div>
-          
-          <div className="outliner-panel" style={{ flex: '0 0 180px', borderTop: '1px solid #111' }}>
-            <div className="panel-header">
-              <Database size={14} />
-              <span>Outliner</span>
-            </div>
-            <div className="outliner-content">
-              <div className="scene-tree">
-                {sceneObjects.map(obj => (
-                  <div key={obj.id} className={`tree-item ${selectedObjectId === obj.id ? 'selected' : ''}`} onClick={() => setSelectedObjectId(obj.id)}>
-                    <Box size={12} />
-                    <span>{obj.name}</span>
-                  </div>
-                ))}
+            <div className="flex items-center gap-2">
+              <div className="flex bg-[#252529] rounded-md p-0.5">
+                <div className="px-2 py-0.5 text-[11px] bg-[#3d3d42] rounded-sm cursor-pointer">Solid</div>
+                <div className="px-2 py-0.5 text-[11px] cursor-pointer hover:text-white transition-colors">Wire</div>
+                <div className="px-2 py-0.5 text-[11px] cursor-pointer hover:text-white transition-colors">Render</div>
               </div>
             </div>
           </div>
+
+          {/* 3D Scene Area */}
+          <div className="viewport-canvas-area">
+            <div className="viewport-grid-overlay" />
+            <div className="w-64 h-64 border-2 border-[rgba(255,255,255,0.05)] rounded-2xl flex items-center justify-center shadow-2xl bg-gradient-to-br from-[#1c1c1e] to-[#252529]">
+              <Box size={80} className="text-[#3d3d42]" />
+            </div>
+
+            {/* Float Overlays */}
+            <div className="absolute top-6 left-6 text-[11px] text-[#8e8e93] font-mono flex flex-col gap-1 backdrop-blur-md p-4 rounded-xl bg-black/20 border border-white/5">
+              <p className="text-white/40 mb-2 uppercase tracking-widest font-bold">(1) SCENE_TREE</p>
+              <p>  - Camera_Primary</p>
+              <p>  - Cube_Mesh_MK1</p>
+              <p>  - Light_Point_A</p>
+            </div>
+          </div>
+
+          {/* BOTTOM TIMELINE */}
+          <div className="timeline-zone">
+            <div className="h-8 flex items-center px-4 gap-4 text-[11px] text-[#8e8e93] border-b border-[#252529]">
+              <span>Timeline</span>
+              <span>Playback</span>
+              <span>Keying</span>
+              <div style={{ flexGrow: 1 }} />
+              <Play size={12} className="text-green-500 cursor-pointer" />
+            </div>
+            <div className="flex-grow flex items-center justify-center opacity-10">
+              <div className="w-full h-px bg-[#fff]/20" />
+            </div>
+          </div>
+        </section>
+
+        {/* RIGHT ASSISTANT SIDEBAR */}
+        <aside className="ed-sidebar">
+          
+          {/* Active AI Core Section */}
+          <div className="sidebar-orb-focus">
+            <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] opacity-20 pointer-events-none" style={{ background: orb.accent }} />
+            
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="orb-visual-mount">
+                <div className="absolute inset-0 rounded-full border border-[rgba(255,255,255,0.05)]" />
+                <div className="w-10 h-10 rounded-full animate-pulse blur-[10px] opacity-50" style={{ background: orb.accent }} />
+                <div className="w-6 h-6 rounded-full relative z-10" style={{ background: orb.accent, boxShadow: `0 0 20px ${orb.accent}` }} />
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-2 border border-dashed border-[rgba(255,255,255,0.1)] rounded-full" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white tracking-tighter">{orb.name}</h3>
+                <p className="text-[11px] text-white/40 uppercase tracking-widest font-bold">{orb.personality}</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsGestureEnabled(!isGestureEnabled)}
+              className={`gesture-toggle-btn ${isGestureEnabled ? 'active' : ''}`}
+            >
+              <Hand size={18} />
+              <span>{isGestureEnabled ? "Disable Gesture Control" : "Enable Gesture Control"}</span>
+            </button>
+          </div>
+
+          {/* CHAT INTERFACE */}
+          <div className="chat-container">
+            {chatHistory.map((msg, i) => (
+              <div key={i} className={`chat-bubble ${msg.role}`}>
+                {msg.content}
+              </div>
+            ))}
+          </div>
+
+          {/* INPUT AREA */}
+          <div className="chat-input-wrapper">
+            <textarea
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())}
+              placeholder="Ask intelligence..."
+              className="chat-textarea"
+            />
+            <button onClick={handleSend} className="btn-send">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          {/* QUICK OPERATIONS */}
+          <div className="ops-grid">
+            {QUICK_ACTIONS.map((action) => (
+              <button key={action.id} className="op-btn">
+                <action.icon size={14} className="text-[#8e8e93]" />
+                <span className="op-label">{action.name}</span>
+              </button>
+            ))}
+          </div>
         </aside>
+
       </main>
 
-      {/* 3. Bottom Timeline Area */}
-      <footer className="aether-footer">
-        <div className="timeline-controls">
-          <button className="btn-icon">◀</button>
-          <button className="btn-icon">▶</button>
-          <div className="current-frame">0</div>
-        </div>
-        <div className="timeline-track">
-          <Timeline />
-        </div>
-      </footer>
-
-      {/* Gesture Status Indicator */}
-      <div className={`gesture-status ${isGestureActive ? 'active' : ''}`} onClick={() => setIsGestureActive(!isGestureActive)}>
-        <Bot size={16} />
-        <span>{isGestureActive ? 'SYSTEM_SYNC_ACTIVE' : 'SYSTEM_IDLE'}</span>
-      </div>
+      {/* GESTURE HUD HOVER PANEL */}
+      <AnimatePresence>
+        {isGestureEnabled && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="gesture-hud-panel shadow-2xl"
+          >
+             <GestureOverlay 
+               videoRef={videoRef} 
+               landmarks={landmarks} 
+               gesture={gesture} 
+               confidence={confidence} 
+             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <style>{`
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-2 { gap: 8px; }
+        .gap-4 { gap: 16px; }
+        .gap-6 { gap: 24px; }
+        .flex-col { flex-direction: column; }
+        .flex-grow { flex-grow: 1; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .inset-0 { top: 0; left: 0; right: 0; bottom: 0; }
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+        .w-64 { width: 256px; }
+        .h-64 { height: 256px; }
+        .rounded-full { border-radius: 9999px; }
+        .rounded-lg { border-radius: 8px; }
+        .rounded-xl { border-radius: 12px; }
+        .rounded-2xl { border-radius: 16px; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+      `}</style>
     </div>
   );
-};
+}
 
-// Internal icons not imported from lucide-react but needed
-const SkipBack = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>;
-const SkipForward = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>;
-const Share2 = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
-const Workflow = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-const Palette = ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.5-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H17c2.8 0 5-2.2 5-5 0-4.9-4.5-9-10-9z"/></svg>;
-
-export default Editor;
+function ToolIcon({ icon: Icon, active = false }) {
+  return (
+    <div className={`tool-btn ${active ? "active" : ""}`}>
+      <Icon size={18} />
+    </div>
+  );
+}

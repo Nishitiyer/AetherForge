@@ -1,0 +1,88 @@
+﻿
+> omniform-ai-3d@0.0.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 1533 modules transformed.
+node.exe : [31mx[39m 
+Build failed in 2.13s
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ([3  
+  1mx[39m Build failed    
+ in 2.13s:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+[31merror during build:
+[31m[vite]: Rollup failed 
+to resolve import 
+"framer-motion-3d" from "C:
+/Users/NISHIT/OneDrive/Desk
+top/blender alternateive/sr
+c/components/landing/ChestH
+ero3D.jsx".
+This is most likely 
+unintended because it can 
+break your application at 
+runtime.
+If you do want to 
+externalize this module 
+explicitly add it to
+`build.rollupOptions.extern
+al`[31m
+    at viteWarn (file:///C:
+/Users/NISHIT/OneDrive/Desk
+top/blender%20alternateive/
+node_modules/vite/dist/node
+/chunks/dep-BK3b2jBa.js:658
+55:17)
+    at onwarn (file:///C:/U
+sers/NISHIT/OneDrive/Deskto
+p/blender%20alternateive/no
+de_modules/@vitejs/plugin-r
+eact/dist/index.js:90:7)
+    at onRollupWarning (fil
+e:///C:/Users/NISHIT/OneDri
+ve/Desktop/blender%20altern
+ateive/node_modules/vite/di
+st/node/chunks/dep-BK3b2jBa
+.js:65885:5)
+    at onwarn (file:///C:/U
+sers/NISHIT/OneDrive/Deskto
+p/blender%20alternateive/no
+de_modules/vite/dist/node/c
+hunks/dep-BK3b2jBa.js:65550
+:7)
+    at file:///C:/Users/NIS
+HIT/OneDrive/Desktop/blende
+r%20alternateive/node_modul
+es/rollup/dist/es/shared/no
+de-entry.js:20995:13
+    at Object.logger [as 
+onLog] (file:///C:/Users/NI
+SHIT/OneDrive/Desktop/blend
+er%20alternateive/node_modu
+les/rollup/dist/es/shared/n
+ode-entry.js:22968:9)
+    at ModuleLoader.handleI
+nvalidResolvedId (file:///C
+:/Users/NISHIT/OneDrive/Des
+ktop/blender%20alternateive
+/node_modules/rollup/dist/e
+s/shared/node-entry.js:2171
+2:26)
+    at file:///C:/Users/NIS
+HIT/OneDrive/Desktop/blende
+r%20alternateive/node_modul
+es/rollup/dist/es/shared/no
+de-entry.js:21670:26[39m
