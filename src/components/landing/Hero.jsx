@@ -1,55 +1,88 @@
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Canvas } from '@react-three/fiber';
-import { 
-  Environment, 
-  ContactShadows, 
-  PerspectiveCamera, 
-  OrbitControls, 
-  Float,
-  BakeShadows
-} from '@react-three/drei';
-import { 
-  ChevronRight, 
-  ChevronLeft, 
-  Mic, 
-  Shield, 
-  Cpu, 
-  Palette, 
-  Globe,
-  Zap
-} from 'lucide-react';
-import Chestplate from './Chestplate.jsx';
-import Orb3D from './Orb3D.jsx';
-import { ORB_MODES } from '../../data/orbs.js';
-import { useSession } from '../../context/SessionContext.jsx';
+import { ORB_MODES } from '../../data/orbs';
+import { useSession } from '../../context/SessionContext';
+import ChestReactorAssembly from './ChestReactorAssembly';
+import Orb3D from './Orb3D';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import './Hero.css';
 
-const Hero = ({ isSelectionMode = false, onConfirm }) => {
-  const [selectedOrbIdx, setSelectedOrbIdx] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
+const Hero = ({ onConfirm }) => {
   const navigate = useNavigate();
   const { setSelectedOrbId, setIsOrbSelected, setOrbSettings } = useSession();
+
+  // Unified State Machine (idle_closed | initialize_open | orb_swap | settle_open | idle_active)
+  const [animState, setAnimState] = useState('idle_closed');
   
-  const currentOrb = ORB_MODES[selectedOrbIdx];
+  // Interaction State
+  const [activeOrbIdx, setActiveOrbIdx] = useState(0);
+  const [nextOrbIdx, setNextOrbIdx] = useState(null); // Used for UI highlights during swap
+  const [isExiting, setIsExiting] = useState(false);
+  
+  // Ref to prevent overlapping triggers
+  const isAnimating = useRef(false);
+
+  const currentOrb = ORB_MODES[activeOrbIdx];
+
+  const triggerOrbSwap = useCallback((newIdx) => {
+      // If closing or already animating a swap, ignore.
+      if (isAnimating.current || newIdx === activeOrbIdx || animState === 'idle_closed') return;
+      isAnimating.current = true;
+      
+      setNextOrbIdx(newIdx);
+      setAnimState('orb_swap');
+      setIsExiting(true); // tells current orb to sink/scale down
+
+      // Halfway through swap sequence, swap the actual rendered component
+      setTimeout(() => {
+          setActiveOrbIdx(newIdx);
+          setIsExiting(false); // new orb mounts and starts rising
+      }, 1200);
+
+      // Settle into open posture
+      setTimeout(() => {
+          setAnimState('settle_open');
+          // Then move to continuous idle active after settling
+          setTimeout(() => {
+             setAnimState('idle_active');
+             setNextOrbIdx(null);
+             isAnimating.current = false;
+          }, 800);
+      }, 2500); 
+  }, [activeOrbIdx, animState]);
 
   const handleNext = useCallback(() => {
-    setIsOpen(true);
-    setTimeout(() => {
-      setSelectedOrbIdx((prev) => (prev + 1) % ORB_MODES.length);
-      setTimeout(() => setIsOpen(false), 800);
-    }, 400);
-  }, []);
+      triggerOrbSwap((activeOrbIdx + 1) % ORB_MODES.length);
+  }, [activeOrbIdx, triggerOrbSwap]);
 
   const handlePrev = useCallback(() => {
-    setIsOpen(true);
-    setTimeout(() => {
-      setSelectedOrbIdx((prev) => (prev - 1 + ORB_MODES.length) % ORB_MODES.length);
-      setTimeout(() => setIsOpen(false), 800);
-    }, 400);
-  }, []);
+      triggerOrbSwap((activeOrbIdx - 1 + ORB_MODES.length) % ORB_MODES.length);
+  }, [activeOrbIdx, triggerOrbSwap]);
+
+  const handleInitialize = () => {
+      if (isAnimating.current || animState !== 'idle_closed') return;
+      isAnimating.current = true;
+      setAnimState('initialize_open');
+      
+      setTimeout(() => {
+          setAnimState('settle_open');
+          setTimeout(() => {
+             setAnimState('idle_active');
+             isAnimating.current = false;
+          }, 800);
+      }, 2000);
+  };
+
+  const handleConfirm = () => {
+      setSelectedOrbId(currentOrb.id);
+      setOrbSettings(prev => ({ ...prev, color: currentOrb.color }));
+      setIsOrbSelected(true);
+      if (onConfirm) onConfirm(currentOrb.id);
+      navigate('/editor');
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -61,127 +94,117 @@ const Hero = ({ isSelectionMode = false, onConfirm }) => {
   }, [handleNext, handlePrev]);
 
   return (
-    <section className="hero-cinematic">
-      <div className="aether-grid-overlay"></div>
+     <section className="hero-hardsurface-v6">
+      <div className="v6-ambient-bg"></div>
 
-      <div className="hero-layout-v3">
-        {/* Top Header Section */}
-        <header className="hero-header">
-           <motion.h1 
-             initial={{ opacity: 0, y: -20 }}
-             animate={{ opacity: 1, y: 0 }}
-             className="main-headline"
-           >
-             SELECT YOUR AI CORE
-           </motion.h1>
-           <motion.p 
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             transition={{ delay: 0.2 }}
-             className="main-subheadline"
-           >
-             Initialize the chestplate core and choose the intelligence mode that powers your creation workflow.
-           </motion.p>
-        </header>
-
-        <div className="hero-main-container">
-            {/* Left Orb Selector */}
-            <div className="side-panel left-panel">
-              <div className="panel-header">CORE_LIBRARY</div>
-              <div className="orb-selector-list">
-                {ORB_MODES.map((orb, idx) => (
-                  <button 
-                    key={orb.id}
-                    className={`orb-selector-item ${selectedOrbIdx === idx ? 'active' : ''}`}
-                    onClick={() => {
-                        setIsOpen(true);
-                        setTimeout(() => {
-                          setSelectedOrbIdx(idx);
-                          setTimeout(() => setIsOpen(false), 800);
-                        }, 400);
-                    }}
-                  >
-                    <div className="orb-selector-dot" style={{ background: orb.color }}></div>
-                    <span>{orb.id.toUpperCase()}</span>
-                  </button>
-                ))}
-              </div>
+      {/* TOP: Brand, Headline, Subheadline */}
+      <header className="v6-header">
+        <div className="v6-brand">AETHERFORGE // MK85</div>
+        <h1 className="v6-headline">SELECT YOUR AI CORE</h1>
+        <p className="v6-subheadline">
+          Initialize the central chest reactor and choose the intelligence mode that powers your creation workflow.
+        </p>
+      </header>
+      
+      <div className="v6-main-layout">
+         
+         {/* SIDE PANEL: ORB SELECTOR */}
+         <aside className="v6-selector-panel">
+            <h3 className="v6-panel-title">CORE_LIBRARY</h3>
+            <div className="v6-orb-list">
+               {ORB_MODES.map((orb, idx) => {
+                   const isActive = idx === (nextOrbIdx !== null ? nextOrbIdx : activeOrbIdx);
+                   return (
+                     <button 
+                        key={orb.id} 
+                        className={`v6-selector-btn ${isActive ? 'active' : ''}`}
+                        onClick={() => {
+                            if (animState === 'idle_closed') {
+                                // First select the orb, then initialize
+                                setActiveOrbIdx(idx);
+                                handleInitialize();
+                            } else {
+                                triggerOrbSwap(idx);
+                            }
+                        }}
+                     >
+                       <span className="v6-orb-dot" style={{ backgroundColor: orb.color, boxShadow: isActive ? `0 0 10px ${orb.color}` : 'none' }}></span>
+                       <span className="v6-orb-name-small">{orb.id.toUpperCase()}</span>
+                     </button>
+                   );
+               })}
             </div>
+         </aside>
 
-            {/* Centered Chestplate Canvas */}
-            <div className="center-stage-v3">
-              <div className="canvas-container-v3">
-                <Canvas shadows camera={{ position: [0, 0, 15], fov: 35 }}>
-                  <Suspense fallback={null}>
-                    <OrbitControls 
-                      enableZoom={false} 
-                      enablePan={false} 
-                      minPolarAngle={Math.PI/2.5} 
-                      maxPolarAngle={Math.PI/1.8} 
-                    />
-                    
-                    <Chestplate isOpen={isOpen}>
-                      <Orb3D key={currentOrb.id} config={currentOrb} isListening={isListening} />
-                    </Chestplate>
+         {/* CENTER: The 3D Render (40-50% width visual) */}
+         <div className="v6-render-stage">
+           <Canvas shadows camera={{ position: [0, 0, 16], fov: 35 }}>
+             <Suspense fallback={null}>
+               <OrbitControls 
+                 enableZoom={false} 
+                 enablePan={false} 
+                 minPolarAngle={Math.PI/2.5} 
+                 maxPolarAngle={Math.PI/1.8} 
+                 minAzimuthAngle={-Math.PI/8}
+                 maxAzimuthAngle={Math.PI/8}
+               />
+               <ChestReactorAssembly animState={animState}>
+                 <Orb3D key={currentOrb.id} config={currentOrb} animState={animState} isExiting={isExiting} />
+               </ChestReactorAssembly>
+               <Environment preset="night" />
+               <ContactShadows position={[0, -5, 0]} opacity={0.6} scale={30} blur={3} color="#000000" />
+             </Suspense>
+           </Canvas>
 
-                    <Environment preset="night" />
-                    <ContactShadows position={[0, -5, 0]} opacity={0.4} scale={20} blur={2.5} />
-                  </Suspense>
-                </Canvas>
-              </div>
+           {/* Hover Interaction Hints */}
+           <button className="v6-nav-btn prev" onClick={handlePrev}><ChevronLeft size={64} /></button>
+           <button className="v6-nav-btn next" onClick={handleNext}><ChevronRight size={64} /></button>
+         </div>
 
-              {/* Navigation Arrow Hints */}
-              <div className="nav-hints">
-                <button className="nav-hint-btn" onClick={handlePrev}><ChevronLeft size={32} /></button>
-                <button className="nav-hint-btn" onClick={handleNext}><ChevronRight size={32} /></button>
-              </div>
+         {/* RIGHT/BOTTOM SPACE (to balance columns) */}
+         <aside className="v6-status-panel">
+            <h3 className="v6-panel-title">SYSTEM_STATUS</h3>
+            <div className="v6-status-item">
+               <span className="v6-status-label">REACTOR</span>
+               <span className="v6-status-value" style={{ color: currentOrb.color }}>{animState.toUpperCase().replace('_', ' ')}</span>
             </div>
-
-            {/* Right Command Panel */}
-            <div className="side-panel right-panel">
-              <div className="panel-header">COMMAND_INTERFACE</div>
-              <div className="action-buttons-v3">
-                <button className="aether-premium-btn" onClick={() => {
-                    setSelectedOrbId(currentOrb.id);
-                    setOrbSettings(prev => ({ ...prev, color: currentOrb.color }));
-                    setIsOrbSelected(true);
-                    if (onConfirm) onConfirm(currentOrb.id);
-                    navigate('/editor');
-                }}>
-                  INITIALIZE STUDIO
-                </button>
-                <button className="aether-ghost-btn" onClick={() => setIsListening(!isListening)}>
-                  {isListening ? 'LISTENING...' : 'VOICE COMMAND'}
-                </button>
-              </div>
-
-              <div className="status-box-v3 glass-panel">
-                <div className="status-label">SYSTEM_CORE</div>
-                <div className="status-value text-cyan">ACTIVE</div>
-                <div className="status-label">LATENCY</div>
-                <div className="status-value">14ms</div>
-              </div>
+            <div className="v6-status-item mt-4">
+               <span className="v6-status-label">SYNC_LINK</span>
+               <span className="v6-status-value text-white">99.8%</span>
             </div>
-        </div>
+         </aside>
 
-        {/* Bottom Orb Info HUD */}
-        <footer className="hero-footer-hud">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={currentOrb.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="orb-details-v3"
-            >
-              <div className="core-category">{currentOrb.coreType}</div>
-              <h2 className="core-name" style={{ color: currentOrb.color }}>{currentOrb.name}</h2>
-              <p className="core-description">{currentOrb.description}</p>
-            </motion.div>
-          </AnimatePresence>
-          <div className="footer-hint">USE LEFT / RIGHT ARROW KEYS TO CYCLE CORES</div>
-        </footer>
       </div>
+
+      {/* BOTTOM: Orb Info & Helper */}
+      <footer className="v6-footer">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={currentOrb.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="v6-orb-info"
+          >
+            <h2 className="v6-orb-name-large" style={{ color: currentOrb.color }}>{currentOrb.name.toUpperCase()}</h2>
+            <p className="v6-orb-desc">{currentOrb.description}</p>
+          </motion.div>
+        </AnimatePresence>
+        
+        <div className="v6-actions">
+           {animState === 'idle_closed' ? (
+              <button className="v6-launch-btn init" onClick={handleInitialize}>
+                INITIALIZE SUIT 
+              </button>
+           ) : (
+              <button className="v6-launch-btn primary" onClick={handleConfirm} style={{ borderColor: currentOrb.color, color: currentOrb.color }}>
+                ENTER WORKSPACE
+              </button>
+           )}
+        </div>
+        
+        <div className="v6-helper">Use UI or Left/Right Arrows for selection</div>
+      </footer>
     </section>
   );
 };
