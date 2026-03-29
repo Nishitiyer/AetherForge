@@ -12,17 +12,17 @@ import {
   PenTool, 
   MousePointer2, 
   Move, 
-  RotateCw, 
-  Maximize, 
-  Scissors, 
-  Plus, 
-  Eye, 
-  Zap,
-  Cpu,
-  Mic,
-  Clapperboard,
-  Waves,
-  Webcam
+  Bot,
+  Scissors,
+  Maximize,
+  Move,
+  RotateCw,
+  Plus,
+  Grid3X3,
+  Wand2,
+  Database,
+  Search,
+  ChevronDown
 } from 'lucide-react';
 import EditorToolbar from '../components/editor/EditorToolbar.jsx';
 import EditorSidebar from '../components/editor/EditorSidebar.jsx';
@@ -48,6 +48,20 @@ const WORKSPACES = [
 const MODES = [
   'Object Mode', 'Edit Mode', 'Sculpt Mode', 'Vertex Paint', 
   'Weight Paint', 'Texture Paint', 'Pose Mode'
+];
+
+const MODE_TOOLS = [
+  { icon: Move, label: 'Move' },
+  { icon: RotateCw, label: 'Rotate' },
+  { icon: Maximize, label: 'Scale' },
+  { icon: MousePointer2, label: 'Select' },
+];
+
+const MODELING_TOOLS = [
+  { icon: Scissors, label: 'Extrude' },
+  { icon: Plus, label: 'Inset' },
+  { icon: Grid3X3, label: 'Loop Cut' },
+  { icon: Wand2, label: 'Subdivide' },
 ];
 
 const Editor = () => {
@@ -96,61 +110,75 @@ const Editor = () => {
 
   return (
     <div className="aether-editor-root">
-      {/* 1. Global Header / Workspace Bar */}
-      <EditorToolbar 
-        activeWorkspace={activeWorkspace} 
-        setActiveWorkspace={setActiveWorkspace} 
-        onIsltoggle={setIsGestureActive} 
-      />
+      {/* 1. Global Header / Workspace Bar (Blender-style) */}
+      <header className="aether-header">
+        <div className="header-left">
+          <div className="logo-icon">AF</div>
+          <div className="menu-bar">
+            <span>File</span><span>Edit</span><span>Render</span><span>Window</span><span>Help</span>
+          </div>
+        </div>
+        
+        <div className="workspace-tabs">
+          {WORKSPACES.map(ws => (
+            <button key={ws} onClick={() => setActiveWorkspace(ws)} className={`ws-tab ${activeWorkspace === ws ? 'active' : ''}`}>
+              {ws}
+            </button>
+          ))}
+        </div>
+
+        <div className="header-right">
+          <button className="header-btn"><Search size={14} /></button>
+          <div className="user-avatar">NI</div>
+        </div>
+      </header>
 
       {/* 2. Main Workspace Layout */}
       <main className="editor-grid">
-        {/* Left Toolbar (Vertical) */}
-        <EditorSidebar 
-          activeMode={activeMode} 
-          isGestureActive={isGestureActive}
-          setIsGestureActive={setIsGestureActive}
-        />
+        {/* Left Tool Shelf */}
+        <aside className="tool-shelf">
+          {MODE_TOOLS.map(t => (
+            <button key={t.label} className="tool-btn" title={t.label}>
+              <t.icon size={18} />
+            </button>
+          ))}
+          <div className="tool-divider" />
+          {MODELING_TOOLS.map(t => (
+            <button key={t.label} className="tool-btn" title={t.label}>
+              <t.icon size={18} />
+            </button>
+          ))}
+        </aside>
 
-        {/* Central Area (Viewport) */}
+        {/* Central Viewport Area */}
         <section className="viewport-zone">
           <div className="viewport-header">
             <div className="mode-selector">
-              <select 
-                className="professional-mode-select"
-                value={activeMode}
-                onChange={(e) => setActiveMode(e.target.value)}
-                style={{
-                   background: 'transparent', color: '#fff', border: 'none', outline: 'none',
-                   fontSize: '12px', fontFamily: 'Inter', fontWeight: 600, cursor: 'pointer'
-                }}
-              >
-                {MODES.map(m => <option key={m} value={m} style={{color: '#000'}}>{m}</option>)}
+              <select className="professional-mode-select" value={activeMode} onChange={e => setActiveMode(e.target.value)}>
+                {MODES.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div className="viewport-overlays-toggle">
-              <button className="view-btn"><Eye size={14} /></button>
-              <button className="view-btn"><Layers size={14} /></button>
-              <button className="view-btn active"><Box size={14} /></button>
+              {['Wire', 'Solid', 'Mat', 'Render'].map(v => (
+                <button key={v} className="view-btn">{v}</button>
+              ))}
             </div>
           </div>
           
           <div className="viewport-canvas-wrapper">
-            <Viewport 
-              activeMode={activeMode}
-              sceneObjects={sceneObjects} 
-              setSceneObjects={setSceneObjects}
-              selectedObjectId={selectedObjectId}
-              setSelectedObjectId={setSelectedObjectId}
-              selectedPartIndex={selectedPartIndex}
-              setSelectedPartIndex={setSelectedPartIndex}
-              transformMode={transformMode}
-              setTransformMode={setTransformMode}
-              gestureData={{ gesture, landmarks }}
-              selectedOrbId={useSession().selectedOrbId}
-            />
-            
-            <GestureOverlay videoRef={videoRef} landmarks={landmarks} active={isGestureActive} />
+             <Viewport 
+               activeMode={activeMode}
+               sceneObjects={sceneObjects} 
+               setSceneObjects={setSceneObjects}
+               selectedObjectId={selectedObjectId}
+               setSelectedObjectId={setSelectedObjectId}
+               selectedPartIndex={selectedPartIndex}
+               setSelectedPartIndex={setSelectedPartIndex}
+               transformMode={transformMode}
+               setTransformMode={setTransformMode}
+               gestureData={{ gesture, landmarks }}
+             />
+             <GestureOverlay videoRef={videoRef} landmarks={landmarks} active={isGestureActive} />
           </div>
 
           <div className="viewport-footer">
@@ -159,93 +187,26 @@ const Editor = () => {
           </div>
         </section>
 
-        {/* Right Sidebar (Orb Assistant + Outliner & Properties) */}
-        <aside className="properties-shelf" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', gap: '0' }}>
-          {/* Orb Assistant Sidebar */}
-          <div style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,.06)', minHeight: 0, flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
-            <OrbAssistantSidebar onAddObject={handleAddObject} />
+        {/* Right Sidebar — Orb Assistant + Outliner */}
+        <aside className="properties-shelf">
+          <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <OrbAssistantSidebar onAddObject={addObject} />
           </div>
-          {/* Outliner (Below) */}
-          <div className="outliner-panel" style={{ flexShrink: 0 }}>
+          
+          <div className="outliner-panel" style={{ flex: '0 0 180px', borderTop: '1px solid #111' }}>
             <div className="panel-header">
               <Database size={14} />
               <span>Outliner</span>
-              <div className="panel-actions">
-                <Search size={12} />
-                <ChevronDown size={12} />
-              </div>
             </div>
             <div className="outliner-content">
               <div className="scene-tree">
-                <div className="tree-item group">
-                  <ChevronDown size={12} />
-                  <span>Scene Collection</span>
-                </div>
-                <div className="tree-item group ml-4">
-                  <ChevronDown size={12} />
-                  <span>Collection</span>
-                </div>
                 {sceneObjects.map(obj => (
-                  <div 
-                    key={obj.id} 
-                    className={`tree-item ml-8 ${selectedObjectId === obj.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedObjectId(obj.id)}
-                  >
+                  <div key={obj.id} className={`tree-item ${selectedObjectId === obj.id ? 'selected' : ''}`} onClick={() => setSelectedObjectId(obj.id)}>
                     <Box size={12} />
                     <span>{obj.name}</span>
-                    <Eye size={12} className="ml-auto" />
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-
-          {/* Properties (Bottom Half) */}
-          <div className="inspector-panel">
-            <div className="panel-tabs">
-              <button 
-                className={`prop-tab ${rightPanel === 'Properties' ? 'active' : ''}`}
-                onClick={() => setRightPanel('Properties')}
-              >
-                <Settings size={14} />
-              </button>
-              <button 
-                className={`prop-tab ${rightPanel === 'Render' ? 'active' : ''}`}
-                onClick={() => setRightPanel('Render')}
-              >
-                <Clapperboard size={14} />
-              </button>
-              <button className="prop-tab"><Layers size={14} /></button>
-              <button 
-                className={`prop-tab ${rightPanel === 'Gesture' ? 'active' : ''}`}
-                onClick={() => setRightPanel('Gesture')}
-                title="Gesture Tracking"
-              >
-                <Webcam size={14} />
-              </button>
-            </div>
-            <div className="inspector-content">
-              {rightPanel === 'Properties' ? (
-                <ConstructionPanel 
-                  onAddObject={addObject} 
-                  sceneObjects={sceneObjects} 
-                  setSceneObjects={setSceneObjects} 
-                  selectedObjectId={selectedObjectId}
-                  setSelectedObjectId={setSelectedObjectId}
-                  selectedPartIndex={selectedPartIndex}
-                  setSelectedPartIndex={setSelectedPartIndex}
-                  transformMode={transformMode}
-                  setTransformMode={setTransformMode}
-                />
-              ) : rightPanel === 'Gesture' ? (
-                <GesturePanel 
-                  isGestureActive={isGestureActive} 
-                  setIsGestureActive={setIsGestureActive} 
-                  gestureData={{ gesture, landmarks }}
-                />
-              ) : (
-                <RenderSettings />
-              )}
             </div>
           </div>
         </aside>
@@ -254,9 +215,8 @@ const Editor = () => {
       {/* 3. Bottom Timeline Area */}
       <footer className="aether-footer">
         <div className="timeline-controls">
-          <button className="btn-icon"><SkipBack size={16} /></button>
-          <button className="btn-icon"><Play size={16} /></button>
-          <button className="btn-icon"><SkipForward size={16} /></button>
+          <button className="btn-icon">◀</button>
+          <button className="btn-icon">▶</button>
           <div className="current-frame">0</div>
         </div>
         <div className="timeline-track">
@@ -264,36 +224,11 @@ const Editor = () => {
         </div>
       </footer>
 
-      {/* 4. Technical Floating Overlays */}
-      <ActiveVoiceAssistant isListening={isAIPanelOpen} onClick={() => setIsAIPanelOpen(!isAIPanelOpen)} />
-      
-      {isAIPanelOpen && (
-        <div className="floating-ai-panel glass-panel">
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold flex items-center gap-2">
-                <Mic size={14} className="text-cyan-400" />
-                AETHER ALCHEMY
-              </h3>
-              <button onClick={() => setIsAIPanelOpen(false)}>×</button>
-            </div>
-            <AIPanel 
-              activeMode={activeMode} 
-              onAddObject={(obj) => {
-                if (typeof obj === 'string') addObject(obj);
-                else setSceneObjects([...sceneObjects, obj]);
-              }} 
-            />
-          </div>
-        </div>
-      )}
-
       {/* Gesture Status Indicator */}
       <div className={`gesture-status ${isGestureActive ? 'active' : ''}`} onClick={() => setIsGestureActive(!isGestureActive)}>
-        <Waves size={16} />
-        <span>{isGestureActive ? 'GESTURE_SYNC_ON' : 'GESTURE_OFF'}</span>
+        <Bot size={16} />
+        <span>{isGestureActive ? 'SYSTEM_SYNC_ACTIVE' : 'SYSTEM_IDLE'}</span>
       </div>
-
     </div>
   );
 };
