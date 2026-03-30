@@ -61,6 +61,7 @@ export function useHands() {
   const [confidence,      setConfidence]      = useState(0);
   const [permissionState, setPermissionState] = useState('prompt');
   const [isReady,         setIsReady]         = useState(false);
+  const [isInitializing,  setIsInitializing]  = useState(false);
 
   /** Step 1: Request camera stream. Call this on user interaction. */
   const requestCamera = useCallback(async () => {
@@ -95,8 +96,9 @@ export function useHands() {
         const { Hands } = await import('@mediapipe/hands');
         if (cancelled) return;
 
+        setIsInitializing(true);
         const hands = new Hands({
-          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`,
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`,
         });
         hands.setOptions({
           maxNumHands:             1,
@@ -132,6 +134,7 @@ export function useHands() {
           }
         });
         handsRef.current = hands;
+        setIsInitializing(false);
         console.log('[AetherForge] MediaPipe Hands initialized');
 
         // Detection loop – run at ~30fps to balance accuracy and perf
@@ -152,6 +155,7 @@ export function useHands() {
         };
         rafRef.current = requestAnimationFrame(detect);
       } catch (err) {
+        setIsInitializing(false);
         console.error('[AetherForge Gesture] MediaPipe init failed:', err);
       }
     }
@@ -173,5 +177,5 @@ export function useHands() {
     };
   }, []);
 
-  return { videoRef, gestureRef, gesture, landmarks, handPos, confidence, permissionState, requestCamera };
+  return { videoRef, gestureRef, gesture, landmarks, handPos, confidence, permissionState, requestCamera, isInitializing };
 }

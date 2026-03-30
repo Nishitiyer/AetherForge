@@ -9,8 +9,7 @@ const OrbSelection = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: Selection, 2: Customization
 
-  const handleConfirmSelection = (orbId) => {
-    setSelectedOrbId(orbId);
+  const handleConfirmSelection = () => {
     setStep(2);
   };
 
@@ -52,8 +51,6 @@ const OrbSelection = () => {
       </div>
 
       <Hero 
-        selectedId={selectedOrbId} 
-        onSelect={setSelectedOrbId} 
         isSelectionMode={true} 
         onConfirm={handleConfirmSelection} 
       />

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ChestHero3D } from "./ChestHero3D";
 import { Canvas } from "@react-three/fiber";
+import { useSession } from "../../context/SessionContext.jsx";
 import "./Hero.css";
 
 const ORBS = [
@@ -62,26 +63,16 @@ const ORBS = [
   }
 ];
 
-export default function Hero({ selectedId, onSelect, isSelectionMode, onConfirm }) {
+export default function Hero({ isSelectionMode, onConfirm }) {
   const navigate = useNavigate();
-  const [internalSelectedId, setInternalSelectedId] = useState("sentinel");
+  const { selectedOrbId, setSelectedOrbId } = useSession();
   const [isHeroOpen, setIsHeroOpen] = useState(false);
 
-  const currentId = selectedId || internalSelectedId;
-
-  useEffect(() => {
-    const saved = localStorage.getItem("selectedOrb");
-    if (saved && !selectedId) setInternalSelectedId(saved);
-  }, [selectedId]);
+  const currentId = selectedOrbId || "sentinel";
 
   const handleOrbSelect = (id) => {
     console.log('[AetherForge] Orb Selected:', id);
-    if (onSelect) {
-      onSelect(id);
-    } else {
-      setInternalSelectedId(id);
-      localStorage.setItem("selectedOrb", id);
-    }
+    setSelectedOrbId(id);
     setIsHeroOpen(true);
     setTimeout(() => setIsHeroOpen(false), 1000);
   };

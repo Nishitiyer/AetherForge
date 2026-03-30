@@ -68,7 +68,7 @@ const OrbAssistantSidebar = () => {
   const orb = ORB_META[selectedOrbId?.toLowerCase()] || ORB_META.nova;
 
   const [tab, setTab] = useState('Assistant');
-  const { videoRef, permissionState, gesture, confidence: realConfidence, requestCamera } = useHands();
+  const { videoRef, permissionState, gesture, confidence: realConfidence, requestCamera, isInitializing } = useHands();
   const [isGestureOn, setIsGestureOn] = useState(false);
   const [gestureMode, setGestureMode] = useState('Select');
   const [prompt, setPrompt] = useState('');
@@ -180,7 +180,17 @@ const OrbAssistantSidebar = () => {
               {/* STARK-STYLE CAMERA FEED */}
               <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black">
                 {isGestureOn ? (
-                  <video ref={videoRef} className="h-full w-full object-cover scale-x-[-1]" muted />
+                  <>
+                    <video ref={videoRef} className="h-full w-full object-cover scale-x-[-1]" muted />
+                    {isInitializing && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="h-8 w-8 rounded-full border-2 border-white/10 border-t-white animate-spin" style={{ borderTopColor: orb.accent }} />
+                          <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40">Initializing Link...</div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="h-full grid place-items-center bg-[#050508]">
                     <Camera className="h-10 w-10 text-white/10" />

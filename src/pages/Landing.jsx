@@ -12,10 +12,10 @@ const Landing = () => {
     <div className="landing-page">
       <Navbar />
       <Hero />
-      {/* <FeatureGrid />
+      <FeatureGrid />
       <Workflows />
       <Pricing />
-      <Footer /> */}
+      <Footer />
     </div>
   );
 };

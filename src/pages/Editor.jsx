@@ -270,7 +270,7 @@ export default function Editor() {
     { role: 'assistant', content: 'AetherForge ready. Commands: "generate [type]" · "move up/down/left/right [n]" · "rotate [deg]" · "scale [n]" · "spin on/off" · "delete"' }
   ]);
 
-  const { videoRef, gestureRef, gesture, handPos, confidence, permissionState, requestCamera } = useHands();
+  const { videoRef, gestureRef, gesture, handPos, confidence, permissionState, requestCamera, isInitializing } = useHands();
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedOrb');
@@ -331,6 +331,21 @@ export default function Editor() {
   const commitTransform = useCallback((id, { position, quaternion, scale }) => {
     setObjects(prev => prev.map(o => o.id === id ? { ...o, position, quaternion, scale } : o));
   }, []);
+
+  const handleDuplicate = useCallback(() => {
+    if (!selectedObj) return;
+    const clone = {
+      ...freshObject(selectedObj.type),
+      position:   selectedObj.position.clone().add(new THREE.Vector3(1, 0, 1)),
+      quaternion: selectedObj.quaternion.clone(),
+      scale:      selectedObj.scale.clone(),
+      color:      selectedObj.color,
+      wireframe:  selectedObj.wireframe,
+      spin:       selectedObj.spin,
+    };
+    setObjects(prev => [...prev, clone]);
+    setSelectedId(clone.id);
+  }, [selectedObj]);
 
   /* ── Gesture toggle ── */
   const toggleGestures = useCallback(async () => {
@@ -453,7 +468,7 @@ export default function Editor() {
           <button className="tm-btn danger" onClick={deleteSelected} disabled={!selectedId}>
             <Trash2 size={14}/><span>Delete</span>
           </button>
-          <button className="tm-btn" onClick={()=>{ if(selectedObj){ const d=freshObject(selectedObj.type); d.position=selectedObj.position.clone().add(new THREE.Vector3(1.5,0,0)); d.color=selectedObj.color; setObjects(p=>[...p,d]); setSelectedId(d.id); } }}>
+          <button className="tm-btn" onClick={handleDuplicate} disabled={!selectedId}>
             <Copy size={14}/><span>Duplicate</span>
           </button>
         </div>
@@ -484,7 +499,7 @@ export default function Editor() {
 
           <div className="shelf-section-label">MESH</div>
           <ToolBtn icon={Plus}     label="Add Mesh"   sub="⇧A" onClick={()=>setShowAddPanel(v=>!v)}     accent={orb.accent} />
-          <ToolBtn icon={Copy}     label="Duplicate"  sub="⇧D" onClick={()=>{ if(selectedObj){ const d=freshObject(selectedObj.type); d.position=selectedObj.position.clone().add(new THREE.Vector3(1.5,0,0)); d.color=selectedObj.color; setObjects(p=>[...p,d]); setSelectedId(d.id); }}}  accent={orb.accent} />
+          <ToolBtn icon={Copy}     label="Duplicate"  sub="⇧D" onClick={handleDuplicate}     accent={orb.accent} />
           <ToolBtn icon={Trash2}   label="Delete"     sub="X"  onClick={deleteSelected} danger tinyLabel="DEL"  accent={orb.accent} />
 
           <div className="shelf-section-label">OBJECT</div>
@@ -574,7 +589,12 @@ export default function Editor() {
                 <AlertCircle size={13}/> Camera denied — check browser settings
               </div>
             )}
-            {isGestureEnabled && permissionState === 'granted' && (
+            {isInitializing && (
+              <div className="gesture-status-float" style={{borderColor: orb.accent+'44'}}>
+                <span className="animate-pulse" style={{color:orb.accent}}>INITIALIZING SPATIAL LINK...</span>
+              </div>
+            )}
+            {isGestureEnabled && permissionState === 'granted' && !isInitializing && (
               <div className="gesture-status-float" style={{borderColor: orb.accent+'44', left: 'auto', right: '14px', transform: 'none'}}>
                 <div className="pulse-dot" style={{background:orb.accent}}/>
                 <span style={{color:orb.accent}}>{gesture}</span>
