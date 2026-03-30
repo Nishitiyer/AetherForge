@@ -8,12 +8,14 @@ export function useHands() {
   const videoRef = useRef(null);
   const handsRef = useRef(null);
   const rafRef   = useRef(null);
-  const gestureRef = useRef('NONE'); // Ref for sync read in useFrame
+  const gestureRef = useRef(['NONE', 'NONE']); // Ref for sync read in useFrame (Dual-Hand)
+  const handPosRef = useRef([{ x:0.5, y:0.5, z:0, v:0 }, { x:0.5, y:0.5, z:0, v:0 }]); // Ref for sync read in useFrame
+  const prevHandPosRef = useRef([{ x:0.5, y:0.5, z:0 }, { x:0.5, y:0.5, z:0 }]); // For velocity tracking
 
-  const [gesture,         setGesture]         = useState('IDLE');
-  const [landmarks,       setLandmarks]       = useState(null);
-  const [handPos,         setHandPos]         = useState({ x: 0.5, y: 0.5, z: 0 });
-  const [confidence,      setConfidence]      = useState(0);
+  const [gestures,        setGestures]        = useState(['IDLE', 'IDLE']);
+  const [landmarksList,   setLandmarksList]   = useState([null, null]);
+  const [handPosList,     setHandPosList]     = useState([{ x: 0.5, y: 0.5, z: 0 }, { x: 0.5, y: 0.5, z: 0 }]);
+  const [confidenceList,  setConfidenceList]  = useState([0, 0]);
   const [permissionState, setPermissionState] = useState('prompt');
   const [isReady,         setIsReady]         = useState(false);
   const [isInitializing,  setIsInitializing]  = useState(false);
@@ -49,37 +51,51 @@ export function useHands() {
     // Tip and base indices for classification
     const thumbTip = points[4], thumbBase = points[2];
     const indexTip = points[8], indexBase = points[6];
-    const middleTip = points[12];
-    const ringTip = points[16];
-    const pinkyTip = points[20];
-
-    // Distance helpers
-    const dist = (p1, p2) => Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
-    
-    // 1. PINCH (Index Tip to Thumb Tip)
-    const pinchDist = dist(indexTip, thumbTip);
-    if (pinchDist < 0.05) return 'PINCH';
-
-    // 2. FIST (All fingers closed towards wrist)
+    const middleTip = points[12], middleBase = points[10];
+    const ringTip = points[16], ringBase = points[14];
+    const pinkyTip = points[20], pinkyBase = points[18];
     const wrist = points[0];
-    const handSize = dist(wrist, points[9]); // Scale normalization
-    const isFist = [8, 12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.8);
-    if (isFist) return 'FIST';
 
-    // 3. PEACE (Index and Middle extended, others closed)
-    const isIndexExt = dist(points[8], wrist) > handSize * 1.2;
-    const isMiddleExt = dist(points[12], wrist) > handSize * 1.2;
+    // Distance helper
+    const dist = (p1, p2) => Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+
+    // Scale normalization for distant hands (Wrist to Middle Knuckle distance as anchor)
+    const handSize = dist(wrist, points[9]) || 0.1; 
+
+    // 1. PINCH (Index Tip to Thumb Tip) 
+    const pinchDist = dist(indexTip, thumbTip);
+    if (pinchDist < handSize * 0.3) return 'PINCH'; 
+
+    // 2. GRAB / FIST (All fingers closed towards wrist)
+    const isFist = [8, 12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.95);
+    if (isFist) return 'GRAB';
+
+    // 3. GUN (Thumb and Index extended, others closed)
+    const isThumbExt = dist(thumbTip, thumbBase) > handSize * 0.4;
+    const isIndexExt = dist(indexTip, indexBase) > handSize * 0.6;
+    const isOthersClosedGun = [12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 1.0);
+    if (isThumbExt && isIndexExt && isOthersClosedGun) return 'GUN';
+
+    // 4. THUMBS_UP (Thumb extended vertically, others closed)
+    const isThumbUp = thumbTip.y < thumbBase.y - (handSize * 0.3);
+    const areOthersFist = [8, 12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.9);
+    if (isThumbUp && areOthersFist) return 'THUMBS_UP';
+
+    // 5. PEACE (Index and Middle extended, others closed)
+    const isPeaceIndex = dist(points[8], wrist) > handSize * 1.2;
+    const isPeaceMiddle = dist(points[12], wrist) > handSize * 1.2;
     const isRingClosed = dist(points[16], wrist) < handSize * 0.9;
     const isPinkyClosed = dist(points[20], wrist) < handSize * 0.9;
-    if (isIndexExt && isMiddleExt && isRingClosed && isPinkyClosed) return 'PEACE';
+    if (isPeaceIndex && isPeaceMiddle && isRingClosed && isPinkyClosed) return 'PEACE';
 
-    // 4. POINT (Index extended, others closed)
-    const isIndexExtended = dist(indexTip, indexBase) > 0.08;
-    const areOthersClosed = [12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.82);
-    if (isIndexExtended && areOthersClosed) return 'POINT';
+    // 6. POINT (Index extended, others closed)
+    const isPointIndex = dist(indexTip, indexBase) > handSize * 0.8;
+    const areOthersClosed = [12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.95);
+    if (isPointIndex && areOthersClosed) return 'POINT';
 
-    // 5. OPEN_HAND
-    if ([8, 12, 16, 20].every(idx => dist(points[idx], wrist) > handSize * 1.2)) return 'OPEN';
+    // 7. SPREAD / OPEN_HAND
+    const isSpread = [8, 12, 16, 20].every(idx => dist(points[idx], wrist) > handSize * 1.4);
+    if (isSpread) return 'SPREAD';
 
     return 'IDLE';
   };
@@ -105,10 +121,10 @@ export function useHands() {
             delegate: "GPU"
           },
           runningMode: "VIDEO",
-          numHands: 1,
-          minHandDetectionConfidence: 0.8,
-          minHandPresenceConfidence: 0.8,
-          minTrackingConfidence: 0.8
+          numHands: 2,
+          minHandDetectionConfidence: 0.5, // Lowered for better range detection
+          minHandPresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5
         });
 
         if (cancelled) return;
@@ -124,19 +140,46 @@ export function useHands() {
               const results = handsRef.current.detectForVideo(videoRef.current, startTimeMs);
 
               if (results && results.landmarks && results.landmarks.length > 0) {
-                const pts = results.landmarks[0];
-                const g = classifyGesture(pts);
+                const newGestures = [];
+                const newLandmarks = [];
+                const newPosList = [];
+                const newConfidences = [];
+
+                results.landmarks.forEach((pts, i) => {
+                  const g = classifyGesture(pts);
+                  newGestures[i] = g;
+                  newLandmarks[i] = pts;
+                  
+                  // Calculate velocity (Z-change) - Exponentially weighted for smooth but reactive creation
+                  const prevZ = prevHandPosRef.current[i]?.z || pts[8].z;
+                  const deltaZ = (prevZ - pts[8].z);
+                  const velocity = deltaZ * 200; // Positive = PUSH towards camera
+                  
+                  const hp = { 
+                    x: 1 - pts[8].x, 
+                    y: pts[8].y, 
+                    z: pts[8].z, 
+                    v: velocity,
+                    isRight: results.handedness ? results.handedness[i][0].label === 'Right' : true
+                  };
+                  newPosList[i] = hp;
+                  newConfidences[i] = results.handPresenceScores ? results.handPresenceScores[i] : 0.9;
+                  
+                  prevHandPosRef.current[i] = { x: hp.x, y: hp.y, z: hp.z };
+                });
+
+                gestureRef.current = newGestures;
+                handPosRef.current = newPosList;
                 
-                gestureRef.current = g;
-                setGesture(g);
-                setLandmarks(pts);
-                setConfidence(results.handPresenceScores ? results.handPresenceScores[0] : 0.9);
-                
-                setHandPos({ x: 1 - pts[8].x, y: pts[8].y, z: pts[8].z });
+                setGestures(newGestures);
+                setLandmarksList(newLandmarks);
+                setHandPosList(newPosList);
+                setConfidenceList(newConfidences);
               } else {
-                gestureRef.current = 'NONE';
-                setGesture('IDLE');
-                setConfidence(0);
+                gestureRef.current = ['NONE', 'NONE'];
+                setGestures(['IDLE', 'IDLE']);
+                setConfidenceList([0, 0]);
+                setLandmarksList([null, null]);
               }
             } catch (err) {
               console.error('[AetherForge] Detection loop error:', err);
@@ -161,5 +204,16 @@ export function useHands() {
     };
   }, [permissionState, isReady]);
 
-  return { videoRef, gestureRef, gesture, landmarks, handPos, confidence, permissionState, requestCamera, isInitializing };
+  return { 
+    videoRef, 
+    gestureRef, 
+    handPosRef, 
+    gestures, 
+    landmarksList, 
+    handPosList, 
+    confidenceList, 
+    permissionState, 
+    requestCamera, 
+    isInitializing 
+  };
 }

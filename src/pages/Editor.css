@@ -111,23 +111,147 @@
 /* CANVAS AREA */
 .viewport-canvas-area { flex-grow: 1; position: relative; overflow: hidden; background: transparent; }
 
-.stark-hologram-feed {
+.stark-monitor-pip {
   position: absolute;
-  top: 0;
-  left: 0;
+  bottom: 20px;
+  right: 20px;
+  width: 240px;
+  background: #000;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 10px rgba(34, 211, 238, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+.stark-monitor-pip.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.pip-header {
+  height: 20px;
+  background: rgba(34, 211, 238, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--orb-accent);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.1);
+}
+
+.pip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orb-accent);
+}
+
+.pip-dot.pulse {
+  animation: pipPulse 1s infinite alternate;
+}
+
+@keyframes pipPulse {
+  from { opacity: 0.4; }
+  to { opacity: 1; filter: brightness(1.5); }
+}
+
+.pip-content {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #000;
+}
+
+.pip-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-  filter: brightness(1.2) contrast(1.1) saturate(1.2) blur(0.5px);
-  mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  transform: scaleX(-1); /* Mirror camera */
+  filter: brightness(1.1) contrast(1.1);
 }
 
-.stark-hologram-feed.active {
-  opacity: 0.55;
+.pip-status-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.status-label {
+  font-size: 7px;
+  font-weight: 800;
+  background: var(--orb-accent);
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+}
+
+.status-gesture {
+  font-size: 9px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+  letter-spacing: -0.02em;
+}
+
+.holographic-pip-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.pip-header span {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.pip-signal {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.signal-bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+}
+
+.sig-bar {
+  width: 2px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 1px;
+}
+
+.sig-bar:nth-child(1) { height: 2px; }
+.sig-bar:nth-child(2) { height: 4px; }
+.sig-bar:nth-child(3) { height: 6px; }
+.sig-bar:nth-child(4) { height: 8px; }
+.sig-bar:nth-child(5) { height: 10px; }
+
+.sig-bar.active {
+  background: var(--orb-accent);
+  box-shadow: 0 0 5px var(--orb-accent);
 }
 
 .hand-hud-overlay {
@@ -198,73 +322,102 @@
 
 .stark-reticle {
   position: absolute;
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border: 1px solid;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.05s ease-out;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .reticle-inner {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  animation: reticlePulse 0.5s ease-in-out infinite alternate;
+  animation: reticlePulse 0.4s ease-in-out infinite alternate;
 }
 
-@keyframes reticlePulse {
-  from { transform: scale(1); opacity: 0.5; }
-  to { transform: scale(2.5); opacity: 1; }
+.reticle-line-h, .reticle-line-v {
+  position: absolute;
+  background: var(--orb-accent);
+  opacity: 0.8;
 }
+
+.reticle-line-h { width: 120px; height: 1px; left: -20px; top: 50%; offset: -20px; }
+.reticle-line-v { width: 1px; height: 120px; top: -20px; left: 50%; }
 
 .reticle-label {
   position: absolute;
-  top: -20px;
-  font-size: 9px;
-  font-weight: 800;
+  top: -25px;
+  font-size: 10px;
+  font-weight: 900;
   white-space: nowrap;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
 .stark-corner {
   position: absolute;
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: linear-gradient(to right, rgba(0,0,0,0.4), transparent);
+  gap: 6px;
+  border: 1px solid transparent;
+  width: 200px;
 }
 
-.stark-corner.top-left { top: 0; left: 0; }
-.stark-corner.bottom-left { bottom: 0; left: 0; }
-
-.telem-row {
-  display: flex;
-  gap: 8px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
+.stark-corner.top-left { 
+  top: 0; left: 0; 
+  border-top-color: var(--orb-accent); 
+  border-left-color: var(--orb-accent);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), transparent 40%);
 }
 
-.telem-row .label { color: rgba(255,255,255,0.4); }
-.telem-row .val { color: var(--orb-accent); text-shadow: 0 0 5px var(--orb-accent); }
+.stark-corner.bottom-left { 
+  bottom: 0; left: 0; 
+  border-bottom-color: var(--orb-accent); 
+  border-left-color: var(--orb-accent);
+  background: linear-gradient(45deg, rgba(34, 211, 238, 0.1), transparent 40%);
+}
+
+.hand-hud-overlay.secondary {
+  opacity: 0.6;
+  filter: hue-rotate(45deg) brightness(0.8);
+}
+
+.rotate-fast {
+  animation: spinCCW 2s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes spinCCW {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.hud-stark-text {
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 5px var(--orb-accent);
+}
 
 .stark-scanlines {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 50%,
-    rgba(0, 0, 0, 0.05) 50%
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(34, 211, 238, 0.03) 1px,
+    rgba(34, 211, 238, 0.03) 2px
   );
-  background-size: 100% 4px;
   pointer-events: none;
-  opacity: 0.3;
+  z-index: 100;
 }
 
 /* Add a scanner effect over the hologram */

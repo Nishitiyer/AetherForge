@@ -62,12 +62,13 @@ export const MODEL_TEMPLATES = {
 
   BLASTER: (color = '#475569') => ({
     type: 'Group',
-    name: 'Blaster',
+    name: 'Tactical Blaster',
     parts: [
-      { type: 'Box', position: [0, 0, 0], scale: [0.15, 0.25, 0.5], color }, // Body
-      { type: 'Cylinder', position: [0, 0.05, 0.4], scale: [0.08, 0.4, 0.08], color: '#1e293b', rotation: [Math.PI/2, 0, 0] }, // Barrel
-      { type: 'Box', position: [0, -0.2, -0.1], scale: [0.12, 0.3, 0.15], color: '#334155' }, // Grip
-      { type: 'Box', position: [0, 0.15, 0], scale: [0.05, 0.1, 0.3], color: '#00f2fe', name: 'Scope' } // Energy Scope
+      { type: 'Box', position: [0, 0, 0], scale: [0.2, 0.35, 0.7], color }, // Body
+      { type: 'Cylinder', position: [0, 0.08, 0.55], scale: [0.09, 0.6, 0.09], color: '#1e293b', rotation: [Math.PI/2, 0, 0] }, // Barrel
+      { type: 'Box', position: [0, -0.3, -0.15], scale: [0.15, 0.45, 0.22], color: '#334155' }, // Grip
+      { type: 'Cylinder', position: [0, 0.25, 0.1], scale: [0.06, 0.35, 0.06], color: '#00f2fe', rotation: [Math.PI/2, 0, 0], name: 'Laser_Sight' }, // Scope
+      { type: 'Box', position: [0, 0.1, -0.4], scale: [0.12, 0.2, 0.4], color: '#111', name: 'Stock' } // Stock
     ]
   }),
 
@@ -90,6 +91,20 @@ export const MODEL_TEMPLATES = {
       { type: 'Cylinder', position: [0.55, 0.15, 0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] }, // Wheel FR
       { type: 'Cylinder', position: [-0.55, 0.15, -0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] }, // Wheel RL
       { type: 'Cylinder', position: [0.55, 0.15, -0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] } // Wheel RR
+    ]
+  }),
+
+  FACE: (color = '#fde68a') => ({
+    type: 'Group',
+    name: 'Proto_Head',
+    parts: [
+      { type: 'Sphere', position: [0, 1.6, 0], scale: [0.25, 0.3, 0.25], color }, // Skull
+      { type: 'Sphere', position: [-0.08, 1.65, 0.2], scale: [0.04, 0.04, 0.04], color: '#fff', name: 'EyeL' }, // Eye L
+      { type: 'Sphere', position: [0.08, 1.65, 0.2], scale: [0.04, 0.04, 0.04], color: '#fff', name: 'EyeR' }, // Eye R
+      { type: 'Box', position: [0, 1.55, 0.22], scale: [0.03, 0.08, 0.03], color, name: 'Nose' }, // Nose
+      { type: 'Box', position: [0, 1.45, 0.18], scale: [0.1, 0.02, 0.05], color: '#ef4444', name: 'Mouth' }, // Mouth
+      { type: 'Sphere', position: [-0.25, 1.6, 0.05], scale: [0.05, 0.08, 0.05], color, name: 'EarL' }, // Ear L
+      { type: 'Sphere', position: [0.25, 1.6, 0.05], scale: [0.05, 0.08, 0.05], color, name: 'EarR' } // Ear R
     ]
   }),
 
@@ -274,11 +289,11 @@ export const assembleFromAI = (prompt, color = '#8b5cf6') => {
   if (p.includes('robot')) {
     name = 'Neural Robot';
     parts = MODEL_TEMPLATES.ROBOT(color).parts;
-  } else if (p.includes('man') || p.includes('human') || p.includes('person')) {
-    name = 'Bio_Sim: Human';
-    parts = MODEL_TEMPLATES.HUMANOID(color, p.includes('woman') || p.includes('girl')).parts;
-  } else if (p.includes('gun') || p.includes('weapon') || p.includes('blaster')) {
-    name = 'Tech_Gear: Blaster';
+  } else if (p.includes('head') || p.includes('face') || p.includes('skull')) {
+    name = 'Bio_Sim: Head';
+    parts = MODEL_TEMPLATES.FACE(color).parts;
+  } else if (p.includes('gun') || p.includes('weapon') || p.includes('blaster') || p.includes('rifle')) {
+    name = 'Tech_Gear: Tactical Blaster';
     parts = MODEL_TEMPLATES.BLASTER('#475569').parts;
   } else if (p.includes('sword') || p.includes('saber')) {
     name = 'Tech_Gear: Saber';

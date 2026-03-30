@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useState, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { 
   OrbitControls, 
@@ -7,114 +7,184 @@ import {
   ContactShadows, 
   TransformControls,
   BakeShadows,
-  Float,
-  Sphere as DreiSphere
+  useVideoTexture,
+  Html
 } from '@react-three/drei';
-import AssistantOrb from '../common/AssistantOrb.jsx';
-import { useFrame } from '@react-three/fiber';
-import { EffectComposer, Bloom, Noise, Vignette, SSAO, ToneMapping } from '@react-three/postprocessing';
+import { useFrame, useThree } from '@react-three/fiber';
+import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-const GestureHand = ({ gestureData, selectedObjectId, sceneObjects, setSceneObjects, lastGesturePos }) => {
-  useFrame((state, delta) => {
-    if (!gestureData || !gestureData.landmarks || !selectedObjectId) {
-      lastGesturePos.current = null;
-      return;
-    }
-
-    // 1. PINCH -> TRANSLATE
-    if (gestureData.gesture === 'PINCH') {
-      const indexTip = gestureData.landmarks[8];
-      const currentPos = { x: (indexTip.x - 0.5) * 20, y: (0.5 - indexTip.y) * 20 };
-
-      if (lastGesturePos.current) {
-        const dx = currentPos.x - lastGesturePos.current.x;
-        const dy = currentPos.y - lastGesturePos.current.y;
-
-        setSceneObjects(prev => prev.map(obj => {
-          if (obj.id === selectedObjectId) {
-            return {
-              ...obj,
-              position: [
-                obj.position[0] + dx,
-                obj.position[1] + dy,
-                obj.position[2]
-              ]
-            };
-          }
-          return obj;
-        }));
-      }
-      lastGesturePos.current = currentPos;
-    }
-
-    // 2. PALM_OPEN -> ROTATION ANIMATION (AUTO)
-    if (gestureData.gesture === 'PALM_OPEN') {
-       setSceneObjects(prev => prev.map(obj => {
-         if (obj.id === selectedObjectId) {
-           return { ...obj, animation: 'SPIN' };
-         }
-         return obj;
-       }));
+const ARBackground = ({ videoRef }) => {
+  const { scene } = useThree();
+  const texture = useVideoTexture(videoRef.current?.srcObject ? videoRef.current : null);
+  
+  useFrame(() => {
+    if (texture) {
+      scene.background = texture;
     }
   });
 
   return null;
 };
 
-const MeshObject = ({ obj, isSelected, onClick, transformMode }) => {
+const GestureHand = ({ 
+  gestureData, 
+  selectedObjectId, 
+  sceneObjects, 
+  setSceneObjects, 
+  lastGesturePos 
+}) => {
+  const { camera } = useThree();
+  const createCooldown = useRef(0);
+
+  useFrame((state, delta) => {
+    if (!gestureData || !gestureData.landmarks || gestureData.landmarks.length === 0) {
+      lastGesturePos.current = null;
+      return;
+    }
+
+    createCooldown.current = Math.max(0, createCooldown.current - delta);
+
+    // Multi-hand processing
+    gestureData.landmarks.forEach((landmarks, idx) => {
+      const gesture = gestureData.gestures[idx];
+      const pos = gestureData.handPosList[idx];
+      
+      // Convert normalized camera coords to 3D world coords
+      // Iron Man Projection: Map screen X/Y to a plane at Z=0 in front of camera
+      const vector = new THREE.Vector3((pos.x - 0.5) * 2, (0.5 - pos.y) * 2, 0.5);
+      vector.unproject(camera);
+      const dir = vector.sub(camera.position).normalize();
+      const distance = 15; // Interaction plane distance
+      const worldPos = camera.position.clone().add(dir.multiplyScalar(distance));
+
+      // 1. CREATION (PUSH or THUMBS_UP)
+      if ((gesture === 'THUMBS_UP' || (pos.v > 15)) && createCooldown.current === 0) {
+        const newId = `obj-${Date.now()}`;
+        const newObj = {
+          id: newId,
+          position: [worldPos.x, worldPos.y, worldPos.z],
+          scale: [1, 1, 1],
+          animation: 'PULSE',
+          parts: [
+            { type: 'Sphere', position: [0, 0, 0], scale: [1, 1, 1], color: '#00e5ff', metalness: 0.9, roughness: 0.1 }
+          ]
+        };
+        setSceneObjects(prev => [...prev, newObj]);
+        createCooldown.current = 1.5; // Cooldown for creation
+        return;
+      }
+
+      // 2. TRANSLATION (GRAB or PINCH)
+      if (gesture === 'GRAB' || gesture === 'PINCH') {
+        if (selectedObjectId) {
+          setSceneObjects(prev => prev.map(obj => {
+            if (obj.id === selectedObjectId) {
+              // Smooth follow
+              return {
+                ...obj,
+                position: [
+                  THREE.MathUtils.lerp(obj.position[0], worldPos.x, 0.2),
+                  THREE.MathUtils.lerp(obj.position[1], worldPos.y, 0.2),
+                  THREE.MathUtils.lerp(obj.position[2], worldPos.z, 0.2)
+                ]
+              };
+            }
+            return obj;
+          }));
+        }
+      }
+
+      // 3. ROTATION (Using hand orientation / velocity)
+      if (gesture === 'POINT' && selectedObjectId) {
+        setSceneObjects(prev => prev.map(obj => {
+           if (obj.id === selectedObjectId) {
+             return { ...obj, animation: 'SPIN' };
+           }
+           return obj;
+        }));
+      }
+
+      // 4. EXPLODE / DELETE (GUN)
+      if (gesture === 'GUN' && selectedObjectId) {
+         setSceneObjects(prev => prev.map(obj => {
+           if (obj.id === selectedObjectId) {
+             return { ...obj, animation: 'EXPLODE' };
+           }
+           return obj;
+         }));
+      }
+    });
+  });
+
+  return null;
+};
+
+const MeshObject = ({ obj, isSelected, onClick }) => {
   const meshRef = useRef();
+  const [explosionFactor, setExplosionFactor] = useState(0);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
     
     if (obj.animation === 'SPIN') {
-      meshRef.current.rotation.y += delta * 2;
+      meshRef.current.rotation.y += delta * 4;
+      meshRef.current.rotation.x += delta * 2;
     }
+    
     if (obj.animation === 'PULSE') {
-      const s = 1 + Math.sin(state.clock.elapsedTime * 5) * 0.1;
+      const s = 1 + Math.sin(state.clock.elapsedTime * 8) * 0.05;
       meshRef.current.scale.set(s, s, s);
+    }
+
+    if (obj.animation === 'EXPLODE') {
+      setExplosionFactor(prev => Math.min(prev + delta * 2, 5));
     }
   });
 
   return (
     <group ref={meshRef} position={obj.position} scale={obj.scale}>
-      {obj.parts.map((part, index) => (
-        <mesh 
-          key={index}
-          position={part.position}
-          scale={part.scale}
-          rotation={part.rotation || [0, 0, 0]}
-          castShadow
-          receiveShadow
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick(obj.id, index);
-          }}
-        >
-          {part.type === 'Box' && <boxGeometry />}
-          {part.type === 'Sphere' && <sphereGeometry args={[1, 64, 64]} />}
-          {part.type === 'Cylinder' && <cylinderGeometry args={[1, 1, 2, 32]} />}
-          {part.type === 'Torus' && <torusGeometry args={[1, 0.4, 32, 100]} />}
-          {part.type === 'Plane' && <planeGeometry args={[1, 1]} />}
-          {!['Box', 'Sphere', 'Cylinder', 'Torus', 'Plane'].includes(part.type) && <boxGeometry />}
-          
-          <meshStandardMaterial 
-            color={part.color} 
-            roughness={part.roughness ?? 0.2}
-            metalness={part.metalness ?? 0.8}
-            emissive={isSelected ? "#00d4ff" : (part.emissive || "#000")}
-            emissiveIntensity={isSelected ? 0.2 : (part.emissiveIntensity || 0)}
-            wireframe={part.wireframe}
-            envMapIntensity={1}
-            transparent={part.opacity < 1}
-            opacity={part.opacity ?? 1}
-            transmission={part.transmission ?? 0}
-            thickness={part.thickness ?? 1}
-            clearcoat={part.clearcoat ?? 0}
-          />
-        </mesh>
-      ))}
+      {obj.parts.map((part, index) => {
+        // Explode logic: offset parts from center
+        const explodeOffset = [
+          (part.position[0] || index - 0.5) * explosionFactor,
+          (part.position[1] || index - 0.5) * explosionFactor,
+          (part.position[2] || index - 0.5) * explosionFactor
+        ];
+
+        return (
+          <mesh 
+            key={index}
+            position={[
+              part.position[0] + explodeOffset[0],
+              part.position[1] + explodeOffset[1],
+              part.position[2] + explodeOffset[2]
+            ]}
+            scale={part.scale}
+            castShadow
+            receiveShadow
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick(obj.id, index);
+            }}
+          >
+            {part.type === 'Box' && <boxGeometry />}
+            {part.type === 'Sphere' && <sphereGeometry args={[1, 32, 32]} />}
+            {part.type === 'Cylinder' && <cylinderGeometry args={[1, 1, 2, 32]} />}
+            {part.type === 'Torus' && <torusGeometry args={[1, 0.4, 32, 64]} />}
+            
+            <meshStandardMaterial 
+              color={part.color} 
+              roughness={isSelected ? 0.1 : (part.roughness ?? 0.2)}
+              metalness={isSelected ? 1.0 : (part.metalness ?? 0.8)}
+              emissive={isSelected ? "#00ffff" : "#000"}
+              emissiveIntensity={isSelected ? 0.5 : 0}
+              transparent={obj.animation === 'EXPLODE'}
+              opacity={obj.animation === 'EXPLODE' ? 1 - explosionFactor/5 : 1}
+            />
+          </mesh>
+        );
+      })}
     </group>
   );
 };
@@ -127,57 +197,26 @@ const Viewport3D = ({
   setSelectedPartIndex,
   transformMode,
   gestureData,
-  selectedOrbId
+  videoRef 
 }) => {
   const lastGesturePos = useRef(null);
-  const [isAIActive, setIsAIActive] = React.useState(false);
-
-  // Listen for AI commands from AIPanel
-  React.useEffect(() => {
-    const handleAI = (e) => {
-      const { action, type, color } = e.detail;
-      setIsAIActive(true);
-      setTimeout(() => setIsAIActive(false), 2000); // 2 second pulse on action
-      
-      setSceneObjects(prev => prev.map(obj => {
-        if (obj.id === selectedObjectId) {
-          if (action === 'ANIMATE') return { ...obj, animation: type };
-          if (action === 'MATERIAL') {
-            return {
-              ...obj,
-              parts: obj.parts.map(p => ({ ...p, color }))
-            };
-          }
-        }
-        return obj;
-      }));
-    };
-    window.addEventListener('aether-ai-command', handleAI);
-    return () => window.removeEventListener('aether-ai-command', handleAI);
-  }, [selectedObjectId, setSceneObjects]);
-
-  const selectedObj = sceneObjects.find(o => o.id === selectedObjectId);
 
   return (
     <div className="viewport-3d-canvas-root">
       <Canvas 
          shadows 
-         legacy={true}
          gl={{ 
-           antialias: false, 
+           antialias: true, 
            powerPreference: "high-performance",
-           alpha: false,
-           stencil: false,
-           depth: true
+           alpha: true 
          }}
          dpr={[1, 2]}
-         onPointerUp={() => { lastGesturePos.current = null; }}
       >
-        <color attach="background" args={['#1a1a1a']} />
-        
-        {/* <Suspense fallback={null}> */}
-          <PerspectiveCamera makeDefault position={[10, 10, 10]} fov={45} />
+        <Suspense fallback={<Html center>Initializing OS...</Html>}>
+          <PerspectiveCamera makeDefault position={[0, 0, 20]} fov={50} />
           <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
+          
+          {videoRef?.current && <ARBackground videoRef={videoRef} />}
           
           <GestureHand 
             gestureData={gestureData} 
@@ -187,63 +226,41 @@ const Viewport3D = ({
             lastGesturePos={lastGesturePos}
           />
           
-          {/* High-Performance Lighting */}
-          <ambientLight intensity={0.5} />
-          <spotLight 
-            position={[10, 15, 10]} 
-            angle={0.3} 
-            penumbra={1} 
-            intensity={2} 
-            castShadow 
-            shadow-mapSize={[1024, 1024]}
-          />
-          <pointLight position={[-10, -10, -10]} intensity={0.5} color="#4f46e5" />
+          <ambientLight intensity={0.8} />
+          <pointLight position={[10, 10, 10]} intensity={1.5} color="#00e5ff" />
+          <pointLight position={[-10, -10, -10]} intensity={1} color="#ff00ff" />
           
-          <Environment preset="city" />
-
-          {/* Scene Content */}
           <group>
             {sceneObjects.map(obj => (
               <MeshObject 
                 key={obj.id} 
                 obj={obj} 
                 isSelected={selectedObjectId === obj.id}
-                transformMode={transformMode}
                 onClick={(id, partIdx) => {
                   setSelectedObjectId(id);
                   setSelectedPartIndex(partIdx);
                 }}
               />
             ))}
-            {selectedObj && (
-              <TransformControls 
-                object={sceneObjects.find(o => o.id === selectedObjectId)} 
-                mode={transformMode} 
-                size={0.6} 
-              />
-            )}
           </group>
           
-          <ContactShadows 
-            position={[0, -0.01, 0]} 
-            opacity={0.4} 
-            scale={40} 
-            blur={2} 
-            far={10} 
-            color="#000000"
-          />
+          <ContactShadows position={[0, -5, 0]} opacity={0.4} scale={40} blur={2} far={10} color="#000" />
+          <Environment preset="city" />
           
-          <gridHelper args={[100, 100, "#222", "#111"]} />
-          
+          <EffectComposer>
+            <Bloom luminanceThreshold={1} intensity={1.5} mipmapBlur />
+            <ChromaticAberration offset={[0.002, 0.002]} />
+          </EffectComposer>
+
           <BakeShadows />
-        {/* </Suspense> */}
+        </Suspense>
       </Canvas>
       
       <style>{`
         .viewport-3d-canvas-root {
           width: 100%;
           height: 100%;
-          background: #1a1a1a;
+          background: #000;
           position: relative;
         }
       `}</style>
