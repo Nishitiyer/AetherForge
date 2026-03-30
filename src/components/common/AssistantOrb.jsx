@@ -28,56 +28,56 @@ const AssistantOrb = ({ orbId = 'nova', active = false }) => {
     <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
       <group ref={groupRef} position={[7, 5, -5]}>
         
-        {/* Core Singularity */}
+        {/* Core Singularity - Mature Glow */}
         <mesh ref={coreRef}>
           <sphereGeometry args={[0.5, 32, 32]} />
           <MeshDistortMaterial
             color={config.color}
-            speed={4}
-            distort={0.3}
+            speed={3}
+            distort={0.4}
             radius={1}
             emissive={config.color}
-            emissiveIntensity={10}
+            emissiveIntensity={6}
             toneMapped={false}
           />
         </mesh>
 
-        {/* Refractive Shell */}
+        {/* Refractive Shell - Fluid Glass */}
         <mesh>
           <sphereGeometry args={[0.8, 64, 64]} />
           <MeshTransmissionMaterial
             backside
             samples={8}
-            thickness={1.0}
-            chromaticAberration={0.2}
-            anisotropicBlur={0.5}
-            distortion={0.2}
-            distortionScale={0.3}
-            temporalDistortion={0.1}
+            thickness={1.8}
+            chromaticAberration={0.3}
+            anisotropicBlur={0.8}
+            distortion={0.3}
+            distortionScale={0.5}
+            temporalDistortion={0.03}
             ior={1.2}
             color={config.color}
-            attenuationDistance={0.5}
+            attenuationDistance={1.0}
             attenuationColor={config.color}
-            roughness={0.0}
+            roughness={0.05}
             transmission={1.0}
-            envMapIntensity={2}
+            envMapIntensity={2.5}
           />
         </mesh>
         
-        {/* Outer Neural Aura */}
+        {/* Outer Neural Aura - Softened */}
         <mesh>
           <sphereGeometry args={[1.1, 32, 32]} />
           <MeshWobbleMaterial 
             color={config.secondaryColor} 
             transparent 
-            opacity={0.1} 
+            opacity={0.05} 
             wireframe 
-            factor={0.5}
-            speed={2}
+            factor={0.4}
+            speed={1.5}
           />
         </mesh>
 
-        <pointLight intensity={8} distance={8} color={config.color} />
+        <pointLight intensity={5} distance={8} color={config.color} />
       </group>
     </Float>
   );

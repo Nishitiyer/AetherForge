@@ -25,7 +25,7 @@ export function ChestHero3D({ orb }) {
     return () => window.removeEventListener('mousemove', handleMove);
   }, []);
 
-  const accentColor = orb?.accent ?? '#22d3ee';
+  const accentColor = orb?.accent ?? '#0e7490';
 
   // Pre-calculate sparkle positions to stabilize the render tree
   const sparkles = useMemo(() => {
@@ -39,8 +39,8 @@ export function ChestHero3D({ orb }) {
   }, []);
 
   const matRing = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: '#ffffff', metalness: 1, roughness: 0.05,
-    emissive: accentColor, emissiveIntensity: 2.5, clearcoat: 1.0,
+    color: '#ffffff', metalness: 1, roughness: 0.1,
+    emissive: accentColor, emissiveIntensity: 1.5, clearcoat: 1.0,
   }), [accentColor]);
 
   useFrame((state) => {
@@ -50,53 +50,55 @@ export function ChestHero3D({ orb }) {
     if (groupRef.current) {
       const targetX = mousePos.x * 1.2;
       const targetY = mousePos.y * 0.8;
-      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, 0.06);
-      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.06);
+      // Weightier, slow-fluid lerp
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, 0.04);
+      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.04);
       
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, mousePos.x * 0.6, 0.06);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -mousePos.y * 0.6, 0.06);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, mousePos.x * 0.6, 0.04);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -mousePos.y * 0.6, 0.04);
     }
 
     if (coreRef.current) {
-      coreRef.current.rotation.y += 0.05;
-      coreRef.current.rotation.z += 0.03;
+      coreRef.current.rotation.y += 0.03;
+      coreRef.current.rotation.z += 0.02;
       const dist = Math.sqrt(mousePos.x**2 + mousePos.y**2);
-      const intensity = Math.max(15, 35 - dist * 20);
-      coreRef.current.material.emissiveIntensity = intensity + Math.sin(t * 4) * 5;
+      // Softened core pulse
+      const intensity = Math.max(8, 20 - dist * 10);
+      coreRef.current.material.emissiveIntensity = intensity + Math.sin(t * 2) * 2;
     }
     
     if (sparklesRef.current) {
-        sparklesRef.current.rotation.y -= 0.02;
-        sparklesRef.current.scale.setScalar(1 + Math.sin(t * 5) * 0.03);
+        sparklesRef.current.rotation.y -= 0.01;
+        sparklesRef.current.scale.setScalar(1 + Math.sin(t * 3) * 0.02);
     }
 
     if (mantleRef.current) {
-      mantleRef.current.rotation.y -= 0.015;
-      mantleRef.current.scale.setScalar(0.96 + Math.sin(t * 2) * 0.04);
+      mantleRef.current.rotation.y -= 0.008;
+      mantleRef.current.scale.setScalar(0.97 + Math.sin(t * 1.5) * 0.02);
     }
-    if (shellRef.current) shellRef.current.rotation.y += 0.005;
+    if (shellRef.current) shellRef.current.rotation.y += 0.003;
     
     if (ringsRef.current) {
       ringsRef.current.children.forEach((ring, i) => {
-        ring.rotation.x += 0.009 * (i + 1);
-        ring.rotation.y += 0.015 * (i + 2);
+        ring.rotation.x += 0.005 * (i + 1);
+        ring.rotation.y += 0.008 * (i + 2);
       });
     }
   });
 
   return (
     <group ref={groupRef} scale={1.3}>
-      <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.4}>
+      <Float speed={1.2} rotationIntensity={0.2} floatIntensity={0.3}>
 
         <mesh ref={coreRef}>
           <icosahedronGeometry args={[0.22, 15]} />
           <MeshDistortMaterial
             color={accentColor} 
-            speed={10} 
-            distort={0.45} 
+            speed={6} 
+            distort={0.4} 
             radius={1}
             emissive={accentColor} 
-            emissiveIntensity={25}
+            emissiveIntensity={12}
             toneMapped={false}
           />
         </mesh>
@@ -104,8 +106,8 @@ export function ChestHero3D({ orb }) {
         <group ref={sparklesRef}>
             {sparkles.map((s, i) => (
                 <mesh key={i} position={s.position}>
-                    <sphereGeometry args={[0.02, 8, 8]} />
-                    <meshBasicMaterial color={accentColor} />
+                    <sphereGeometry args={[0.015, 8, 8]} />
+                    <meshBasicMaterial color={accentColor} transparent opacity={0.6} />
                 </mesh>
             ))}
         </group>
@@ -114,10 +116,10 @@ export function ChestHero3D({ orb }) {
           <sphereGeometry args={[0.42, 32, 32]} />
           <MeshWobbleMaterial 
             color={accentColor} 
-            factor={0.4} 
-            speed={4} 
+            factor={0.3} 
+            speed={2} 
             transparent 
-            opacity={0.08} 
+            opacity={0.06} 
             wireframe 
           />
         </mesh>
@@ -125,58 +127,59 @@ export function ChestHero3D({ orb }) {
         <mesh ref={mantleRef}>
           <sphereGeometry args={[0.55, 64, 64]} />
           <MeshWobbleMaterial 
-            factor={1.2} 
-            speed={2}
+            factor={0.8} 
+            speed={1.5}
             color={accentColor} 
             wireframe 
-            opacity={0.05} 
+            opacity={0.04} 
             transparent 
           />
         </mesh>
 
+        {/* Premium Fluid Shell - Sophisticated Refraction */}
         <mesh ref={shellRef}>
           <sphereGeometry args={[0.68, 64, 64]} />
           <MeshTransmissionMaterial
             backside 
-            samples={16} 
-            thickness={1.5}
-            chromaticAberration={0.6} 
+            samples={12} 
+            thickness={2.2}
+            chromaticAberration={0.4} 
             anisotropicBlur={1.0}
-            distortion={0.2} 
-            distortionScale={0.4}
-            temporalDistortion={0.05} 
-            ior={1.3}
+            distortion={0.3} 
+            distortionScale={0.8}
+            temporalDistortion={0.03} 
+            ior={1.2}
             color={accentColor} 
-            attenuationDistance={2}
+            attenuationDistance={2.5}
             attenuationColor={accentColor} 
-            roughness={0.0} 
+            roughness={0.05} 
             transmission={1.0}
-            envMapIntensity={4}
+            envMapIntensity={3}
           />
         </mesh>
 
         <group ref={ringsRef}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.92, 0.008, 32, 120]} />
-            <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={40} toneMapped={false} />
+            <torusGeometry args={[0.92, 0.006, 32, 120]} />
+            <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={15} toneMapped={false} />
           </mesh>
           <mesh rotation={[Math.PI / 2.5, 0.4, 0]}>
-            <torusGeometry args={[1.12, 0.012, 32, 160]} />
+            <torusGeometry args={[1.12, 0.01, 32, 160]} />
             <primitive object={matRing} attach="material" />
           </mesh>
           <mesh rotation={[Math.PI / 3.5, -0.6, 0]}>
-            <torusGeometry args={[1.32, 0.004, 32, 200]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.4} />
+            <torusGeometry args={[1.32, 0.003, 32, 200]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.2} />
           </mesh>
         </group>
 
-        <Stars radius={10} depth={60} count={1200} factor={6} fade speed={2} />
+        <Stars radius={10} depth={60} count={800} factor={4} fade speed={1.2} />
       </Float>
 
-      <spotLight position={[10, 15, 10]} angle={0.2} penumbra={1} intensity={15} color={accentColor} />
-      <pointLight position={[0, 0, 0]} intensity={25} color={accentColor} distance={5} />
-      <pointLight position={[-4, 2, 4]} intensity={8} color="#ffffff" />
-      <pointLight position={[0, -5, 0]} intensity={10} color={accentColor} />
+      <spotLight position={[10, 15, 10]} angle={0.2} penumbra={1} intensity={10} color={accentColor} />
+      <pointLight position={[0, 0, 0]} intensity={12} color={accentColor} distance={5} />
+      <pointLight position={[-4, 2, 4]} intensity={5} color="#ffffff" />
+      <pointLight position={[0, -5, 0]} intensity={6} color={accentColor} />
       <Environment preset="night" />
     </group>
   );

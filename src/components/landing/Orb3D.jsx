@@ -116,11 +116,11 @@ const Orb3D = ({ config, animState, isExiting, responsive = false }) => {
 
     // 1. Structural rotations
     if (ringRef1.current) {
-        ringRef1.current.rotation.y = t * (responsive ? 4 : 1.5);
+        ringRef1.current.rotation.y = t * (responsive ? 2 : 0.8);
     }
     if (ringRef2.current) {
-        ringRef2.current.rotation.x = Math.cos(t * 0.3) * (responsive ? 2 : 0.8);
-        ringRef2.current.rotation.y = -t * 1.5;
+        ringRef2.current.rotation.x = Math.cos(t * 0.3) * (responsive ? 1 : 0.5);
+        ringRef2.current.rotation.y = -t * 0.8;
     }
 
     // 2. State Lerps
@@ -129,8 +129,8 @@ const Orb3D = ({ config, animState, isExiting, responsive = false }) => {
     if (animState === 'idle_closed') targetZ = -0.5;
     if (isExiting) { targetZ = -2.0; targetScale = 0; }
 
-    groupRef.current.position.z = THREE.MathUtils.lerp(groupRef.current.position.z, targetZ, delta * 3.5);
-    const newScale = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, delta * 5.0);
+    groupRef.current.position.z = THREE.MathUtils.lerp(groupRef.current.position.z, targetZ, delta * 2.5);
+    const newScale = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, delta * 3.0);
     groupRef.current.scale.set(newScale, newScale, newScale);
   });
 
@@ -139,41 +139,41 @@ const Orb3D = ({ config, animState, isExiting, responsive = false }) => {
       {/* 1. Core Assembly */}
       <CoreGeometry id={config.id} color={config.color} responsive={responsive} />
 
-      {/* 2. Premium Refractive Shell */}
+      {/* 2. Premium Refractive Shell - Mature Fluidity */}
       <mesh>
         <sphereGeometry args={[0.6, 64, 64]} />
         <MeshTransmissionMaterial
             backside
             samples={12}
-            thickness={1.2}
-            chromaticAberration={0.4}
-            anisotropicBlur={0.8}
-            distortion={0.2}
-            distortionScale={responsive ? 0.6 : 0.3}
-            temporalDistortion={0.1}
-            ior={1.4}
+            thickness={2.0}
+            chromaticAberration={0.3}
+            anisotropicBlur={1.0}
+            distortion={0.3}
+            distortionScale={responsive ? 0.8 : 0.4}
+            temporalDistortion={0.03}
+            ior={1.2}
             color={config.color}
-            attenuationDistance={1.0}
+            attenuationDistance={1.2}
             attenuationColor={config.color}
-            roughness={0.0}
+            roughness={0.05}
             transmission={1.0}
-            envMapIntensity={2}
+            envMapIntensity={2.5}
         />
       </mesh>
 
-      {/* 3. Magnetic Retention Rings */}
+      {/* 3. Magnetic Retention Rings - Softened */}
       <group ref={ringRef1}>
-        <Torus args={[0.75, 0.008, 16, 64]}>
-           <meshPhysicalMaterial color={config.color} emissive={config.color} emissiveIntensity={responsive ? 15 : 5} toneMapped={false} />
+        <Torus args={[0.75, 0.006, 16, 64]}>
+           <meshPhysicalMaterial color={config.color} emissive={config.color} emissiveIntensity={responsive ? 8 : 3} toneMapped={false} />
         </Torus>
       </group>
       <group ref={ringRef2}>
-        <Torus args={[0.82, 0.005, 16, 64]}>
-           <meshBasicMaterial color="#ffffff" transparent opacity={0.3} />
+        <Torus args={[0.82, 0.003, 16, 64]}>
+           <meshBasicMaterial color="#ffffff" transparent opacity={0.15} />
         </Torus>
       </group>
       
-      <pointLight distance={5} intensity={responsive ? 12 : 4} color={config.color} decay={2} />
+      <pointLight distance={5} intensity={responsive ? 6 : 2} color={config.color} decay={2} />
     </group>
   );
 };
