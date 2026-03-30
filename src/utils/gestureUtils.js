@@ -57,3 +57,32 @@ export const classifyGesture = (points) => {
 
   return 'IDLE';
 };
+
+/** JARVIS: Calculate distance between two points in 3D (normalized 0-1 range) */
+export const calculateHandDistance = (h1, h2) => {
+  if (!h1 || !h2) return 0;
+  return Math.sqrt((h1.x - h2.x)**2 + (h1.y - h2.y)**2 + (h1.z - h2.z)**2);
+};
+
+/** JARVIS: Calculate midpoint between two hands */
+export const calculateHandMidpoint = (h1, h2) => {
+  if (!h1 || !h2) return { x: 0.5, y: 0.5, z: 0 };
+  return {
+    x: (h1.x + h2.x) / 2,
+    y: (h1.y + h2.y) / 2,
+    z: (h1.z + h2.z) / 2
+  };
+};
+
+/** Simple lerp for smooth vector transitions */
+export const lerp = (v1, v2, alpha) => v1 + (v2 - v1) * alpha;
+
+/** Calculate direction of velocity for 'Flick' actions */
+export const getVelocityVector = (h, prevH) => {
+  if (!h || !prevH) return { vx: 0, vy: 0, vz: 0 };
+  return {
+    vx: (h.x - prevH.x) * 100,
+    vy: (h.y - prevH.y) * 100,
+    vz: (h.z - prevH.z) * 100
+  };
+};

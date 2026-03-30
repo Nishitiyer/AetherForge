@@ -97,17 +97,18 @@ export function useHands() {
                   const g = classifyGesture(pts);
                   newGestures[i] = g;
                   newLandmarks[i] = pts;
-                  
-                  // Calculate velocity (Z-change) - Exponentially weighted for smooth but reactive creation
-                  const prevZ = prevHandPosRef.current[i]?.z || pts[8].z;
-                  const deltaZ = (prevZ - pts[8].z);
-                  const velocity = deltaZ * 200; // Positive = PUSH towards camera
+                  // Calculate 3D velocity vectors (Stark-style trajectory tracking)
+                  const prevHP = prevHandPosRef.current[i] || { x: 1 - pts[8].x, y: pts[8].y, z: pts[8].z };
+                  const vx = ( (1 - pts[8].x) - prevHP.x) * 200;
+                  const vy = (pts[8].y - prevHP.y) * 200;
+                  const vz = (prevHP.z - pts[8].z) * 200; // Positive = Push depth
                   
                   const hp = { 
                     x: 1 - pts[8].x, 
                     y: pts[8].y, 
                     z: pts[8].z, 
-                    v: velocity,
+                    vx, vy, vz,
+                    v: Math.sqrt(vx**2 + vy**2 + vz**2), // Scalar magnitude
                     isRight: results.handedness ? results.handedness[i][0].label === 'Right' : true
                   };
                   newPosList[i] = hp;

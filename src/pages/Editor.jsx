@@ -131,11 +131,11 @@ function freshObject(primKey) {
   };
 }
 
-/* ────────────────── SCENE OBJECT ────────────────── */
-/* ────────────────── SCENE OBJECT ────────────────── */
-function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb, multiGestures, multiHandPos }) {
+function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb, gestures, handPosList }) {
   const meshRef = useRef();
   const pinchStartRef = useRef();
+  const dualHandBaseDistRef = useRef(null);
+  const dualHandBaseScaleRef = useRef(null);
   
   // Animation state for multi-part models
   const [parts, setParts] = useState(obj.parts || []);
@@ -153,24 +153,53 @@ function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gestur
       setParts(applyAnimation(obj.parts, obj.animation, time));
     }
     
-    // ── HIGH-PERFORMANCE GESTURE LOOP ──
-    const g = gestureRef.current;
-    const hp = handPosRef?.current || handPos; // Prefer Ref for 0ms sync
+    // ── HIGH-PERFORMANCE JARVIS GESTURE LOOP ──
+    const gList = gestureRef.current;
+    const hpList = handPosRef.current;
+    
+    const g0 = gList[0], g1 = gList[1];
+    const hp0 = hpList[0], hp1 = hpList[1];
 
-    // GESTURE: GRAB -> ATTACH AND MOVE
-    if (g === 'GRAB' && hp) {
-      const worldPos = new THREE.Vector3((hp.x - 0.5) * 14, (0.5 - hp.y) * 10, hp.z * -10);
+    if (!meshRef.current) return;
+
+    // A. DUAL-HAND INTERACTION (The Stark 'Pull Apart')
+    if (isGestureEnabled && isSelected && g0 === 'PINCH' && g1 === 'PINCH') {
+       const dist = Math.sqrt((hp0.x - hp1.x)**2 + (hp0.y - hp1.y)**2);
+       if (dualHandBaseDistRef.current === null) {
+          dualHandBaseDistRef.current = dist;
+          dualHandBaseScaleRef.current = meshRef.current.scale.x;
+       } else {
+          const scaleFactor = (dist / dualHandBaseDistRef.current);
+          meshRef.current.scale.setScalar(dualHandBaseScaleRef.current * scaleFactor);
+          
+          // Trigger EXPLODE if pulled apart quickly
+          if (scaleFactor > 2.5 && obj.parts) {
+             // Logic to set global animation state would go here
+          }
+       }
+    } else {
+       dualHandBaseDistRef.current = null;
+    }
+
+    // B. SINGLE-HAND MANIPULATION
+    const activeHand = hp0; 
+    const activeGesture = g0;
+
+    if (activeHand && activeGesture === 'GRAB' && isSelected) {
+      const worldPos = new THREE.Vector3((activeHand.x - 0.5) * 14, (0.5 - activeHand.y) * 10, activeHand.z * -10);
       meshRef.current.position.lerp(worldPos, 0.2);
+
+      // FLICK-TO-DELETE (Stark 'Throw Away')
+      if (Math.abs(activeHand.vx) > 80 || Math.abs(activeHand.vy) > 80) {
+          // In a real app we'd call a delete function here
+          // For now we'll just 'scale down' out of existence to simulate deletion
+          meshRef.current.scale.multiplyScalar(0.8);
+      }
     }
 
     // GESTURE: ROTATE (Triggered by PINCH movement or specific pose)
-    if (g === 'ROTATE' || (g === 'PINCH' && hp.v > 10)) {
+    if (activeGesture === 'ROTATE' || (activeGesture === 'PINCH' && activeHand?.v > 15)) {
        meshRef.current.rotation.y += delta * 5;
-    }
-
-    // GESTURE: GUN -> TRIGGER EXPLOSION
-    if (g === 'GUN') {
-       // Explosion logic is handled via obj.animation state change in parent
     }
 
     // Spin animation
@@ -203,25 +232,31 @@ function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gestur
 
   return (
     <>
-      {/* Holographic Neural Targeter — Zero-Latency raw hand position */}
-      {isGestureEnabled && hp && (
-        <group position={[(hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0]}>
+      {/* 3D Fingertip Energy Hubs — JARVIS STYLE */}
+      {isGestureEnabled && handPosList.map((hp, i) => hp && (
+        <group key={i} position={[(hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0]}>
+           {/* Primary Hub */}
            <mesh>
-             <sphereGeometry args={[0.04, 16, 16]} />
+             <sphereGeometry args={[0.04 * (gestures[i]==='PINCH'?1.5:1), 16, 16]} />
              <meshStandardMaterial color={orb.accent} emissive={orb.accent} emissiveIntensity={3} />
            </mesh>
+           {/* Rotating Rings */}
            <mesh rotation={[Math.PI/2, 0, 0]}>
              <ringGeometry args={[0.08, 0.1, 32]} />
              <meshBasicMaterial color={orb.accent} transparent opacity={0.4} />
            </mesh>
+           <mesh rotation={[Math.PI/4, Math.PI/4, 0]}>
+             <ringGeometry args={[0.12, 0.13, 32]} />
+             <meshBasicMaterial color={orb.accent} transparent opacity={0.2} />
+           </mesh>
         </group>
-      )}
+      ))}
 
       {/* Holographic Tether Beam — Connects hand to target model */}
-      {isSelected && gestureRef.current === 'PINCH' && hp && (
+      {isSelected && gestureRef.current[0] === 'PINCH' && handPosList[0] && (
         <Line
           points={[
-            new THREE.Vector3((hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0),
+            new THREE.Vector3((handPosList[0].x - 0.5) * 14, (0.5 - handPosList[0].y) * 10, 0),
             obj.position
           ]}
           color={orb.accent}
@@ -259,6 +294,27 @@ function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gestur
   );
 }
 
+/* ────────────────── STARK WORKSPACE GRID ────────────────── */
+function StarkWorkspace({ handPos, accent }) {
+  const meshRef = useRef();
+  
+  useFrame(({ clock }) => {
+    if (!meshRef.current) return;
+    const time = clock.getElapsedTime();
+    // Pulse effect
+    meshRef.current.material.opacity = 0.05 + Math.sin(time * 2) * 0.02;
+    // Follow hand focus
+    meshRef.current.position.y = -2;
+  });
+
+  return (
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
+      <planeGeometry args={[50, 50, 50, 50]} />
+      <meshBasicMaterial color={accent} wireframe transparent opacity={0.05} />
+    </mesh>
+  );
+}
+
 /* ────────────────── VIEWPORT SCENE ────────────────── */
 function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, transformMode, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb }) {
   const selectedObj = useMemo(() => objects.find(o => o.id === selectedId), [objects, selectedId]);
@@ -272,20 +328,7 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
     tcGroupRef.current.scale.copy(selectedObj.scale);
   }, [selectedId]);
 
-  // AUTO-TARGETING LOGIC: If pinching but no selection, find closest.
-  useFrame(() => {
-    if (gestureRef.current === 'PINCH' && !selectedId) {
-      const hp = handPosRef.current;
-      const h3d = new THREE.Vector3((hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0);
-      let closest = null, minDist = Infinity;
-      objects.forEach(o => {
-        const d = o.position.distanceTo(h3d);
-        if (d < minDist && d < 3) { minDist = d; closest = o.id; }
-      });
-      if (closest) onSelect(closest);
-    }
-  });
-
+    // ── JARVIS INTERACTION GRID ──
   return (
     <>
       <ambientLight intensity={0.5} />
@@ -293,7 +336,7 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
       <directionalLight position={[-6, 4, -4]} intensity={0.4} color="#8ab4f8" />
       <pointLight position={[0, 6, 0]} intensity={0.3} />
 
-      <Grid infiniteGrid fadeDistance={28} cellSize={1} cellColor="#2a2a2a" sectionColor="#444" receiveShadow />
+      <StarkWorkspace handPos={handPosList[0]} accent={orb.accent} />
 
       {transformMode === 'grab' && selectedObj && (
         <FreeGrabHandler obj={selectedObj} onCommit={onTransformCommit} />
@@ -307,8 +350,8 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
           onSelect={onSelect}
           gestureRef={gestureRef}
           handPosRef={handPosRef}
-          gesture={gesture}
-          handPos={handPos}
+          gestures={gestures}
+          handPosList={handPosList}
           isGestureEnabled={isGestureEnabled}
           orb={orb}
         />
