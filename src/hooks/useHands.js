@@ -1,181 +1,150 @@
-/**
- * useHands — AetherForge Gesture Engine v4
- *
- * Architecture:
- * - Stream is started via requestCamera() on user action (required by browser security)
- * - MediaPipe Hands is loaded via static package import, not dynamic CDN fetch
- * - Detection runs in a requestAnimationFrame loop; sets gesture via state
- * - gestureRef is also set synchronously so Three.js useFrame can read it without
- *   waiting for a React re-render (critical for 60fps transform smoothness)
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+/** 
+ * AetherForge elite Gesture Engine (MediaPipe Tasks Vision v0.10+) 
+ * Uses the high-accuracy HandLandmarker with 0ms network latency.
  */
-import { useEffect, useRef, useState, useCallback } from 'react';
-
-function classifyGesture(hand) {
-  try {
-    const tip  = (i) => hand[i];
-    const pip  = (i) => hand[i - 2];
-
-    const thumbTip   = tip(4);
-    const indexTip   = tip(8);
-    const middleTip  = tip(12);
-    const ringTip    = tip(16);
-    const pinkyTip   = tip(20);
-    const wrist      = hand[0];
-
-    // Pinch: thumb+index close together
-    const dx = thumbTip.x - indexTip.x;
-    const dy = thumbTip.y - indexTip.y;
-    const pinchDist = Math.sqrt(dx*dx + dy*dy);
-    // Increase threshold for easier pinching
-    if (pinchDist < 0.1) return 'PINCH';
-
-    // Extended fingers: tip above pip (lower y = higher on screen)
-    const indexExt  = indexTip.y  < pip(8).y;
-    const middleExt = middleTip.y < pip(12).y;
-    const ringExt   = ringTip.y   < pip(16).y;
-    const pinkyExt  = pinkyTip.y  < pip(20).y;
-    const extCount  = [indexExt, middleExt, ringExt, pinkyExt].filter(Boolean).length;
-
-    if (extCount === 4) return 'OPEN_HAND';   // scale up
-    if (extCount === 0) return 'FIST';        // scale down
-    if (indexExt && !middleExt) return 'POINT'; // rotate
-    if (indexExt && middleExt && !ringExt) return 'PEACE'; // move up
-    
-    // Fallback IDLE if no specific gesture met
-    return 'IDLE';
-  } catch {
-    return 'NONE';
-  }
-}
-
 export function useHands() {
-  const videoRef        = useRef(null);
-  const streamRef       = useRef(null);
-  const handsRef        = useRef(null);
-  const rafRef          = useRef(null);
-  const gestureRef      = useRef('NONE'); // sync ref for Three.js useFrame
+  const videoRef = useRef(null);
+  const handsRef = useRef(null);
+  const rafRef   = useRef(null);
+  const gestureRef = useRef('NONE'); // Ref for sync read in useFrame
 
-  const [gesture,         setGesture]         = useState('NONE');
+  const [gesture,         setGesture]         = useState('IDLE');
   const [landmarks,       setLandmarks]       = useState(null);
-  const [handPos,         setHandPos]         = useState(null); // {x, y, z} normalized
+  const [handPos,         setHandPos]         = useState({ x: 0.5, y: 0.5, z: 0 });
   const [confidence,      setConfidence]      = useState(0);
   const [permissionState, setPermissionState] = useState('prompt');
   const [isReady,         setIsReady]         = useState(false);
   const [isInitializing,  setIsInitializing]  = useState(false);
 
-  /** Step 1: Request camera stream. Call this on user interaction. */
+  /** Step 1: Request camera stream. */
   const requestCamera = useCallback(async () => {
-    if (streamRef.current) return; // already started
     try {
-      setPermissionState('requesting');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 320, height: 240, facingMode: 'user' },
-        audio: false,
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 640, height: 480, frameRate: 30 } 
       });
-      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+          setIsReady(true);
+        };
       }
       setPermissionState('granted');
-      setIsReady(true);
     } catch (err) {
-      console.error('[AetherForge Gesture] Camera denied:', err.name, err.message);
+      console.error('[AetherForge] Camera Access Denied:', err);
       setPermissionState('denied');
     }
   }, []);
 
-  /** Step 2: Initialise MediaPipe Hands once camera is ready */
+  /** Step 2: Classify gestures based on 3D landmarks. */
+  const classifyGesture = (points) => {
+    if (!points || points.length < 21) return 'NONE';
+
+    // Tip and base indices for classification
+    const thumbTip = points[4], thumbBase = points[2];
+    const indexTip = points[8], indexBase = points[6];
+    const middleTip = points[12];
+    const ringTip = points[16];
+    const pinkyTip = points[20];
+
+    // Distance helpers
+    const dist = (p1, p2) => Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+    
+    // 1. PINCH (Index Tip to Thumb Tip)
+    const pinchDist = dist(indexTip, thumbTip);
+    if (pinchDist < 0.05) return 'PINCH';
+
+    // 2. FIST (All fingers closed towards wrist)
+    const wrist = points[0];
+    const handSize = dist(wrist, points[9]); // Scale normalization
+    const isFist = [8, 12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.8);
+    if (isFist) return 'FIST';
+
+    // 3. POINT (Index extended, others closed)
+    const isIndexExtended = dist(indexTip, indexBase) > 0.08;
+    const areOthersClosed = [12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.82);
+    if (isIndexExtended && areOthersClosed) return 'POINT';
+
+    // 4. OPEN_HAND
+    if ([8, 12, 16, 20].every(idx => dist(points[idx], wrist) > handSize * 1.2)) return 'OPEN';
+
+    return 'IDLE';
+  };
+
+  /** Step 3: Initialize Tasks-Vision HandLandmarker. */
   useEffect(() => {
-    if (!isReady) return;
     let cancelled = false;
 
     async function init() {
       try {
-        // Static import — no CDN, works offline
-        const { Hands } = await import('@mediapipe/hands');
+        const { HandLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
         if (cancelled) return;
 
         setIsInitializing(true);
-        const hands = new Hands({
-          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`,
+        
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.15/wasm"
+        );
+        
+        const landmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numHands: 1,
+          minHandDetectionConfidence: 0.7,
+          minHandPresenceConfidence: 0.7,
+          minTrackingConfidence: 0.7
         });
-        hands.setOptions({
-          maxNumHands:             1,
-          modelComplexity:         1, // 1 = more accurate than 0
-          minDetectionConfidence:  0.7,
-          minTrackingConfidence:   0.7,
-        });
-        hands.onResults((results) => {
-          if (cancelled) return;
-          console.log('[AetherForge] Results:', results.multiHandLandmarks?.length > 0 ? 'Hand detected' : 'No hand');
-          if (results.multiHandLandmarks?.length > 0) {
-            const hand  = results.multiHandLandmarks[0];
-            const g     = classifyGesture(hand);
-            
-            // Calculate pinch point (midpoint between thumb 4 and index 8)
-            const thumb  = hand[4];
-            const index  = hand[8];
-            const midX   = (thumb.x + index.x) / 2;
-            const midY   = (thumb.y + index.y) / 2;
-            const midZ   = (thumb.z + index.z) / 2;
 
-            gestureRef.current = g;
-            setGesture(g);
-            setLandmarks(results.multiHandLandmarks);
-            setHandPos({ x: midX, y: midY, z: midZ });
-            setConfidence(results.multiHandedness?.[0]?.score ?? 0.9);
-          } else {
-            gestureRef.current = 'NONE';
-            setGesture('NONE');
-            setLandmarks(null);
-            setHandPos(null);
-            setConfidence(0);
-          }
-        });
-        handsRef.current = hands;
+        if (cancelled) return;
+        handsRef.current = landmarker;
         setIsInitializing(false);
-        console.log('[AetherForge] MediaPipe Hands initialized');
+        console.log('[AetherForge] Elite HandLandmarker initialized');
 
-        // Detection loop – run at ~30fps to balance accuracy and perf
-        let lastTime = 0;
-        const detect = async (now) => {
-          if (cancelled) return;
-          rafRef.current = requestAnimationFrame(detect);
-          if (now - lastTime < 16) return; // ~60fps target
-          lastTime = now;
-          const vid = videoRef.current;
-          if (vid && vid.readyState >= 2 && !vid.paused) {
-            try { 
-              await hands.send({ image: vid }); 
-            } catch (e) {
-              console.warn('[AetherForge] hands.send failed:', e.message);
+        const detect = () => {
+          if (!cancelled && videoRef.current && videoRef.current.readyState >= 2 && handsRef.current) {
+            const startTimeMs = performance.now();
+            const results = handsRef.current.detectForVideo(videoRef.current, startTimeMs);
+
+            if (results && results.landmarks && results.landmarks.length > 0) {
+              const pts = results.landmarks[0];
+              const g = classifyGesture(pts);
+              
+              gestureRef.current = g;
+              setGesture(g);
+              setLandmarks(pts);
+              setConfidence(results.handPresenceScores ? results.handPresenceScores[0] : 0.9);
+              
+              // Map index tip (point 8) for spatial tracking
+              setHandPos({ x: 1 - pts[8].x, y: pts[8].y, z: pts[8].z });
+            } else {
+              gestureRef.current = 'NONE';
+              setGesture('IDLE');
+              setConfidence(0);
             }
           }
+          rafRef.current = requestAnimationFrame(detect);
         };
         rafRef.current = requestAnimationFrame(detect);
       } catch (err) {
         setIsInitializing(false);
-        console.error('[AetherForge Gesture] MediaPipe init failed:', err);
+        console.error('[AetherForge Gesture] Task init failed:', err);
       }
     }
 
-    init();
+    if (permissionState === 'granted' && isReady) {
+      init();
+    }
+
     return () => {
       cancelled = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      handsRef.current?.close?.();
     };
-  }, [isReady]);
-
-  /** Cleanup stream on unmount */
-  useEffect(() => {
-    return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
+  }, [permissionState, isReady]);
 
   return { videoRef, gestureRef, gesture, landmarks, handPos, confidence, permissionState, requestCamera, isInitializing };
 }

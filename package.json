@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@mediapipe/drawing_utils": "^0.3.1675466124",
-    "@mediapipe/hands": "^0.4.1675469240",
+    "@mediapipe/tasks-vision": "^0.10.15",
     "@react-three/drei": "^9.88.16",
     "@react-three/fiber": "^8.15.11",
     "@react-three/postprocessing": "^3.0.4",
