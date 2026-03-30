@@ -69,11 +69,18 @@ export default function Hero({ selectedId, onSelect, isSelectionMode, onConfirm 
 
   const currentId = selectedId || internalSelectedId;
 
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedOrb");
+    if (saved && !selectedId) setInternalSelectedId(saved);
+  }, [selectedId]);
+
   const handleOrbSelect = (id) => {
+    console.log('[AetherForge] Orb Selected:', id);
     if (onSelect) {
       onSelect(id);
     } else {
       setInternalSelectedId(id);
+      localStorage.setItem("selectedOrb", id);
     }
     setIsHeroOpen(true);
     setTimeout(() => setIsHeroOpen(false), 1000);
