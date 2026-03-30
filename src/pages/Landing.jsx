@@ -1,3 +1,4 @@
+// JARVIS_CORE_SYSTEM_V2_STABLE_AUTOBUILD_TRIGGER_1774885175
 import React from 'react';
 import Navbar from '../components/common/Navbar.jsx';
 import Hero from '../components/landing/Hero.jsx';
