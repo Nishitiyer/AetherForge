@@ -31,14 +31,19 @@ const ActiveVoiceAssistant = ({ isListening, onClick }) => {
                 <ambientLight intensity={0.5} />
                 <pointLight position={[10, 10, 10]} intensity={1} />
                 
-                <group scale={isActive ? 0.9 : 0.8} position={[0, -0.2, 0]}>
-                   <Orb3D config={config} animState={isActive ? 'idle_active' : 'idle_closed'} isExiting={false} />
+                <group scale={isActive ? 0.92 : 0.8} position={[0, -0.2, 0]}>
+                   <Orb3D config={config} animState={isActive ? 'idle_active' : 'idle_closed'} isExiting={false} responsive={isActive} />
                 </group>
-                <OrbitControls enableZoom={false} enablePan={false} autoRotate={isActive} autoRotateSpeed={4} />
+                <OrbitControls enableZoom={false} enablePan={false} autoRotate={isActive} autoRotateSpeed={isActive ? 12 : 4} />
              </Suspense>
           </Canvas>
        </div>
-       <div className="assistant-ring" style={{ borderColor: isActive ? config.color : 'transparent', boxShadow: isActive ? `0 0 15px ${config.color}` : 'none' }}></div>
+       <div className={`assistant-ring ${isActive ? 'active-pulse' : ''}`} 
+            style={{ 
+              borderColor: isActive ? config.color : 'rgba(255,255,255,0.05)', 
+              boxShadow: isActive ? `0 0 25px ${config.color}, inset 0 0 15px ${config.color}` : 'none' 
+            }}>
+       </div>
     </div>
   );
 };
