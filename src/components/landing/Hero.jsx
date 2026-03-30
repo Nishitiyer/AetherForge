@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, 
@@ -61,23 +62,24 @@ const ORBS = [
   }
 ];
 
-export default function Hero() {
-  const [selectedOrbId, setSelectedOrbId] = useState("sentinel");
+export default function Hero({ selectedId, onSelect, isSelectionMode, onConfirm }) {
+  const navigate = useNavigate();
+  const [internalSelectedId, setInternalSelectedId] = useState("sentinel");
   const [isHeroOpen, setIsHeroOpen] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("selectedOrb");
-    if (saved) setSelectedOrbId(saved);
-  }, []);
+  const currentId = selectedId || internalSelectedId;
 
   const handleOrbSelect = (id) => {
-    setSelectedOrbId(id);
-    localStorage.setItem("selectedOrb", id);
+    if (onSelect) {
+      onSelect(id);
+    } else {
+      setInternalSelectedId(id);
+    }
     setIsHeroOpen(true);
-    setTimeout(() => setIsHeroOpen(false), 3000);
+    setTimeout(() => setIsHeroOpen(false), 1000);
   };
 
-  const activeOrb = ORBS.find(o => o.id === selectedOrbId) || ORBS[1];
+  const activeOrb = ORBS.find(o => o.id === currentId) || ORBS[1];
 
   return (
     <div className="hero-root">
@@ -102,7 +104,7 @@ export default function Hero() {
               {ORBS.map((orb) => (
                 <div 
                   key={orb.id}
-                  className={`identity-card ${selectedOrbId === orb.id ? 'active' : ''}`}
+                  className={`identity-card ${currentId === orb.id ? 'active' : ''}`}
                   onClick={() => handleOrbSelect(orb.id)}
                 >
                   <div className="card-indicator" style={{ backgroundColor: orb.accent }} />
@@ -155,7 +157,7 @@ export default function Hero() {
               </Canvas>
             </div>
 
-            {/* BOTTOM COMMAND CONSOLE */}
+             {/* BOTTOM COMMAND CONSOLE */}
             <div className="command-console">
                <div className="console-info">
                   <div className="console-icon-box">
@@ -168,9 +170,9 @@ export default function Hero() {
                </div>
                <button 
                 className="btn-enter"
-                onClick={() => window.location.href='/editor'}
+                onClick={() => onConfirm ? onConfirm(currentId) : navigate('/orb-selection')}
                >
-                 ENTER_WORKSPACE
+                 {isSelectionMode ? 'INITIALIZE_CORE' : 'ENTER_WORKSPACE'}
                </button>
             </div>
           </section>
@@ -195,10 +197,10 @@ export default function Hero() {
             <div className="deploy-action-zone">
                <button 
                 className="btn-deploy"
-                onClick={() => window.location.href='/editor'}
+                onClick={() => onConfirm ? onConfirm(currentId) : navigate('/orb-selection')}
                >
                  <Zap size={16} />
-                 DEPLOY_CORE_WORKSPACE
+                 {isSelectionMode ? 'DEPLOY_ACTIVE_HEART' : 'DEPLOY_CORE_WORKSPACE'}
                </button>
                <div className="deploy-disclaimer">Deploying {activeOrb.name} for 3D construction.</div>
             </div>

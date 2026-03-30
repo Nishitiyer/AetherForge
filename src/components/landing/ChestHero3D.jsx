@@ -60,12 +60,12 @@ export function ChestHero3D({ orb }) {
 
         {/* Outer Glass Shell */}
         <mesh ref={shellRef}>
-          <sphereGeometry args={[0.62, 64, 64]} />
+          <sphereGeometry args={[0.62, 48, 48]} />
           <MeshTransmissionMaterial
-            backside samples={8} thickness={0.35}
-            chromaticAberration={0.12} anisotropicBlur={0.8}
-            distortion={0.7} distortionScale={0.5}
-            temporalDistortion={0.15} ior={1.4}
+            backside samples={4} thickness={0.3}
+            chromaticAberration={0.05} anisotropicBlur={0.5}
+            distortion={0.4} distortionScale={0.4}
+            temporalDistortion={0.1} ior={1.3}
             color={accentColor} attenuationDistance={1}
             attenuationColor={accentColor} roughness={0} transmission={1}
           />

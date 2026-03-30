@@ -1,57 +1,75 @@
+/**
+ * useHands — AetherForge Gesture Engine v4
+ *
+ * Architecture:
+ * - Stream is started via requestCamera() on user action (required by browser security)
+ * - MediaPipe Hands is loaded via static package import, not dynamic CDN fetch
+ * - Detection runs in a requestAnimationFrame loop; sets gesture via state
+ * - gestureRef is also set synchronously so Three.js useFrame can read it without
+ *   waiting for a React re-render (critical for 60fps transform smoothness)
+ */
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-/**
- * AetherForge: Robust Hand-Tracking Hook (v3)
- * 
- * KEY FIX: This hook loads MediaPipe scripts dynamically and calls
- * navigator.mediaDevices.getUserMedia() directly to guarantee camera
- * permission is requested regardless of the video element's DOM state.
- * 
- * IMPORTANT: The videoRef must always be mounted in the DOM (even when hidden)
- * so the camera stream has a target. See Editor.jsx for the hidden video element.
- */
-export function useHands() {
-  const [landmarks, setLandmarks] = useState(null);
-  const [gesture, setGesture] = useState('NONE');
-  const [confidence, setConfidence] = useState(0);
-  const [permissionState, setPermissionState] = useState('prompt'); // 'prompt'|'granted'|'denied'
-  const [isReady, setIsReady] = useState(false);
-  const videoRef = useRef(null);
-  const handsRef = useRef(null);
-  const cameraRef = useRef(null);
-  const streamRef = useRef(null);
+function classifyGesture(hand) {
+  try {
+    const tip  = (i) => hand[i];
+    const pip  = (i) => hand[i - 2];
 
-  const classifyGesture = useCallback((hand) => {
-    const thumbTip   = hand[4];
-    const indexTip   = hand[8];
-    const middleTip  = hand[12];
-    const ringTip    = hand[16];
-    const pinkyTip   = hand[20];
-    const indexMid   = hand[6];
-    const middleMid  = hand[10];
+    const thumbTip   = tip(4);
+    const indexTip   = tip(8);
+    const middleTip  = tip(12);
+    const ringTip    = tip(16);
+    const pinkyTip   = tip(20);
+    const wrist      = hand[0];
 
-    const distTI = Math.sqrt(
-      Math.pow(thumbTip.x - indexTip.x, 2) +
-      Math.pow(thumbTip.y - indexTip.y, 2)
-    );
+    // Pinch: thumb+index close together
+    const dx = thumbTip.x - indexTip.x;
+    const dy = thumbTip.y - indexTip.y;
+    const pinchDist = Math.sqrt(dx*dx + dy*dy);
+    // Increase threshold for easier pinching
+    if (pinchDist < 0.1) return 'PINCH';
 
-    if (distTI < 0.05) return 'PINCH_GRAB';
-    if (indexTip.y < indexMid.y && middleTip.y > middleMid.y) return 'POINTING_UP';
-    if (indexTip.y < indexMid.y && middleTip.y < middleMid.y) return 'OPEN_HAND';
-    if (indexTip.y > indexMid.y && middleTip.y > middleMid.y) return 'CLOSED_FIST';
+    // Extended fingers: tip above pip (lower y = higher on screen)
+    const indexExt  = indexTip.y  < pip(8).y;
+    const middleExt = middleTip.y < pip(12).y;
+    const ringExt   = ringTip.y   < pip(16).y;
+    const pinkyExt  = pinkyTip.y  < pip(20).y;
+    const extCount  = [indexExt, middleExt, ringExt, pinkyExt].filter(Boolean).length;
+
+    if (extCount === 4) return 'OPEN_HAND';   // scale up
+    if (extCount === 0) return 'FIST';        // scale down
+    if (indexExt && !middleExt) return 'POINT'; // rotate
+    if (indexExt && middleExt && !ringExt) return 'PEACE'; // move up
     return 'IDLE';
-  }, []);
+  } catch {
+    return 'NONE';
+  }
+}
 
-  // Step 1: Request camera permission explicitly via getUserMedia
+export function useHands() {
+  const videoRef        = useRef(null);
+  const streamRef       = useRef(null);
+  const handsRef        = useRef(null);
+  const rafRef          = useRef(null);
+  const gestureRef      = useRef('NONE'); // sync ref for Three.js useFrame
+
+  const [gesture,         setGesture]         = useState('NONE');
+  const [landmarks,       setLandmarks]       = useState(null);
+  const [handPos,         setHandPos]         = useState(null); // {x, y, z} normalized
+  const [confidence,      setConfidence]      = useState(0);
+  const [permissionState, setPermissionState] = useState('prompt');
+  const [isReady,         setIsReady]         = useState(false);
+
+  /** Step 1: Request camera stream. Call this on user interaction. */
   const requestCamera = useCallback(async () => {
+    if (streamRef.current) return; // already started
     try {
-      setPermissionState('prompt');
+      setPermissionState('requesting');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: 'user' }
+        video: { width: 320, height: 240, facingMode: 'user' },
+        audio: false,
       });
       streamRef.current = stream;
-
-      // Attach stream to the always-mounted video element
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
@@ -59,68 +77,99 @@ export function useHands() {
       setPermissionState('granted');
       setIsReady(true);
     } catch (err) {
-      console.error('[AetherForge] Camera access denied:', err);
+      console.error('[AetherForge Gesture] Camera denied:', err.name, err.message);
       setPermissionState('denied');
-      setIsReady(false);
     }
   }, []);
 
-  // Step 2: Once camera is ready, initialise MediaPipe hands
+  /** Step 2: Initialise MediaPipe Hands once camera is ready */
   useEffect(() => {
     if (!isReady) return;
+    let cancelled = false;
 
-    let animId;
+    async function init() {
+      try {
+        // Static import — no CDN, works offline
+        const { Hands } = await import('@mediapipe/hands');
+        if (cancelled) return;
 
-    const initMediaPipe = async () => {
-      // Dynamically import to avoid SSR issues
-      const { Hands } = await import('@mediapipe/hands');
-      const hands = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-      });
-      hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.65,
-        minTrackingConfidence: 0.65,
-      });
-      hands.onResults((results) => {
-        if (results.multiHandLandmarks?.length > 0) {
-          const hand = results.multiHandLandmarks[0];
-          setLandmarks(results.multiHandLandmarks);
-          setConfidence(0.9);
-          setGesture(classifyGesture(hand));
-        } else {
-          setLandmarks(null);
-          setGesture('NONE');
-          setConfidence(0);
-        }
-      });
-      handsRef.current = hands;
+        const hands = new Hands({
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@${import.meta.env?.MODE === 'development' ? '0.4' : '0.4'}/${f}`,
+        });
+        hands.setOptions({
+          maxNumHands:             1,
+          modelComplexity:         0, // 0 = lite, faster
+          minDetectionConfidence:  0.6,
+          minTrackingConfidence:   0.5,
+        });
+        hands.onResults((results) => {
+          if (cancelled) return;
+          console.log('[AetherForge] Results:', results.multiHandLandmarks?.length > 0 ? 'Hand detected' : 'No hand');
+          if (results.multiHandLandmarks?.length > 0) {
+            const hand  = results.multiHandLandmarks[0];
+            const g     = classifyGesture(hand);
+            
+            // Calculate pinch point (midpoint between thumb 4 and index 8)
+            const thumb  = hand[4];
+            const index  = hand[8];
+            const midX   = (thumb.x + index.x) / 2;
+            const midY   = (thumb.y + index.y) / 2;
+            const midZ   = (thumb.z + index.z) / 2;
 
-      // Frame-by-frame detection loop
-      const detect = async () => {
-        if (videoRef.current && !videoRef.current.paused) {
-          await hands.send({ image: videoRef.current });
-        }
-        animId = requestAnimationFrame(detect);
-      };
-      detect();
-    };
+            gestureRef.current = g;
+            setGesture(g);
+            setLandmarks(results.multiHandLandmarks);
+            setHandPos({ x: midX, y: midY, z: midZ });
+            setConfidence(results.multiHandedness?.[0]?.score ?? 0.9);
+          } else {
+            gestureRef.current = 'NONE';
+            setGesture('NONE');
+            setLandmarks(null);
+            setHandPos(null);
+            setConfidence(0);
+          }
+        });
+        handsRef.current = hands;
+        console.log('[AetherForge] MediaPipe Hands initialized');
 
-    initMediaPipe();
+        // Detection loop – run at ~30fps to balance accuracy and perf
+        let lastTime = 0;
+        const detect = async (now) => {
+          if (cancelled) return;
+          rafRef.current = requestAnimationFrame(detect);
+          if (now - lastTime < 16) return; // ~60fps target
+          lastTime = now;
+          const vid = videoRef.current;
+          if (vid && vid.readyState >= 2 && !vid.paused) {
+            try { 
+              await hands.send({ image: vid }); 
+            } catch (e) {
+              console.warn('[AetherForge] hands.send failed:', e.message);
+            }
+          }
+        };
+        rafRef.current = requestAnimationFrame(detect);
+      } catch (err) {
+        console.error('[AetherForge Gesture] MediaPipe init failed:', err);
+      }
+    }
 
+    init();
     return () => {
-      if (animId) cancelAnimationFrame(animId);
-      if (handsRef.current) handsRef.current.close();
+      cancelled = true;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      handsRef.current?.close?.();
     };
-  }, [isReady, classifyGesture]);
+  }, [isReady]);
 
-  // Cleanup stream on unmount
+  /** Cleanup stream on unmount */
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
-  return { videoRef, landmarks, gesture, confidence, permissionState, requestCamera };
+  return { videoRef, gestureRef, gesture, landmarks, handPos, confidence, permissionState, requestCamera };
 }

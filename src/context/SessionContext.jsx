@@ -16,7 +16,7 @@ export const SessionProvider = ({ children }) => {
 
   const [userType, setUserType] = useState(getStorageItem('userType', 'USER')); // USER, CREATOR, ADMIN
   const [isOrbSelected, setIsOrbSelected] = useState(getStorageItem('isOrbSelected', 'false') === 'true');
-  const [selectedOrbId, setSelectedOrbId] = useState(getStorageItem('selectedOrbId', 'Nova'));
+  const [selectedOrbId, setSelectedOrbId] = useState(getStorageItem('selectedOrbId', 'nova'));
   
   const [orbSettings, setOrbSettings] = useState({
     name: getStorageItem('orbName', 'Omni'),

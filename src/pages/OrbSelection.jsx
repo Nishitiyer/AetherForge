@@ -51,7 +51,12 @@ const OrbSelection = () => {
         )}
       </div>
 
-      <Hero isSelectionMode={true} onConfirm={handleConfirmSelection} />
+      <Hero 
+        selectedId={selectedOrbId} 
+        onSelect={setSelectedOrbId} 
+        isSelectionMode={true} 
+        onConfirm={handleConfirmSelection} 
+      />
       
       <style>{`
         .orb-selection-page {
