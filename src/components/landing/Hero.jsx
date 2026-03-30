@@ -139,29 +139,23 @@ export default function Hero({ selectedId, onSelect, isSelectionMode, onConfirm 
             
             {/* BALANCED CENTER HEADLINE */}
             <div className="center-header">
-               <motion.div 
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 className="hero-heading-group"
-               >
+               <div className="hero-heading-group">
                  <h1 className="main-title">
                    Select <span className="stark-accent">Active Heart</span>
                  </h1>
                  <p className="main-subtitle">
                    Initialize high-fidelity spatial construction via neural-linked AI architecture.
                  </p>
-               </motion.div>
+               </div>
             </div>
 
             <div className="stage-hud-top">
                <div className="hud-label">SPATIAL_INTERFACE_VERIFIED</div>
             </div>
 
-            {/* 3D HERO STAGE */}
-            <div className="hero-3d-stage" onClick={() => setIsHeroOpen(!isHeroOpen)}>
-              <Canvas camera={{ position: [0, 0, 4.5], fov: 40 }}>
-                <ChestHero3D orb={activeOrb} isOpen={isHeroOpen} />
-              </Canvas>
+            {/* 3D HERO STAGE - DISABLED FOR DEBUGGING */}
+            <div className="hero-3d-stage" style={{ background: 'rgba(255,255,255,0.05)', minHeight: '300px' }}>
+              <div style={{ color: '#666', paddingTop: '140px' }}>3D_CORES_DISABLED_FOR_DEBUG</div>
             </div>
 
              {/* BOTTOM COMMAND CONSOLE */}

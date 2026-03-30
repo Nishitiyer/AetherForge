@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import Navbar from '../components/common/Navbar.jsx';
 import Hero from '../components/landing/Hero.jsx';
 import FeatureGrid from '../components/landing/FeatureGrid.jsx';
@@ -12,10 +12,10 @@ const Landing = () => {
     <div className="landing-page">
       <Navbar />
       <Hero />
-      <FeatureGrid />
+      {/* <FeatureGrid />
       <Workflows />
       <Pricing />
-      <Footer />
+      <Footer /> */}
     </div>
   );
 };
