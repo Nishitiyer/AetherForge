@@ -598,7 +598,7 @@ export default function Editor() {
               <div className="gesture-status-float" style={{borderColor: orb.accent+'44', left: 'auto', right: '14px', transform: 'none'}}>
                 <div className="pulse-dot" style={{background:orb.accent}}/>
                 <span style={{color:orb.accent}}>{gesture}</span>
-                <span className="conf">{(confidence*100).toFixed(0)}%</span>
+                <span className="conf">{((confidence || 0)*100).toFixed(0)}%</span>
               </div>
             )}
 
@@ -830,7 +830,7 @@ export default function Editor() {
 /* ── Sub-components ── */
 function HandHUD({ landmarks, accent }) {
   if (!landmarks || landmarks.length === 0) return null;
-  const hand = landmarks[0];
+  const hand = landmarks; // landmarks is already the array of 21 points
   
   return (
     <svg className="hand-hud-overlay" viewBox="0 0 1 1" preserveAspectRatio="none">
@@ -890,7 +890,7 @@ function VecInput({ label, obj, prop, onChange }) {
         <div key={ax} className="prop-numrow">
           <span className={`axis-badge ${ax}`}>{ax.toUpperCase()}</span>
           <input type="number" step={prop==='scale'?0.05:0.1}
-            value={obj[prop][ax==='x'?0:ax==='y'?1:2].toFixed(3)}
+            value={(obj[prop][ax] || 0).toFixed(3)}
             onChange={e=>onChange(prop,ax,e.target.value)}
             className="prop-num-input"/>
         </div>

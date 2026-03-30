@@ -61,15 +61,15 @@ const ConstructionPanel = ({
         <div className="transform-grid">
           <div className="axis-row">
             <span className="axis-label x">X</span>
-            <input type="number" value={selectedObject.position[0].toFixed(2)} step="0.1" readOnly />
+            <input type="number" value={(selectedObject.position.x || 0).toFixed(2)} step="0.1" readOnly />
           </div>
           <div className="axis-row">
             <span className="axis-label y">Y</span>
-            <input type="number" value={selectedObject.position[1].toFixed(2)} step="0.1" readOnly />
+            <input type="number" value={(selectedObject.position.y || 0).toFixed(2)} step="0.1" readOnly />
           </div>
           <div className="axis-row">
             <span className="axis-label z">Z</span>
-            <input type="number" value={selectedObject.position[2].toFixed(2)} step="0.1" readOnly />
+            <input type="number" value={(selectedObject.position.z || 0).toFixed(2)} step="0.1" readOnly />
           </div>
         </div>
         <div className="transform-modes mt-2">

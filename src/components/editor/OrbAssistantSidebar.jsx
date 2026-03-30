@@ -221,7 +221,7 @@ const OrbAssistantSidebar = () => {
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-center">
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Confidence</div>
-                  <div className="text-[16px] font-bold">{isGestureOn ? `${(realConfidence * 100).toFixed(0)}%` : '—'}</div>
+                  <div className="text-[16px] font-bold">{isGestureOn ? `${((realConfidence || 0) * 100).toFixed(0)}%` : '—'}</div>
                 </div>
               </div>
 
