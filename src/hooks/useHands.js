@@ -40,6 +40,8 @@ function classifyGesture(hand) {
     if (extCount === 0) return 'FIST';        // scale down
     if (indexExt && !middleExt) return 'POINT'; // rotate
     if (indexExt && middleExt && !ringExt) return 'PEACE'; // move up
+    
+    // Fallback IDLE if no specific gesture met
     return 'IDLE';
   } catch {
     return 'NONE';
@@ -94,13 +96,13 @@ export function useHands() {
         if (cancelled) return;
 
         const hands = new Hands({
-          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@${import.meta.env?.MODE === 'development' ? '0.4' : '0.4'}/${f}`,
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`,
         });
         hands.setOptions({
           maxNumHands:             1,
-          modelComplexity:         0, // 0 = lite, faster
-          minDetectionConfidence:  0.6,
-          minTrackingConfidence:   0.5,
+          modelComplexity:         1, // 1 = more accurate than 0
+          minDetectionConfidence:  0.7,
+          minTrackingConfidence:   0.7,
         });
         hands.onResults((results) => {
           if (cancelled) return;

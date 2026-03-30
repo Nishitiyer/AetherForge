@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useSession } from '../../context/SessionContext';
 import { useChat } from '../../context/ChatContext';
+import { useHands } from '../../hooks/useHands';
 
 const ORB_META = {
   nova:     { accent: '#fbbf24', glow: 'rgba(251,191,36,.6)',  name: 'Nova Core',     personality: 'Cinematic Director' },
@@ -67,36 +68,18 @@ const OrbAssistantSidebar = () => {
   const orb = ORB_META[selectedOrbId?.toLowerCase()] || ORB_META.nova;
 
   const [tab, setTab] = useState('Assistant');
+  const { videoRef, permissionState, gesture, confidence: realConfidence, requestCamera } = useHands();
   const [isGestureOn, setIsGestureOn] = useState(false);
   const [gestureMode, setGestureMode] = useState('Select');
-  const [detectedGesture, setDetectedGesture] = useState('—');
-  const [confidence, setConfidence] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [micActive, setMicActive] = useState(false);
-  
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
 
   const toggleGesture = async () => {
-    if (isGestureOn) {
-      streamRef.current?.getTracks().forEach(t => t.stop());
-      setIsGestureOn(false);
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+    if (!isGestureOn) {
+      await requestCamera();
       setIsGestureOn(true);
-      // Simulate Stark-style telemetry
-      const interval = setInterval(() => {
-        const gest = ['Point-Target', 'Pinch-Grab', 'Wrist-Rotate', 'Spread-Scale', 'Palm-Release', 'Point-Place'];
-        setDetectedGesture(gest[Math.floor(Math.random() * gest.length)]);
-        setConfidence(Math.floor(Math.random() * 15) + 85);
-      }, 2000);
-      return () => clearInterval(interval);
-    } catch (err) {
-      alert("Camera permission denied. Required for spatial gesture control.");
+    } else {
+      setIsGestureOn(false);
     }
   };
 
@@ -224,11 +207,11 @@ const OrbAssistantSidebar = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-center">
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Gesture</div>
-                  <div className="text-[16px] font-bold" style={{ color: isGestureOn ? orb.accent : 'inherit' }}>{detectedGesture}</div>
+                  <div className="text-[16px] font-bold" style={{ color: isGestureOn ? orb.accent : 'inherit' }}>{isGestureOn ? gesture : '—'}</div>
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-center">
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Confidence</div>
-                  <div className="text-[16px] font-bold">{isGestureOn ? `${confidence}%` : '—'}</div>
+                  <div className="text-[16px] font-bold">{isGestureOn ? `${(realConfidence * 100).toFixed(0)}%` : '—'}</div>
                 </div>
               </div>
 

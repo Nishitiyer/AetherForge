@@ -153,9 +153,12 @@ export default function Hero({ selectedId, onSelect, isSelectionMode, onConfirm 
                <div className="hud-label">SPATIAL_INTERFACE_VERIFIED</div>
             </div>
 
-            {/* 3D HERO STAGE - DISABLED FOR DEBUGGING */}
-            <div className="hero-3d-stage" style={{ background: 'rgba(255,255,255,0.05)', minHeight: '300px' }}>
-              <div style={{ color: '#666', paddingTop: '140px' }}>3D_CORES_DISABLED_FOR_DEBUG</div>
+            {/* 3D HERO STAGE - RE-ENABLED */}
+            <div className="hero-3d-stage">
+              <Canvas camera={{ position: [0, 0, 3.5], fov: 45 }}>
+                <ambientLight intensity={0.4} />
+                <ChestHero3D orb={activeOrb} />
+              </Canvas>
             </div>
 
              {/* BOTTOM COMMAND CONSOLE */}
