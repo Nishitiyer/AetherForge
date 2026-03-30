@@ -103,28 +103,32 @@ export function useHands() {
         if (cancelled) return;
         handsRef.current = landmarker;
         setIsInitializing(false);
-        console.log('[AetherForge] Elite HandLandmarker initialized');
+        console.log('[AetherForge] Elite HandLandmarker initialized successfully');
 
         const detect = () => {
-          if (!cancelled && videoRef.current && videoRef.current.readyState >= 2 && handsRef.current) {
-            const startTimeMs = performance.now();
-            const results = handsRef.current.detectForVideo(videoRef.current, startTimeMs);
+          if (cancelled) return;
+          if (videoRef.current && videoRef.current.readyState >= 2 && handsRef.current) {
+            try {
+              const startTimeMs = performance.now();
+              const results = handsRef.current.detectForVideo(videoRef.current, startTimeMs);
 
-            if (results && results.landmarks && results.landmarks.length > 0) {
-              const pts = results.landmarks[0];
-              const g = classifyGesture(pts);
-              
-              gestureRef.current = g;
-              setGesture(g);
-              setLandmarks(pts);
-              setConfidence(results.handPresenceScores ? results.handPresenceScores[0] : 0.9);
-              
-              // Map index tip (point 8) for spatial tracking
-              setHandPos({ x: 1 - pts[8].x, y: pts[8].y, z: pts[8].z });
-            } else {
-              gestureRef.current = 'NONE';
-              setGesture('IDLE');
-              setConfidence(0);
+              if (results && results.landmarks && results.landmarks.length > 0) {
+                const pts = results.landmarks[0];
+                const g = classifyGesture(pts);
+                
+                gestureRef.current = g;
+                setGesture(g);
+                setLandmarks(pts);
+                setConfidence(results.handPresenceScores ? results.handPresenceScores[0] : 0.9);
+                
+                setHandPos({ x: 1 - pts[8].x, y: pts[8].y, z: pts[8].z });
+              } else {
+                gestureRef.current = 'NONE';
+                setGesture('IDLE');
+                setConfidence(0);
+              }
+            } catch (err) {
+              console.error('[AetherForge] Detection loop error:', err);
             }
           }
           rafRef.current = requestAnimationFrame(detect);
@@ -132,7 +136,7 @@ export function useHands() {
         rafRef.current = requestAnimationFrame(detect);
       } catch (err) {
         setIsInitializing(false);
-        console.error('[AetherForge Gesture] Task init failed:', err);
+        console.error('[AetherForge Gesture] Task Vision init failed. Check network or GPU support:', err);
       }
     }
 

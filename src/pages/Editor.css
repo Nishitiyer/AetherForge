@@ -229,39 +229,42 @@
 
 /* CSS ORB (replaces second Canvas) */
 .assistant-core-panel { padding: 12px; flex-shrink: 0; }
-.css-orb-box {
-  background: #000; border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 14px; padding: 12px;
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 10px;
+.sidebar-3d-orb-container {
+  width: 100%;
+  height: 140px;
+  background: radial-gradient(circle at center, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
 }
-.css-orb {
-  width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
-  position: relative; display: flex; align-items: center; justify-content: center;
-  animation: orbFloat 4s ease-in-out infinite;
+
+.core-info-overlay {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
 }
-.orb-ring {
-  position: absolute; border-radius: 50%; border: 1px solid;
-  animation: orbRingSpin 3s linear infinite;
+
+.core-title {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 2px;
 }
-.r1 { width: 80px; height: 80px; animation-duration: 2.5s; }
-.r2 { width: 95px; height: 95px; animation-duration: 3.8s; animation-direction: reverse; }
-.r3 { width: 110px; height: 110px; animation-duration: 5s; }
-.orb-glow {
-  position: absolute; width: 30px; height: 30px;
-  border-radius: 50%; opacity: 0.3; filter: blur(10px);
+
+.core-subtitle {
+  font-size: 8px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
-@keyframes orbFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
-}
-@keyframes orbRingSpin {
-  from { transform: rotateX(60deg) rotateZ(0deg); }
-  to   { transform: rotateX(60deg) rotateZ(360deg); }
-}
-.core-info { flex-grow: 1; }
-.core-title { font-size: 14px; font-weight: 900; margin-bottom: 2px; letter-spacing: -0.02em; }
-.core-subtitle { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.25); text-transform: uppercase; }
 .core-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .stark-btn-action {
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);

@@ -165,7 +165,13 @@ export default function Hero({ isSelectionMode, onConfirm }) {
                </div>
                <button 
                 className="btn-enter"
-                onClick={() => onConfirm ? onConfirm(currentId) : navigate('/orb-selection')}
+                id="hero-workshop-btn"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  console.log('[AetherForge] Enter/Confirm Triggered');
+                  if (onConfirm) onConfirm(currentId);
+                  else navigate('/orb-selection');
+                }}
                >
                  {isSelectionMode ? 'INITIALIZE_CORE' : 'ENTER_WORKSPACE'}
                </button>
@@ -190,13 +196,18 @@ export default function Hero({ isSelectionMode, onConfirm }) {
             </div>
 
             <div className="deploy-action-zone">
-               <button 
-                className="btn-deploy"
-                onClick={() => onConfirm ? onConfirm(currentId) : navigate('/orb-selection')}
-               >
-                 <Zap size={16} />
-                 {isSelectionMode ? 'DEPLOY_ACTIVE_HEART' : 'DEPLOY_CORE_WORKSPACE'}
-               </button>
+                <button 
+                 className="btn-deploy"
+                 id="hero-deploy-btn"
+                 onPointerDown={(e) => {
+                   e.stopPropagation();
+                   if (onConfirm) onConfirm(currentId);
+                   else navigate('/orb-selection');
+                 }}
+                >
+                  <Zap size={16} />
+                  {isSelectionMode ? 'DEPLOY_ACTIVE_HEART' : 'DEPLOY_CORE_WORKSPACE'}
+                </button>
                <div className="deploy-disclaimer">Deploying {activeOrb.name} for 3D construction.</div>
             </div>
 

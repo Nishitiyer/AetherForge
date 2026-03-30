@@ -233,11 +233,13 @@
   border: 1px solid var(--stark-border);
   padding: 16px 24px;
   border-radius: 100px;
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 24px;
   margin-bottom: 20px;
-  z-index: 20;
+  z-index: 500 !important;
+  position: relative !important;
+  pointer-events: auto !important;
 }
 
 .console-info { display: flex; align-items: center; gap: 16px; flex-grow: 1; }

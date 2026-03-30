@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import "./Editor.css";
 import { useHands } from "../hooks/useHands";
+import { ChestHero3D } from "../components/landing/ChestHero3D";
 
 /* ────────────────── ORB CONFIG ────────────────── */
 const ORBS = {
@@ -650,17 +651,12 @@ export default function Editor() {
 
           {/* AI CORE (CSS orb — no second Canvas!) */}
           <div className="assistant-core-panel">
-            <div className="css-orb-box">
-              <div className="css-orb" style={{
-                '--oa': orb.accent,
-                background: `radial-gradient(circle at 35% 35%, white, ${orb.accent} 40%, #000 100%)`
-              }}>
-                <div className="orb-ring r1" style={{borderColor:orb.accent}}/>
-                <div className="orb-ring r2" style={{borderColor:orb.accent+'88'}}/>
-                <div className="orb-ring r3" style={{borderColor:orb.accent+'44'}}/>
-                <div className="orb-glow"    style={{background:orb.accent}}/>
-              </div>
-              <div className="core-info">
+            <div className="sidebar-3d-orb-container" style={{height: 140, position:'relative'}}>
+              <Canvas camera={{ position: [0, 0, 2.5], fov: 40 }}>
+                <ambientLight intensity={0.5} />
+                <ChestHero3D orb={ORBS[selectedOrbId] || ORBS.sentinel} />
+              </Canvas>
+              <div className="core-info-overlay">
                 <h2 className="core-title">{orb.name}</h2>
                 <div className="core-subtitle">{orb.personality}</div>
               </div>

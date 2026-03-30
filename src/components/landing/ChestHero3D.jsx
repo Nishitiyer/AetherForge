@@ -40,60 +40,90 @@ export function ChestHero3D({ orb }) {
 
   return (
     <group scale={1.3}>
-      <Float speed={3} rotationIntensity={0.7} floatIntensity={0.7}>
+      <Float speed={4} rotationIntensity={1.2} floatIntensity={1.2}>
 
-        {/* Inner Plasma Core (Distorted) */}
+        {/* Inner Plasma Core - High Pulse */}
         <mesh ref={coreRef}>
-          <icosahedronGeometry args={[0.28, 4]} />
+          <icosahedronGeometry args={[0.3, 10]} />
           <MeshDistortMaterial
-            color={accentColor} speed={4} distort={0.5} radius={1}
-            emissive={accentColor} emissiveIntensity={3}
+            color={accentColor} 
+            speed={5} 
+            distort={0.6} 
+            radius={1}
+            emissive={accentColor} 
+            emissiveIntensity={12}
+            toneMapped={false}
           />
         </mesh>
 
-        {/* Neural Mantle (Wobble) */}
+        {/* Neural Mantle - Ghost Layer */}
         <mesh ref={mantleRef}>
-          <sphereGeometry args={[0.44, 48, 48]} />
-          <MeshWobbleMaterial factor={0.5} speed={2}
-            color={accentColor} wireframe opacity={0.12} transparent />
-        </mesh>
-
-        {/* Outer Glass Shell */}
-        <mesh ref={shellRef}>
-          <sphereGeometry args={[0.62, 48, 48]} />
-          <MeshTransmissionMaterial
-            backside samples={4} thickness={0.3}
-            chromaticAberration={0.05} anisotropicBlur={0.5}
-            distortion={0.4} distortionScale={0.4}
-            temporalDistortion={0.1} ior={1.3}
-            color={accentColor} attenuationDistance={1}
-            attenuationColor={accentColor} roughness={0} transmission={1}
+          <sphereGeometry args={[0.48, 64, 64]} />
+          <MeshWobbleMaterial 
+            factor={0.8} 
+            speed={3}
+            color={accentColor} 
+            wireframe 
+            opacity={0.15} 
+            transparent 
           />
         </mesh>
 
-        {/* Orbiting Rings */}
+        {/* Premium Glass Shell - Advanced Refraction */}
+        <mesh ref={shellRef}>
+          <sphereGeometry args={[0.65, 64, 64]} />
+          <MeshTransmissionMaterial
+            backside 
+            samples={16} 
+            thickness={0.8}
+            chromaticAberration={0.12} 
+            anisotropicBlur={0.8}
+            distortion={0.5} 
+            distortionScale={0.5}
+            temporalDistortion={0.2} 
+            ior={1.5}
+            color={accentColor} 
+            attenuationDistance={1.2}
+            attenuationColor={accentColor} 
+            roughness={0.02} 
+            transmission={1.0}
+            envMapIntensity={2}
+          />
+        </mesh>
+
+        {/* Elite Orbital Rings */}
         <group ref={ringsRef}>
+          {/* Inner Fast Ring */}
           <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.82, 0.008, 16, 100]} />
-            <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={5} />
+            <torusGeometry args={[0.85, 0.015, 32, 120]} />
+            <meshStandardMaterial 
+              color={accentColor} 
+              emissive={accentColor} 
+              emissiveIntensity={20} 
+              toneMapped={false} 
+            />
           </mesh>
-          <mesh rotation={[Math.PI / 2.2, 0.2, 0]}>
-            <torusGeometry args={[1.0, 0.012, 24, 120]} />
+          {/* Middle Pattern Ring */}
+          <mesh rotation={[Math.PI / 2.5, 0.4, 0]}>
+            <torusGeometry args={[1.05, 0.02, 32, 160]} />
             <primitive object={matRing} attach="material" />
           </mesh>
-          <mesh rotation={[Math.PI / 4, -0.4, 0]}>
-            <torusGeometry args={[1.15, 0.004, 16, 120]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.15} />
+          {/* Outer Thin Halo */}
+          <mesh rotation={[Math.PI / 3.5, -0.6, 0]}>
+            <torusGeometry args={[1.25, 0.006, 32, 200]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.25} />
           </mesh>
         </group>
 
-        <Stars radius={5} depth={50} count={400} factor={4} fade speed={1} />
+        <Stars radius={10} depth={60} count={600} factor={6} fade speed={1.5} />
       </Float>
 
-      <spotLight position={[8, 8, 8]}   angle={0.15} penumbra={1} intensity={8}  color={accentColor} />
-      <pointLight position={[-2, 1, 2]} intensity={4} color="#ffffff" />
-      <pointLight position={[0, -2, 0]} intensity={3} color={accentColor} />
-      <Environment preset="city" />
+      {/* Cinematic Lighting */}
+      <spotLight position={[10, 15, 10]} angle={0.2} penumbra={1} intensity={12} color={accentColor} />
+      <pointLight position={[0, 0, 0]} intensity={15} color={accentColor} distance={3} />
+      <pointLight position={[-4, 2, 4]} intensity={6} color="#ffffff" />
+      <pointLight position={[0, -5, 0]} intensity={8} color={accentColor} />
+      <Environment preset="night" />
     </group>
   );
 }
