@@ -46,6 +46,53 @@ export const MODEL_TEMPLATES = {
     animation: { type: 'Idle', amplitude: 0.1, speed: 1 }
   }),
 
+  HUMANOID: (color = '#fde68a', isWoman = false) => ({
+    type: 'Group',
+    name: isWoman ? 'Woman' : 'Man',
+    parts: [
+      { type: 'Box', position: [0, 1.1, 0], scale: [isWoman ? 0.4 : 0.6, 0.7, 0.3], color: '#334155' }, // Torso
+      { type: 'Sphere', position: [0, 1.6, 0.05], scale: [0.25, 0.28, 0.25], color }, // Head
+      { type: 'Box', position: [-0.35, 1.2, 0], scale: [0.15, 0.6, 0.15], color }, // L Arm
+      { type: 'Box', position: [0.35, 1.2, 0], scale: [0.15, 0.6, 0.15], color }, // R Arm
+      { type: 'Box', position: [-0.18, 0.4, 0], scale: [0.18, 0.8, 0.18], color: '#1e293b' }, // L Leg
+      { type: 'Box', position: [0.18, 0.4, 0], scale: [0.18, 0.8, 0.18], color: '#1e293b' }, // R Leg
+      { type: 'Sphere', position: [0, 1.58, 0.1], scale: [0.22, 0.2, 0.22], color: isWoman ? '#4c1d95' : '#1e1b4b', name:'Hair' }
+    ]
+  }),
+
+  BLASTER: (color = '#475569') => ({
+    type: 'Group',
+    name: 'Blaster',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [0.15, 0.25, 0.5], color }, // Body
+      { type: 'Cylinder', position: [0, 0.05, 0.4], scale: [0.08, 0.4, 0.08], color: '#1e293b', rotation: [Math.PI/2, 0, 0] }, // Barrel
+      { type: 'Box', position: [0, -0.2, -0.1], scale: [0.12, 0.3, 0.15], color: '#334155' }, // Grip
+      { type: 'Box', position: [0, 0.15, 0], scale: [0.05, 0.1, 0.3], color: '#00f2fe', name: 'Scope' } // Energy Scope
+    ]
+  }),
+
+  SABER: (color = '#00f2fe') => ({
+    type: 'Group',
+    name: 'Plasma Saber',
+    parts: [
+      { type: 'Cylinder', position: [0, 0, 0], scale: [0.06, 0.3, 0.06], color: '#475569' }, // Hilt
+      { type: 'Cylinder', position: [0, 1, 0], scale: [0.04, 1.8, 0.04], color, emissive: color, emissiveIntensity: 2 } // Active Blade
+    ]
+  }),
+
+  SUPERCAR: (color = '#f43f5e') => ({
+    type: 'Group',
+    name: 'CyberCar',
+    parts: [
+      { type: 'Box', position: [0, 0.25, 0], scale: [1, 0.3, 2], color }, // Chassis
+      { type: 'Box', position: [0, 0.5, -0.2], scale: [0.8, 0.3, 1], color: 'rgba(0,242,254,0.4)' }, // Cockpit
+      { type: 'Cylinder', position: [-0.55, 0.15, 0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] }, // Wheel FL
+      { type: 'Cylinder', position: [0.55, 0.15, 0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] }, // Wheel FR
+      { type: 'Cylinder', position: [-0.55, 0.15, -0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] }, // Wheel RL
+      { type: 'Cylinder', position: [0.55, 0.15, -0.7], scale: [0.3, 0.1, 0.3], color: '#111', rotation: [0, 0, Math.PI/2] } // Wheel RR
+    ]
+  }),
+
   STAIRS: (color = '#cbd5e1') => ({
     type: 'Group',
     name: 'Stairs',
@@ -225,8 +272,20 @@ export const assembleFromAI = (prompt, color = '#8b5cf6') => {
   let name = 'AI Construction';
 
   if (p.includes('robot')) {
-    name = 'Exact Robot';
+    name = 'Neural Robot';
     parts = MODEL_TEMPLATES.ROBOT(color).parts;
+  } else if (p.includes('man') || p.includes('human') || p.includes('person')) {
+    name = 'Bio_Sim: Human';
+    parts = MODEL_TEMPLATES.HUMANOID(color, p.includes('woman') || p.includes('girl')).parts;
+  } else if (p.includes('gun') || p.includes('weapon') || p.includes('blaster')) {
+    name = 'Tech_Gear: Blaster';
+    parts = MODEL_TEMPLATES.BLASTER('#475569').parts;
+  } else if (p.includes('sword') || p.includes('saber')) {
+    name = 'Tech_Gear: Saber';
+    parts = MODEL_TEMPLATES.SABER('#00f2fe').parts;
+  } else if (p.includes('car') || p.includes('vehicle')) {
+    name = 'Transport_Sim: CyberCar';
+    parts = MODEL_TEMPLATES.SUPERCAR(color).parts;
   } else if (p.includes('table')) {
     name = 'Exact Table';
     parts = MODEL_TEMPLATES.TABLE(color).parts;

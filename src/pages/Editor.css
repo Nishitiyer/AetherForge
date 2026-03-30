@@ -148,6 +148,125 @@
   filter: drop-shadow(0 0 2px var(--orb-accent));
 }
 
+/* ── STARK UI THEME ── */
+.stark-ui-theme {
+  filter: drop-shadow(0 0 5px var(--orb-accent));
+}
+
+.hud-path-neural {
+  fill: none;
+  stroke-width: 0.003;
+  stroke-dasharray: 0.005, 0.005;
+  opacity: 0.6;
+  animation: neuralFlow 4s linear infinite;
+}
+
+@keyframes neuralFlow {
+  0% { stroke-dashoffset: 0.1; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.hud-dot-stark {
+  transition: all 0.2s ease;
+}
+
+.hud-dot-stark.pulse {
+  animation: nodePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes nodePulse {
+  0%, 100% { r: 0.008; opacity: 1; }
+  50% { r: 0.012; opacity: 0.7; }
+}
+
+.hud-tech-label {
+  font-size: 0.012px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 900;
+  pointer-events: none;
+  text-shadow: 0 0 2px #000;
+}
+
+/* ── STARK HUD CONTAINER ── */
+.stark-hud-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.stark-reticle {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 1px solid;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.reticle-inner {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: reticlePulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes reticlePulse {
+  from { transform: scale(1); opacity: 0.5; }
+  to { transform: scale(2.5); opacity: 1; }
+}
+
+.reticle-label {
+  position: absolute;
+  top: -20px;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stark-corner {
+  position: absolute;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: linear-gradient(to right, rgba(0,0,0,0.4), transparent);
+}
+
+.stark-corner.top-left { top: 0; left: 0; }
+.stark-corner.bottom-left { bottom: 0; left: 0; }
+
+.telem-row {
+  display: flex;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.telem-row .label { color: rgba(255,255,255,0.4); }
+.telem-row .val { color: var(--orb-accent); text-shadow: 0 0 5px var(--orb-accent); }
+
+.stark-scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.05) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
 /* Add a scanner effect over the hologram */
 .stark-hologram-feed.active::after {
   content: '';

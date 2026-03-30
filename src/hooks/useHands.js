@@ -27,8 +27,12 @@ export function useHands() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          setIsReady(true);
+          if (videoRef.current) {
+            videoRef.current.play().catch(err => {
+              console.warn('[AetherForge] Autoplay blocked or interrupted:', err);
+            });
+            setIsReady(true);
+          }
         };
       }
       setPermissionState('granted');
@@ -62,12 +66,19 @@ export function useHands() {
     const isFist = [8, 12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.8);
     if (isFist) return 'FIST';
 
-    // 3. POINT (Index extended, others closed)
+    // 3. PEACE (Index and Middle extended, others closed)
+    const isIndexExt = dist(points[8], wrist) > handSize * 1.2;
+    const isMiddleExt = dist(points[12], wrist) > handSize * 1.2;
+    const isRingClosed = dist(points[16], wrist) < handSize * 0.9;
+    const isPinkyClosed = dist(points[20], wrist) < handSize * 0.9;
+    if (isIndexExt && isMiddleExt && isRingClosed && isPinkyClosed) return 'PEACE';
+
+    // 4. POINT (Index extended, others closed)
     const isIndexExtended = dist(indexTip, indexBase) > 0.08;
     const areOthersClosed = [12, 16, 20].every(idx => dist(points[idx], wrist) < handSize * 0.82);
     if (isIndexExtended && areOthersClosed) return 'POINT';
 
-    // 4. OPEN_HAND
+    // 5. OPEN_HAND
     if ([8, 12, 16, 20].every(idx => dist(points[idx], wrist) > handSize * 1.2)) return 'OPEN';
 
     return 'IDLE';
@@ -95,9 +106,9 @@ export function useHands() {
           },
           runningMode: "VIDEO",
           numHands: 1,
-          minHandDetectionConfidence: 0.7,
-          minHandPresenceConfidence: 0.7,
-          minTrackingConfidence: 0.7
+          minHandDetectionConfidence: 0.8,
+          minHandPresenceConfidence: 0.8,
+          minTrackingConfidence: 0.8
         });
 
         if (cancelled) return;
