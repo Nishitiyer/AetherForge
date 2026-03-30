@@ -8,7 +8,7 @@
  * - Object state only updates on: add/delete/AI command (not on every frame)
  * - TransformControls handles click-drag manipulation natively in GL thread
  */
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree, useLoader } from "@react-three/fiber";
 import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport, Environment, Float, Sphere, MeshDistortMaterial, Line, useVideoTexture } from '@react-three/drei';
 import { motion, AnimatePresence } from "framer-motion";
@@ -232,42 +232,6 @@ function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gestur
 
   return (
     <>
-      {/* 3D Fingertip Energy Hubs — JARVIS STYLE */}
-      {isGestureEnabled && handPosList.map((hp, i) => hp && (
-        <group key={i} position={[(hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0]}>
-           {/* Primary Hub */}
-           <mesh>
-             <sphereGeometry args={[0.04 * (gestures[i]==='PINCH'?1.5:1), 16, 16]} />
-             <meshStandardMaterial color={orb.accent} emissive={orb.accent} emissiveIntensity={3} />
-           </mesh>
-           {/* Rotating Rings */}
-           <mesh rotation={[Math.PI/2, 0, 0]}>
-             <ringGeometry args={[0.08, 0.1, 32]} />
-             <meshBasicMaterial color={orb.accent} transparent opacity={0.4} />
-           </mesh>
-           <mesh rotation={[Math.PI/4, Math.PI/4, 0]}>
-             <ringGeometry args={[0.12, 0.13, 32]} />
-             <meshBasicMaterial color={orb.accent} transparent opacity={0.2} />
-           </mesh>
-        </group>
-      ))}
-
-      {/* Holographic Tether Beam — Connects hand to target model */}
-      {isSelected && gestureRef.current[0] === 'PINCH' && handPosList[0] && (
-        <Line
-          points={[
-            new THREE.Vector3((handPosList[0].x - 0.5) * 14, (0.5 - handPosList[0].y) * 10, 0),
-            obj.position
-          ]}
-          color={orb.accent}
-          lineWidth={1.5}
-          transparent
-          opacity={0.5}
-          dashed
-          dashSize={0.2}
-          gapSize={0.1}
-        />
-      )}
 
       <group 
         ref={meshRef} 
@@ -315,8 +279,74 @@ function StarkWorkspace({ handPos, accent }) {
   );
 }
 
+/* ────────────────── HOLOGRAPHIC HUD COMPONENTS ────────────────── */
+function FingertipHUD({ handPosRef, gestureRef, orb }) {
+  const groupRefs = [useRef(), useRef()];
+  const meshRefs  = [useRef(), useRef()];
+
+  useFrame(() => {
+    const hpList = handPosRef.current;
+    const gList  = gestureRef.current;
+    hpList.forEach((hp, i) => {
+      if (!hp || !groupRefs[i].current) return;
+      groupRefs[i].current.position.set((hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0);
+      if (meshRefs[i].current) {
+        const s = gList[i] === 'PINCH' ? 1.5 : 1;
+        meshRefs[i].current.scale.lerp(new THREE.Vector3(s, s, s), 0.2);
+      }
+    });
+  });
+
+  return [0, 1].map(i => (
+    <group key={i} ref={groupRefs[i]}>
+       <mesh ref={meshRefs[i]}>
+         <sphereGeometry args={[0.04, 16, 16]} />
+         <meshStandardMaterial color={orb.accent} emissive={orb.accent} emissiveIntensity={3} />
+       </mesh>
+       <mesh rotation={[Math.PI/2, 0, 0]}>
+         <ringGeometry args={[0.08, 0.1, 32]} />
+         <meshBasicMaterial color={orb.accent} transparent opacity={0.4} />
+       </mesh>
+       <mesh rotation={[Math.PI/4, Math.PI/4, 0]}>
+         <ringGeometry args={[0.12, 0.13, 32]} />
+         <meshBasicMaterial color={orb.accent} transparent opacity={0.2} />
+       </mesh>
+    </group>
+  ));
+}
+
+function TetherHUD({ handPosRef, selectedObj, orb }) {
+  const lineRef = useRef();
+
+  useFrame(() => {
+    if (!lineRef.current || !selectedObj) return;
+    const hp = handPosRef.current[0];
+    if (!hp) {
+      lineRef.current.visible = false;
+      return;
+    }
+    lineRef.current.visible = true;
+    const h3d = new THREE.Vector3((hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0);
+    lineRef.current.setPoints([h3d, selectedObj.position]);
+  });
+
+  return (
+    <Line
+      ref={lineRef}
+      points={[new THREE.Vector3(), new THREE.Vector3()]}
+      color={orb.accent}
+      lineWidth={1.5}
+      transparent
+      opacity={0.5}
+      dashed
+      dashSize={0.2}
+      gapSize={0.1}
+    />
+  );
+}
+
 /* ────────────────── VIEWPORT SCENE ────────────────── */
-function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, transformMode, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb }) {
+function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, transformMode, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb, gestures, handPosList }) {
   const selectedObj = useMemo(() => objects.find(o => o.id === selectedId), [objects, selectedId]);
   const tcGroupRef  = useRef();
 
@@ -337,6 +367,14 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
       <pointLight position={[0, 6, 0]} intensity={0.3} />
 
       <StarkWorkspace handPos={handPosList[0]} accent={orb.accent} />
+
+      {isGestureEnabled && (
+        <FingertipHUD handPosRef={handPosRef} gestureRef={gestureRef} orb={orb} />
+      )}
+
+      {selectedObj && gestureRef.current[0] === 'PINCH' && (
+        <TetherHUD handPosRef={handPosRef} selectedObj={selectedObj} orb={orb} />
+      )}
 
       {transformMode === 'grab' && selectedObj && (
         <FreeGrabHandler obj={selectedObj} onCommit={onTransformCommit} />
@@ -431,45 +469,17 @@ export default function Editor() {
     requestCamera, 
     isInitializing 
   } = useHands();
+  
+  // HUD Link: Map the primary hand's data for singular HUD components
+  const gesture    = gestures[0];
+  const handPos    = handPosList[0];
+  const confidence = confidenceList[0];
 
   // STARK_LINK: Core state for gesture-driven creation
   const [ghostObject, setGhostObject] = useState({ type: 'cube', parts: null }); 
   const creationCooldownRef = useRef(0);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
 
-  // PUSH-TO-CREATE MONITOR (Stark Spatial Protocol)
-  useEffect(() => {
-     const interval = setInterval(() => {
-        if (!isGestureEnabled) return;
-        const h0 = handPosRef.current[0];
-        
-        // Detection Logic: High-velocity PUSH or THUMBS_UP gesture
-        const isPushing = h0 && h0.v > 50; 
-        const isCreating = isPushing || (gestures[0] === 'THUMBS_UP');
-
-        if (isCreating && Date.now() > creationCooldownRef.current) {
-           setIsSynthesizing(true);
-           setTimeout(() => setIsSynthesizing(false), 1000);
-           
-           const obj = freshObject(ghostObject.type);
-           // Calculate 3D position based on hand projection
-           const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
-           
-           const newObj = { 
-             ...obj, 
-             position: spawnPos,
-             parts: ghostObject.parts ? JSON.parse(JSON.stringify(ghostObject.parts)) : null, 
-             name: ghostObject.name || 'AI_SPATIAL_SPAWN',
-             animation: 'PULSE'
-           };
-           
-           setObjects(prev => [...prev, newObj]);
-           setSelectedId(newObj.id);
-           creationCooldownRef.current = Date.now() + 1200; 
-        }
-     }, 50); // Faster polling for better responsiveness
-     return () => clearInterval(interval);
-  }, [isGestureEnabled, gestures, ghostObject, addObject]);
 
   // Internal state to override useHands during diagnostics
   const [activeGesture, setActiveGesture] = useState('NONE');
@@ -477,10 +487,10 @@ export default function Editor() {
   
   useEffect(() => {
     if (!isDiagnostic) {
-      setActiveGesture(gesture);
-      setActiveHandPos(handPos);
+      setActiveGesture(gestures[0]);
+      setActiveHandPos(handPosList[0]);
     }
-  }, [gesture, handPos, isDiagnostic]);
+  }, [gestures, handPosList, isDiagnostic]);
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedOrb');
@@ -635,6 +645,40 @@ export default function Editor() {
 
     setChatHistory(prev => [...prev, { role:'assistant', content:'Commands: generate [type] · move up/down/left/right/forward/back [n] · rotate [axis] [deg] · scale [n] · spin on/off · wireframe on/off · delete' }]);
   }, [selectedId, selectedObj, updateSelected, deleteSelected, setRotDeg, addObject]);
+
+  // PUSH-TO-CREATE MONITOR (Stark Spatial Protocol)
+  useEffect(() => {
+     const interval = setInterval(() => {
+        if (!isGestureEnabled) return;
+        const h0 = handPosRef.current[0];
+        
+        // Detection Logic: High-velocity PUSH or THUMBS_UP gesture
+        const isPushing = h0 && h0.v > 50; 
+        const isCreating = isPushing || (gestures[0] === 'THUMBS_UP');
+
+        if (isCreating && Date.now() > creationCooldownRef.current) {
+           setIsSynthesizing(true);
+           setTimeout(() => setIsSynthesizing(false), 1000);
+           
+           const obj = freshObject(ghostObject.type);
+           // Calculate 3D position based on hand projection
+           const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
+           
+           const newObj = { 
+             ...obj, 
+             position: spawnPos,
+             parts: ghostObject.parts ? JSON.parse(JSON.stringify(ghostObject.parts)) : null, 
+             name: ghostObject.name || 'AI_SPATIAL_SPAWN',
+             animation: 'PULSE'
+           };
+           
+           setObjects(prev => [...prev, newObj]);
+           setSelectedId(newObj.id);
+           creationCooldownRef.current = Date.now() + 1200; 
+        }
+     }, 50); // Faster polling for better responsiveness
+     return () => clearInterval(interval);
+  }, [isGestureEnabled, gestures, ghostObject, addObject]);
 
   /* ── External Command Link ── */
   useEffect(() => {
