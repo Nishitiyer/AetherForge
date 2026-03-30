@@ -107,8 +107,6 @@ function SceneObject({ obj, isSelected, onSelect, gestureRef, gesture, handPos, 
       return;
     }
     
-    const g = gestureRef.current;
-    
     // GESTURE: PINCH -> GRAB AND MOVE
     if (g === 'PINCH' && handPos) {
       // Sensitivity factor to map screen [0-1] to world units
