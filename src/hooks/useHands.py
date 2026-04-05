@@ -70,6 +70,7 @@ class HandPulseEngine:
         if not landmarks or len(landmarks) < 21:
             return "IDLE"
         
+        # 0. Benchmarks & Distances
         wrist = landmarks[0]
         thumb_tip = landmarks[4]
         index_tip = landmarks[8]
@@ -79,22 +80,66 @@ class HandPulseEngine:
         
         hand_size = self.dist(wrist, landmarks[9]) or 0.1
         
+        # Helper: Is finger extended?
+        def is_ext(tip, base): 
+            return self.dist(tip, wrist) > self.dist(base, wrist) * 1.2
+
+        ix_ext = is_ext(index_tip, landmarks[6])
+        md_ext = is_ext(middle_tip, landmarks[10])
+        rg_ext = is_ext(ring_tip, landmarks[14])
+        pk_ext = is_ext(pinky_tip, landmarks[18])
+
+        # 1. PINCH Protocol (Thumb + Index)
         pinch_dist = self.dist(thumb_tip, index_tip)
         if pinch_dist < hand_size * 0.4:
             return "PINCH"
         
-        tips = [index_tip, middle_tip, ring_tip, pinky_tip]
-        is_grab = all(self.dist(tip, wrist) < hand_size * 1.1 for tip in tips)
-        if is_grab:
+        # 2. GRAB/FIST Protocol
+        if not any([ix_ext, md_ext, rg_ext, pk_ext]):
             return "GRAB"
             
+        # 3. PALM (All Open)
+        if all([ix_ext, md_ext, rg_ext, pk_ext]):
+             # Check if thumb also out
+             if self.dist(thumb_tip, landmarks[13]) > hand_size * 1.2:
+                 return "PALM"
+            
+        # 4. POINT (Only Index)
+        if ix_ext and not any([md_ext, rg_ext, pk_ext]):
+            return "POINT"
+            
+        # 5. PEACE / V_SIGN
+        if ix_ext and md_ext and not rg_ext and not pk_ext:
+            return "PEACE"
+
+        # 6. ROCK_ON (Index + Pinky)
+        if ix_ext and pk_ext and not md_ext and not rg_ext:
+            return "ROCK_ON"
+            
+        # 7. L_SIGN (Thumb + Index)
+        if ix_ext and self.dist(thumb_tip, landmarks[2]) > hand_size * 1.3:
+            if not any([md_ext, rg_ext, pk_ext]):
+                return "L_SIGN"
+
+        # 8. THUMBS_UP
         if thumb_tip.y < landmarks[3].y and thumb_tip.y < landmarks[2].y:
-            if all(self.dist(t, wrist) < hand_size * 1.6 for t in tips):
+            if not any([ix_ext, md_ext, rg_ext, pk_ext]):
                 return "THUMBS_UP"
-                
-        if self.dist(index_tip, wrist) > hand_size * 1.5 and self.dist(middle_tip, wrist) > hand_size * 1.5:
-            if self.dist(ring_tip, wrist) < hand_size * 1.2:
-                return "PEACE"
+
+        # 9. C_SIGN (Cube / Claw)
+        if ix_ext and md_ext and rg_ext and pk_ext:
+            if self.dist(thumb_tip, index_tip) > hand_size * 0.7:
+                 return "C_SIGN"
+
+        # 10. O_SIGN (Circle / Sphere)
+        if self.dist(thumb_tip, index_tip) < hand_size * 0.2:
+             if md_ext and rg_ext: # Fingers open above the circle
+                 return "O_SIGN"
+                 
+        # 11. T_SIGN (Torus / Right Angle)
+        if ix_ext and self.dist(thumb_tip, landmarks[2]) > hand_size * 1.2:
+            if not any([md_ext, rg_ext, pk_ext]):
+                return "T_SIGN"
 
         return "IDLE"
 

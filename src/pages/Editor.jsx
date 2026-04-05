@@ -764,6 +764,47 @@ export default function Editor() {
           creationCooldownRef.current = Date.now() + 5000;
         }
 
+        // NEW STARK GESTURES
+        if (gestures[0] === 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
+          updateSelected({ wireframe: !selectedObj.wireframe });
+          setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Telemetry Wireframe ${!selectedObj.wireframe ? 'Engaged' : 'Dismissed'}.` }]);
+          creationCooldownRef.current = Date.now() + 1000;
+        }
+
+        if (gestures[0] === 'PALM' && Date.now() > creationCooldownRef.current) {
+          setSelectedId(null);
+          setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Global Selection Flush.' }]);
+          creationCooldownRef.current = Date.now() + 1500;
+        }
+
+        if (gestures[0] === 'POINT' && !selectedObj) {
+           // Proximity selection logic in SceneObject handles the selection if pointed
+        }
+
+        if (gestures[0] === 'L_SIGN' && Date.now() > creationCooldownRef.current) {
+          setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: JARVIS UI System Reboot.' }]);
+          creationCooldownRef.current = Date.now() + 2000;
+        }
+
+        // --- INSTANT SHAPE GESTURES ---
+        if (Date.now() > creationCooldownRef.current) {
+          const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
+          
+          if (gestures[0] === 'C_SIGN') {
+             addObject('box');
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Cubic Matrix Manifested.' }]);
+             creationCooldownRef.current = Date.now() + 1500;
+          } else if (gestures[0] === 'O_SIGN') {
+             addObject('sphere');
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Spherical Core Synthesized.' }]);
+             creationCooldownRef.current = Date.now() + 1500;
+          } else if (gestures[0] === 'T_SIGN') {
+             addObject('torus');
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Toroidal Geometry Synchronized.' }]);
+             creationCooldownRef.current = Date.now() + 1500;
+          }
+        }
+
         if (isCreating && Date.now() > creationCooldownRef.current) {
            setIsSynthesizing(true);
            setTimeout(() => setIsSynthesizing(false), 1000);
