@@ -47,7 +47,7 @@ export function ChestHero3D({ orb }) {
   };
 
   return (
-    <group ref={groupRef} scale={1.4}>
+    <group ref={groupRef} scale={1.8}>
       {/* 
           Using the production-grade StarkOrb component directly.
           Ensures absolute aesthetic parity across the entire platform.
@@ -55,16 +55,16 @@ export function ChestHero3D({ orb }) {
       <StarkOrb 
          orbId={orb?.id || 'sentinel'} 
          state="activated"
-         scale={1.2}
+         scale={1.5}
       />
 
       {/* Cinematic Environmental Infrastructure */}
       <Stars radius={50} depth={50} count={300} factor={4} fade speed={1.5} />
       
+      <pointLight position={[0, 0, 2]} intensity={25} color="#ffffff" />
       <spotLight position={[10, 10, 10]} angle={0.2} penumbra={1} intensity={25} color={accentColor} />
       <pointLight position={[-5, 5, 5]} intensity={15} color="#ffffff" />
       <pointLight position={[0, -10, 0]} intensity={18} color={accentColor} />
-      
       <Environment preset="city" />
     </group>
   );

@@ -1079,10 +1079,12 @@ export default function Editor() {
 
           <div className="shelf-spacer"/>
           <div className="shelf-section-label">AI PROTOCOL</div>
-          <StarkOrb 
-            orbId={orb.id} 
-            state={isSynthesizing || isVisionRunning ? 'processing' : isVoiceActive || isAssistantSpeaking ? 'listening' : 'idle'}
-          />
+          <Suspense fallback={null}>
+            <StarkOrb 
+              orbId={orb.id} 
+              state={isSynthesizing || isVisionRunning ? 'processing' : isVoiceActive || isAssistantSpeaking ? 'listening' : 'idle'}
+            />
+          </Suspense>
           <ToolBtn 
             icon={Bot} 
             label="Vision Scan" 

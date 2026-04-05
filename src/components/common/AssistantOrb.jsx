@@ -87,7 +87,7 @@ const StarkOrb = ({
         <mesh>
           <sphereGeometry args={[0.15, 16, 16]} />
           <meshBasicMaterial color="#ffffff" />
-          <pointLight intensity={30} distance={10} color={orb.color} />
+          <pointLight intensity={60} distance={15} color={orb.color} />
         </mesh>
 
         {/* PHASE 1: INTERNAL NEURAL ENERGY (Distorted Core) */}
@@ -102,7 +102,7 @@ const StarkOrb = ({
             transparent
             opacity={0.8}
             emissive={orb.color}
-            emissiveIntensity={25}
+            emissiveIntensity={50}
             toneMapped={false}
           />
         </mesh>
@@ -165,7 +165,7 @@ const StarkOrb = ({
           <PointMaterial
             transparent
             color={orb.color}
-            size={0.015}
+            size={0.03}
             sizeAttenuation={true}
             depthWrite={false}
             alphaWrite={false}

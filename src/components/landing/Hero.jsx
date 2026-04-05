@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -158,10 +158,12 @@ export default function Hero({ isSelectionMode, onConfirm }) {
               <Canvas 
                 id="stark-hero-canvas"
                 gl={{ antialias: false, powerPreference: "high-performance", alpha: true }}
-                camera={{ position: [0, 0, 3.5], fov: 45 }}
+                camera={{ position: [0, 0, 4.0], fov: 45 }}
               >
-                <ambientLight intensity={0.4} />
-                <ChestHero3D orb={activeOrb} />
+                <ambientLight intensity={1.5} />
+                <Suspense fallback={null}>
+                   <ChestHero3D orb={activeOrb} />
+                </Suspense>
               </Canvas>
             </div>
 
