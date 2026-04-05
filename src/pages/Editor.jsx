@@ -186,16 +186,51 @@ function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosR
 
     if (!meshRef.current) return;
 
-    if (hp0 && g0 === 'GRAB' && isSelected) {
-      const worldPos = new THREE.Vector3((hp0.x - 0.5) * 14, (0.5 - hp0.y) * 10, hp0.z * -10);
-      meshRef.current.position.lerp(worldPos, 0.2);
+    // ── DISTANCE-BASED SPATIAL ATTENTION ──
+    const camPos = new THREE.Vector3((hp0.x - 0.5) * 14, (0.5 - hp0.y) * 10, hp0.z * -10);
+    const distToHand = meshRef.current.position.distanceTo(camPos);
+    const isNear = distToHand < 3.0;
 
-      // FLICK-TO-DELETE (Stark 'Throw Away')
-      if (Math.abs(hp0.vx) > 100 || Math.abs(hp0.vy) > 100) {
+    // A. GRAB TO MOVE (Unified for all objects)
+    if (hp0 && (g0 === 'GRAB' || g0 === 'FIST') && (isSelected || isNear)) {
+      meshRef.current.position.lerp(camPos, 0.15);
+
+      // FLICK-TO-DELETE (Stark Discard)
+      if (Math.abs(hp0.vx) > 120 || Math.abs(hp0.vy) > 120) {
           onDelete(); 
       }
     }
     
+    // B. PINCH TO SCULPT (Neural Deformation)
+    if (hp0 && g0 === 'PINCH' && isNear) {
+       // Stark Sculp logic: Distort towards hand
+       const pullIntensity = (1.0 - (distToHand / 3.0)) * 0.1;
+       meshRef.current.scale.x += (Math.abs(hp0.vx) * 0.002);
+       meshRef.current.scale.y += (Math.abs(hp0.vy) * 0.002);
+       meshRef.current.position.lerp(camPos, pullIntensity);
+       
+       // Visual feedback (Neural glow)
+       if (isSelected) {
+          meshRef.current.scale.multiplyScalar(1 + Math.sin(time * 20) * 0.01);
+       }
+    }
+    
+    // C. DUAL-HAND PINCH (SCALE)
+    const g1 = gList[1];
+    const hp1 = hpList[1];
+    if (hp0 && hp1 && g0 === 'PINCH' && g1 === 'PINCH' && isSelected) {
+       const dist = Math.sqrt((hp0.x-hp1.x)**2 + (hp0.y-hp1.y)**2);
+       if (dualHandBaseDistRef.current === null) {
+         dualHandBaseDistRef.current = dist;
+         dualHandBaseScaleRef.current = meshRef.current.scale.x;
+       } else {
+         const factor = dist / dualHandBaseDistRef.current;
+         meshRef.current.scale.setScalar(dualHandBaseScaleRef.current * factor);
+       }
+    } else {
+       dualHandBaseDistRef.current = null;
+    }
+
     // Spin animation
     if (obj.spin) meshRef.current.rotation.y += 1.0 * delta;
   });
@@ -359,7 +394,7 @@ function TetherHUD({ handPosRef, selectedObj, orb }) {
 }
 
 /* ────────────────── VIEWPORT SCENE ────────────────── */
-function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, transformMode, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb, gestures, handPosList }) {
+function ViewportScene({ objects, selectedId, onSelect, onDelete, onTransformCommit, transformMode, gestureRef, handPosRef, isGestureEnabled, orb, gestures, handPosList, videoRef, frameData }) {
   const selectedObj = useMemo(() => objects.find(o => o.id === selectedId), [objects, selectedId]);
   const tcGroupRef  = useRef();
 
@@ -373,6 +408,7 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
 
     // ── JARVIS INTERACTION GRID ──
   return (
+    <>
       <ARBackground videoRef={videoRef} isEnabled={isGestureEnabled} frameData={frameData} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[8, 12, 6]}  intensity={1.4} castShadow />
@@ -399,7 +435,7 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
           obj={obj}
           isSelected={obj.id === selectedId}
           onSelect={onSelect}
-          onDelete={() => setObjects(prev => prev.filter(o => o.id !== obj.id))}
+          onDelete={() => onDelete(obj.id)}
           gestureRef={gestureRef}
           handPosRef={handPosRef}
           isGestureEnabled={isGestureEnabled}
