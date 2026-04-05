@@ -77,6 +77,33 @@
   padding: 1px 4px; border-radius: 3px; white-space: nowrap;
 }
 
+/* ── INTEGRATED SHELF MONITOR ── */
+.shelf-monitor-container {
+  padding: 10px; margin-top: auto;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.2);
+}
+.shelf-monitor {
+  width: 110px; height: 82px; border-radius: 8px;
+  background: #000; border: 1px solid rgba(255,255,255,0.08);
+  position: relative; overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.shelf-monitor.active { border-color: var(--orb-accent); }
+.shelf-vid { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; filter: contrast(1.2) brightness(1.1); }
+.shelf-hud-overlay { position: absolute; inset: 0; pointer-events: none; }
+.shelf-monitor-label {
+  font-size: 7px; font-weight: 900; color: rgba(255,255,255,0.3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 5px; display: flex; align-items: center; gap: 4px;
+}
+.shelf-status-bar {
+  height: 2px; background: rgba(255,255,255,0.1);
+  margin-top: 4px; border-radius: 1px; overflow: hidden;
+}
+.shelf-status-fill { height: 100%; background: var(--orb-accent); transition: width 0.3s; }
+
+
 /* ── VIEWPORT ── */
 .ed-viewport-section { flex-grow: 1; display: flex; flex-direction: column; background: #000; min-width: 0; position: relative; }
 .viewport-header {
@@ -110,6 +137,38 @@
 
 /* CANVAS AREA */
 .viewport-canvas-area { flex-grow: 1; position: relative; overflow: hidden; background: transparent; }
+
+/* ── STARK HOLOGRAPHIC HUD ── */
+.viewport-hologram-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 50;
+  mix-blend-mode: screen;
+}
+
+.stark-top-telemetry {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 100; display: flex; align-items: center; gap: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  padding: 8px 24px; border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.telem-block { display: flex; flex-direction: column; gap: 2px; }
+.telem-label { font-size: 7px; font-weight: 900; color: rgba(255,255,255,0.25); letter-spacing: 0.1em; }
+.telem-value { font-size: 13px; font-weight: 900; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.05em; }
+.telem-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.1); }
+
+.telem-graph-area { display: flex; align-items: flex-end; gap: 2px; height: 16px; margin-left: 10px; }
+.telem-bar { width: 3px; background: rgba(255,255,255,0.1); border-radius: 1px; }
+.telem-bar.pulse-anim { animation: barGrow 0.4s ease-in-out infinite alternate; }
+
+@keyframes barGrow {
+  from { height: 40%; }
+  to { height: 100%; }
+}
 
 .stark-monitor-pip {
   position: absolute;

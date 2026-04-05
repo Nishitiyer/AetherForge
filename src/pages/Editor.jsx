@@ -16,27 +16,49 @@ import * as THREE from 'three';
 import {
   Settings, Activity, Plus, Hand, Move, RotateCw, Maximize,
   MousePointer2, Eye, Layers, Film, Trash2, Copy, Clock,
-  MessageSquare, AlertCircle, Cpu, ChevronRight, Mic,
+  MessageSquare, AlertCircle, Cpu, ChevronRight, Mic, Camera,
   Box as BoxIcon, Circle, Triangle, Bot, Zap, Hexagon,
   Globe, Square, CopyCheck, Play, Save, HelpCircle
 } from "lucide-react";
 import "./Editor.css";
 import { useHands } from "../hooks/useHands";
+import { useAIEngine } from "../hooks/useAIEngine";
 import { ChestHero3D } from "../components/landing/ChestHero3D";
 import { MODEL_TEMPLATES, assembleFromAI, applyAnimation } from '../utils/ModelFactory';
 
 /* ────────────────── AR BACKGROUND ────────────────── */
-function ARBackground({ videoRef, isEnabled }) {
+function ARBackground({ videoRef, isEnabled, frameData }) {
+  if (!isEnabled) return null;
+  return <ARBackgroundInside videoRef={videoRef} frameData={frameData} />;
+}
+
+function ARBackgroundInside({ videoRef, frameData }) {
   const { scene } = useThree();
-  const texture = useVideoTexture(videoRef?.current?.srcObject ? videoRef.current : null);
+  const [texture, setTexture] = useState(null);
+  const videoTexture = useVideoTexture(videoRef.current || document.createElement('video'));
   
+  useEffect(() => {
+    if (frameData) {
+      const loader = new THREE.TextureLoader();
+      loader.load(frameData, (tex) => {
+        setTexture(tex);
+      });
+    }
+  }, [frameData]);
+
   useFrame(() => {
-    if (isEnabled && texture) {
+    if (frameData && texture) {
       scene.background = texture;
-    } else if (!isEnabled) {
-      scene.background = new THREE.Color('#000');
+    } else if (videoRef.current?.srcObject && videoTexture) {
+      scene.background = videoTexture;
     }
   });
+
+  useEffect(() => {
+    return () => {
+      scene.background = new THREE.Color('#000');
+    };
+  }, [scene]);
 
   return null;
 }
@@ -124,20 +146,22 @@ function freshObject(primKey) {
     position: new THREE.Vector3(0, 0, 0),
     quaternion: new THREE.Quaternion(),
     scale: new THREE.Vector3(1, 1, 1),
-    color: p.color,
+    color: p.color || '#8b5cf6',
+    emissive: '#000000',
+    emissiveIntensity: 0,
+    castShadow: true,
+    receiveShadow: true,
     wireframe: false,
     spin: false,
     keyframes: [],
   };
 }
 
-function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gesture, handPos, isGestureEnabled, orb, gestures, handPosList }) {
+function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosRef, isGestureEnabled, orb }) {
   const meshRef = useRef();
-  const pinchStartRef = useRef();
   const dualHandBaseDistRef = useRef(null);
   const dualHandBaseScaleRef = useRef(null);
   
-  // Animation state for multi-part models
   const [parts, setParts] = useState(obj.parts || []);
 
   useEffect(() => {
@@ -157,104 +181,62 @@ function SceneObject({ obj, isSelected, onSelect, gestureRef, handPosRef, gestur
     const gList = gestureRef.current;
     const hpList = handPosRef.current;
     
-    const g0 = gList[0], g1 = gList[1];
-    const hp0 = hpList[0], hp1 = hpList[1];
+    const g0 = gList[0];
+    const hp0 = hpList[0];
 
     if (!meshRef.current) return;
 
-    // A. DUAL-HAND INTERACTION (The Stark 'Pull Apart')
-    if (isGestureEnabled && isSelected && g0 === 'PINCH' && g1 === 'PINCH') {
-       const dist = Math.sqrt((hp0.x - hp1.x)**2 + (hp0.y - hp1.y)**2);
-       if (dualHandBaseDistRef.current === null) {
-          dualHandBaseDistRef.current = dist;
-          dualHandBaseScaleRef.current = meshRef.current.scale.x;
-       } else {
-          const scaleFactor = (dist / dualHandBaseDistRef.current);
-          meshRef.current.scale.setScalar(dualHandBaseScaleRef.current * scaleFactor);
-          
-          // Trigger EXPLODE if pulled apart quickly
-          if (scaleFactor > 2.5 && obj.parts) {
-             // Logic to set global animation state would go here
-          }
-       }
-    } else {
-       dualHandBaseDistRef.current = null;
-    }
-
-    // B. SINGLE-HAND MANIPULATION
-    const activeHand = hp0; 
-    const activeGesture = g0;
-
-    if (activeHand && activeGesture === 'GRAB' && isSelected) {
-      const worldPos = new THREE.Vector3((activeHand.x - 0.5) * 14, (0.5 - activeHand.y) * 10, activeHand.z * -10);
+    if (hp0 && g0 === 'GRAB' && isSelected) {
+      const worldPos = new THREE.Vector3((hp0.x - 0.5) * 14, (0.5 - hp0.y) * 10, hp0.z * -10);
       meshRef.current.position.lerp(worldPos, 0.2);
 
       // FLICK-TO-DELETE (Stark 'Throw Away')
-      if (Math.abs(activeHand.vx) > 80 || Math.abs(activeHand.vy) > 80) {
-          // In a real app we'd call a delete function here
-          // For now we'll just 'scale down' out of existence to simulate deletion
-          meshRef.current.scale.multiplyScalar(0.8);
+      if (Math.abs(hp0.vx) > 100 || Math.abs(hp0.vy) > 100) {
+          onDelete(); 
       }
     }
-
-    // GESTURE: ROTATE (Triggered by PINCH movement or specific pose)
-    if (activeGesture === 'ROTATE' || (activeGesture === 'PINCH' && activeHand?.v > 15)) {
-       meshRef.current.rotation.y += delta * 5;
-    }
-
+    
     // Spin animation
     if (obj.spin) meshRef.current.rotation.y += 1.0 * delta;
-    
-    // EXPLODE ANIMATION
-    if (obj.animation === 'EXPLODE') {
-      const explosionSpeed = 3.0;
-      setParts(prev => prev.map((p, i) => ({
-        ...p,
-        position: [
-          p.position[0] + (p.position[0] || i - 2) * delta * explosionSpeed,
-          p.position[1] + (p.position[1] || i - 2) * delta * explosionSpeed,
-          p.position[2] + (p.position[2] || i - 2) * delta * explosionSpeed
-        ],
-        opacity: Math.max(0, (p.opacity ?? 1) - delta * 0.5)
-      })));
-    }
   });
 
   const renderPart = (part, idx) => {
     const PartGeo = makeGeo(part.type.toLowerCase(), part.args || [1,1,1]);
     return (
-      <mesh key={idx} position={part.position} scale={part.scale} rotation={part.rotation}>
+      <mesh key={idx} position={part.position} scale={part.scale} rotation={part.rotation} castShadow receiveShadow>
         <primitive object={PartGeo} attach="geometry" />
-        <meshStandardMaterial color={part.color} wireframe={obj.wireframe} emissive={part.emissive} emissiveIntensity={part.emissiveIntensity} />
+        <meshStandardMaterial 
+          color={part.color} 
+          wireframe={obj.wireframe} 
+          emissive={part.emissive || '#000000'} 
+          emissiveIntensity={part.emissiveIntensity || 0} 
+        />
       </mesh>
     );
   };
 
   return (
-    <>
-
-      <group 
-        ref={meshRef} 
-        name={obj.id.toString()} 
-        onClick={(e) => { e.stopPropagation(); onSelect(obj.id); }}
-        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { document.body.style.cursor = 'auto'; }}
-      >
-      {obj.parts ? (
-        parts.map((p, i) => renderPart(p, i))
-      ) : (
-        <mesh>
-          <primitive object={makeGeo(PRIMITIVES[obj.type]?.geometry || 'box', PRIMITIVES[obj.type]?.args || [1,1,1])} attach="geometry" />
-          <meshStandardMaterial 
-            color={obj.color} 
-            wireframe={obj.wireframe} 
-            transparent={obj.visible === false} 
-            opacity={obj.visible === false ? 0 : 1}
-          />
+    <group 
+      ref={meshRef} 
+      name={obj.id.toString()} 
+      onClick={(e) => { e.stopPropagation(); onSelect(obj.id); }}
+    >
+      {isSelected && (
+        <mesh visible={false}>
+          <boxGeometry args={[1.2, 1.2, 1.2]} />
+          <meshStandardMaterial color="cyan" wireframe transparent opacity={0.3} />
         </mesh>
       )}
-      </group>
-    </>
+      
+      {obj.parts ? (
+        <group>{parts.map((p, i) => renderPart(p, i))}</group>
+      ) : (
+        <mesh castShadow receiveShadow>
+          <primitive object={makeGeo(obj.type.toLowerCase(), PRIMITIVES[obj.type]?.args || [1,1,1])} attach="geometry" />
+          <meshStandardMaterial color={obj.color} wireframe={obj.wireframe} emissive={obj.emissive} emissiveIntensity={obj.emissiveIntensity} />
+        </mesh>
+      )}
+    </group>
   );
 }
 
@@ -315,6 +297,37 @@ function FingertipHUD({ handPosRef, gestureRef, orb }) {
   ));
 }
 
+/* ────────────────── TOP TELEMETRY PANEL ────────────────── */
+function TopTelemetry({ orb, gestures, handPosList, confidenceList }) {
+  const g0 = gestures[0] || 'IDLE';
+  const c0 = confidenceList[0] || 0;
+  
+  return (
+    <div className="stark-top-telemetry">
+      <div className="telem-block">
+        <div className="telem-label">GESTURE_STATE</div>
+        <div className="telem-value" style={{ color: orb.accent }}>{g0}</div>
+      </div>
+      <div className="telem-divider" />
+      <div className="telem-block">
+        <div className="telem-label">CONFIDENCE</div>
+        <div className="telem-value">{ (c0 * 100).toFixed(1) }%</div>
+      </div>
+      <div className="telem-divider" />
+      <div className="telem-block">
+        <div className="telem-label">SYSTEM_LNK</div>
+        <div className="telem-value" style={{ color: '#4ade80' }}>STABLE</div>
+      </div>
+      <div className="telem-graph-area">
+        <div className="telem-bar" style={{ height: '40%', opacity: 0.3 }} />
+        <div className="telem-bar" style={{ height: '70%', background: orb.accent }} />
+        <div className="telem-bar" style={{ height: '20%', opacity: 0.5 }} />
+        <div className="telem-bar pulse-anim" style={{ height: '90%', background: orb.accent }} />
+      </div>
+    </div>
+  );
+}
+
 function TetherHUD({ handPosRef, selectedObj, orb }) {
   const lineRef = useRef();
 
@@ -360,7 +373,7 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
 
     // ── JARVIS INTERACTION GRID ──
   return (
-    <>
+      <ARBackground videoRef={videoRef} isEnabled={isGestureEnabled} frameData={frameData} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[8, 12, 6]}  intensity={1.4} castShadow />
       <directionalLight position={[-6, 4, -4]} intensity={0.4} color="#8ab4f8" />
@@ -386,10 +399,9 @@ function ViewportScene({ objects, selectedId, onSelect, onTransformCommit, trans
           obj={obj}
           isSelected={obj.id === selectedId}
           onSelect={onSelect}
+          onDelete={() => setObjects(prev => prev.filter(o => o.id !== obj.id))}
           gestureRef={gestureRef}
           handPosRef={handPosRef}
-          gestures={gestures}
-          handPosList={handPosList}
           isGestureEnabled={isGestureEnabled}
           orb={orb}
         />
@@ -467,7 +479,8 @@ export default function Editor() {
     confidenceList, 
     permissionState, 
     requestCamera, 
-    isInitializing 
+    isInitializing,
+    frameData
   } = useHands();
   
   // HUD Link: Map the primary hand's data for singular HUD components
@@ -478,7 +491,7 @@ export default function Editor() {
   // STARK_LINK: Core state for gesture-driven creation
   const [ghostObject, setGhostObject] = useState({ type: 'cube', parts: null }); 
   const creationCooldownRef = useRef(0);
-  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const { generateFromPython, isSynthesizing } = useAIEngine();
 
 
   // Internal state to override useHands during diagnostics
@@ -581,33 +594,80 @@ export default function Editor() {
   }, [isPlaying]);
 
   /* ── AI command parser ── */
-  const handleAI = useCallback((msg) => {
+  const handleAI = useCallback(async (msg) => {
     const p = msg.toLowerCase();
     const n = parseFloat(p.match(/[\d.]+/)?.[0]) || 1;
 
     setIsProcessing(true);
     setTimeout(() => setIsProcessing(false), 2000);
 
+    // 1. COMPLEX SYNTHESIS (Python Backend)
+    if (/generate|create|make|add|vision|scan/i.test(p) && (p.includes("camera") || p.includes("vision") || p.includes("drone") || p.includes("tree") || p.includes("building") || p.includes("tower") || p.split(' ').length > 2)) {
+      setIsGenerating(true);
+      const useCamera = p.includes("camera") || p.includes("vision") || p.includes("scan");
+      const data = await generateFromPython(p, orb.accent, useCamera);
+      if (data) {
+        setObjects(prev => [...prev, data]);
+        setSelectedId(data.id);
+        const source = useCamera ? 'Rodin Vision Engine' : 'Python Neural Engine';
+        setChatHistory(prev => [...prev, { role:'assistant', content:`✓ ${source} synthesized: ${data.name}` }]);
+      }
+      setIsGenerating(false);
+      return;
+    }
+
+    // 2. PRIMITIVE GENERATION (Local)
     if (/generate|create|make|add/i.test(p)) {
       setIsGenerating(true);
       let key = 'cube';
       Object.keys(PRIMITIVES).forEach(k => { if (p.includes(k)) key = k; });
       if (p.includes('ball'))   key = 'sphere';
       if (p.includes('ring'))   key = 'torus';
-      if (p.includes('ship'))   key = 'drone';
-      if (p.includes('gun'))    key = 'tactical_blaster';
-      if (p.includes('head'))   key = 'proto_head';
-      if (p.includes('face'))   key = 'proto_head';
       
-      const template = MODEL_TEMPLATES[key];
-      setGhostObject({ type: key, parts: template?.parts, name: template?.label || 'AI_GEN' });
+      const template = MODEL_TEMPLATES[key.toUpperCase()];
+      const newObj = freshObject(key);
+      if (template) {
+        newObj.parts = template(orb.accent).parts;
+        newObj.name = template(orb.accent).name;
+      }
 
       setTimeout(() => {
-        addObject(key);
+        setObjects(prev => [...prev, newObj]);
+        setSelectedId(newObj.id);
         setIsGenerating(false);
-        setChatHistory(prev => [...prev, { role:'assistant', content:`✓ ${PRIMITIVES[key].label} added to scene.` }]);
-      }, 1400);
+        setChatHistory(prev => [...prev, { role:'assistant', content:`✓ ${newObj.name} added to scene.` }]);
+      }, 800);
       return;
+    }
+
+    // 3. DETAILING (Shadows, Glow, Materials)
+    if (selectedId) {
+      const updates = {};
+      if (/shadow/i.test(p)) updates.castShadow = !/off|remove/i.test(p);
+      if (/glow|emissive/i.test(p)) {
+        updates.emissive = orb.accent;
+        updates.emissiveIntensity = /off/i.test(p) ? 0 : 2;
+      }
+      if (/metal|chrome/i.test(p)) {
+        updates.metalness = 1;
+        updates.roughness = 0.1;
+      }
+      if (/plastic|matte/i.test(p)) {
+        updates.metalness = 0;
+        updates.roughness = 0.8;
+      }
+      if (/color|make it/i.test(p)) {
+        const colors = { red: '#ef4444', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308', white: '#ffffff', black: '#111111' };
+        Object.entries(colors).forEach(([name, hex]) => {
+          if (p.includes(name)) updates.color = hex;
+        });
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateSelected(updates);
+        setChatHistory(prev => [...prev, { role:'assistant', content:'✓ Detailing applied to active selection.' }]);
+        return;
+      }
     }
 
     if (/move|translate/i.test(p) && selectedId) {
@@ -654,14 +714,25 @@ export default function Editor() {
         
         // Detection Logic: High-velocity PUSH or THUMBS_UP gesture
         const isPushing = h0 && h0.v > 50; 
-        const isCreating = isPushing || (gestures[0] === 'THUMBS_UP');
+        const isCreating = isPushing;
+
+        // UI COMMANDS VIA GESTURES
+        if (gestures[0] === 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
+           setShowAddPanel(true);
+           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Initiated: Accessing Mesh Primitives.' }]);
+           creationCooldownRef.current = Date.now() + 2000;
+        }
+
+        if (gestures[0] === 'PEACE' && Date.now() > creationCooldownRef.current) {
+          handleVisionAI();
+          creationCooldownRef.current = Date.now() + 5000;
+        }
 
         if (isCreating && Date.now() > creationCooldownRef.current) {
            setIsSynthesizing(true);
            setTimeout(() => setIsSynthesizing(false), 1000);
            
            const obj = freshObject(ghostObject.type);
-           // Calculate 3D position based on hand projection
            const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
            
            const newObj = { 
@@ -676,7 +747,7 @@ export default function Editor() {
            setSelectedId(newObj.id);
            creationCooldownRef.current = Date.now() + 1200; 
         }
-     }, 50); // Faster polling for better responsiveness
+     }, 50);
      return () => clearInterval(interval);
   }, [isGestureEnabled, gestures, ghostObject, addObject]);
 
@@ -777,6 +848,23 @@ export default function Editor() {
     handleAI(msg);
   };
 
+  const handleVisionAI = useCallback(async () => {
+    setIsGenerating(true);
+    setChatHistory(prev => [...prev, { role:'assistant', content:'Initiating Spatial Vision Scan via Rodin AI...' }]);
+    
+    // Call the Python backend with use_camera=true
+    const data = await generateFromPython("Analyze vision input", orb.accent, true);
+    
+    if (data) {
+      setObjects(prev => [...prev, data]);
+      setSelectedId(data.id);
+      setChatHistory(prev => [...prev, { role:'assistant', content: `✓ Rodin Synthesis Protocol complete: ${data.name} generated.` }]);
+    } else {
+      setChatHistory(prev => [...prev, { role:'assistant', content: '⚠ Vision Scan failed. Ensure Python server is online.' }]);
+    }
+    setIsGenerating(false);
+  }, [generateFromPython, orb.accent]);
+
   /* ── Euler from selected quaternion ── */
   const selEuler = useMemo(() => {
     if (!selectedObj) return new THREE.Euler();
@@ -853,8 +941,40 @@ export default function Editor() {
           <ToolBtn icon={CopyCheck} label="Wireframe" sub="W" onClick={()=>updateSelected({wireframe:!selectedObj?.wireframe})} active={selectedObj?.wireframe} accent={orb.accent} />
 
           <div className="shelf-spacer"/>
+          <div className="shelf-section-label">AI PROTOCOL</div>
+          <ToolBtn 
+            icon={Bot} 
+            label="Vision Scan" 
+            sub="RODIN" 
+            onClick={handleVisionAI} 
+            accent={orb.accent} 
+          />
+
           <div className="shelf-section-label">SPATIAL</div>
           <ToolBtn icon={Hand} active={isGestureEnabled} label="Gesture" sub="CAM" onClick={toggleGestures} accent={orb.accent} danger={permissionState==='denied'} />
+          
+          <div className="shelf-monitor-container">
+            <div className="shelf-monitor-label">
+              <Camera size={8}/> <span>NEURAL_HUB</span>
+            </div>
+            <div className={`shelf-monitor ${isGestureEnabled && permissionState === 'granted' ? 'active' : ''}`}>
+              <video 
+                ref={videoRef}
+                className="shelf-vid"
+                playsInline 
+                muted 
+              />
+              {/* Hand HUD Overlay in Shelf */}
+              {isGestureEnabled && permissionState === 'granted' && landmarksList[0] && (
+                <div className="shelf-hud-overlay">
+                  <HandHUD landmarks={landmarksList[0]} accent={orb.accent} gesture={gestures[0]} confidence={confidenceList[0]} />
+                </div>
+              )}
+            </div>
+            <div className={`shelf-status-bar`}>
+              <div className="shelf-status-fill" style={{ width: isInitializing ? '100%' : (isGestureEnabled ? '100%' : '0%'), opacity: isInitializing ? 0.3 : 1 }} />
+            </div>
+          </div>
         </aside>
 
         {/* ── CENTRAL VIEWPORT ── */}
@@ -892,6 +1012,19 @@ export default function Editor() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* ── HOLOGRAM OVERLAY ── */}
+          {isGestureEnabled && permissionState === 'granted' && (
+            <>
+              <TopTelemetry orb={orb} gestures={gestures} handPosList={handPosList} confidenceList={confidenceList} />
+              <div className="viewport-hologram-overlay">
+                {landmarksList.map((hand, i) => (
+                  <HandHUD key={i} landmarks={hand} accent={orb.accent} gesture={gestures[i]} confidence={confidenceList[i]} isSecondary={i > 0} />
+                ))}
+                <StarkHUD accent={orb.accent} handPos={handPosList[0]} gesture={gestures[0]} confidence={confidenceList[0]} />
+              </div>
+            </>
+          )}
 
           {/* REAL THREE.JS CANVAS */}
           <div className="viewport-canvas-area">
@@ -933,77 +1066,9 @@ export default function Editor() {
                 />
               </Suspense>
             </Canvas>
+          </div>
 
-            {/* Neural Monitor PIP — Bottom Corner Technical Window */}
-            <div className={`stark-monitor-pip ${isGestureEnabled && permissionState === 'granted' ? 'active' : ''}`}>
-                <div className="pip-header">
-                   <span>NEURAL_LINK: {gestures[0] === 'NONE' ? 'SEARCHING...' : 'ACTIVE'}</span>
-                   <div className={`pip-dot ${gestures[0] !== 'NONE' ? 'pulse' : ''}`} />
-                </div>
-               <div className="pip-content">
-                  <video 
-                    ref={videoRef}
-                    className="pip-video"
-                    playsInline 
-                    muted 
-                  />
-                  {/* Status Overlay in PIP */}
-                  <div className="pip-status-overlay">
-                    <div className="status-label">{isSynthesizing ? 'SYNTHESIZING' : (gestures[0] === 'PINCH' ? 'TARGET_LOCKED' : 'NEURAL_SYNC')}</div>
-                    <div className="status-gesture">{isSynthesizing ? 'LAUNCHING...' : (gestures[0] !== 'NONE' ? `G: ${gestures[0]}` : 'WAITING_FOR_HAND')}</div>
-                  </div>
-                  
-                  {/* Holographic 3D Overlay Layer */}
-                  {isGestureEnabled && landmarksList[0] && (
-                    <div className="holographic-pip-overlay">
-                       <Canvas camera={{ position: [0,0,2] }}>
-                          <ambientLight intensity={1} />
-                          <pointLight position={[2,2,2]} />
-                          <group position={[
-                             (handPosList[0].x - 0.5) * 5, 
-                             (0.5 - handPosList[0].y) * 4, 
-                             0
-                          ]}>
-                             <group scale={0.4} rotation={[0.5, 0.5, 0]}>
-                                {ghostObject.parts ? ghostObject.parts.map((part, i) => (
-                                   <mesh key={i} position={part.position} scale={part.scale} rotation={part.rotation}>
-                                      <primitive object={makeGeo(part.type.toLowerCase(), part.args || [1,1,1])} attach="geometry" />
-                                      <meshStandardMaterial color={orb.accent} wireframe transparent opacity={0.6} />
-                                   </mesh>
-                                )) : (
-                                   <mesh>
-                                      <primitive object={makeGeo(PRIMITIVES[ghostObject.type]?.geometry || 'box', PRIMITIVES[ghostObject.type]?.args || [1,1,1])} attach="geometry" />
-                                      <meshStandardMaterial color={orb.accent} wireframe transparent opacity={0.6} />
-                                   </mesh>
-                                )}
-                             </group>
-                          </group>
-                       </Canvas>
-                    </div>
-                  )}
-
-                  {/* Hand Landmark HUD — Perfectly aligned in PIP window */}
-                  {isGestureEnabled && permissionState === 'granted' && landmarksList[0] && (
-                    <HandHUD landmarks={landmarksList[0]} accent={orb.accent} gesture={gestures[0]} confidence={confidenceList[0]} />
-                  )}
-                  {isGestureEnabled && permissionState === 'granted' && landmarksList[1] && (
-                    <HandHUD landmarks={landmarksList[1]} accent={orb.accent} gesture={gestures[1]} confidence={confidenceList[1]} isSecondary />
-                  )}
-               </div>
-               <div className="pip-footer">
-                  <span>RES: 640x480</span>
-                  <div className="pip-signal">
-                    <span>SIGNAL: </span>
-                    <div className="signal-bars">
-                      {Array.from({length:5}).map((_,i) => (
-                        <div key={i} className={`sig-bar ${confidence > (i*0.2) ? 'active' : ''}`} />
-                      ))}
-                    </div>
-                  </div>
-               </div>
-            </div>
-
-            {/* Overlays */}
+          {/* Overlays */}
             {permissionState === 'denied' && (
               <div className="stark-error-msg">
                 <AlertCircle size={13}/> Camera denied — check browser settings
@@ -1026,12 +1091,11 @@ export default function Editor() {
                 <BoxIcon size={14}/> Select an object to manipulate with gestures
               </div>
             )}
-            {isGestureEnabled && permissionState === 'granted' && !landmarks && (
+            {isGestureEnabled && permissionState === 'granted' && !landmarksList[0] && (
               <div className="stark-hint-msg" style={{top: '120px', color: '#fca5a5'}}>
                 <Hand size={14}/> Waiting for hand... (Move hand closer to camera)
               </div>
             )}
-          </div>
 
           {/* TIMELINE */}
           <div className="timeline-zone">
