@@ -137,7 +137,7 @@
   display: flex;
   gap: 16px;
   align-items: center;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 100 !important;
   pointer-events: auto !important;
@@ -205,6 +205,25 @@
   position: relative;
   z-index: 10;
   margin: -40px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage-glow-fallback {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+  filter: blur(40px);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: atmospheric-pulse 4s infinite ease-in-out;
+}
+
+@keyframes atmospheric-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
 }
 
 .stage-hud-top {

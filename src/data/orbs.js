@@ -1,62 +1,106 @@
-export const ORB_MODES = [
-  {
-    id: 'nova',
-    name: 'NOVA CORE',
-    color: '#9a3412', // Mature Rust/Amber
-    secondaryColor: '#451a03',
-    description: 'High-intensity fusion core for cinematic lighting and photorealistic rendering.',
-    coreType: 'Fusion Nucleus',
-    particleCount: 80,
-    pulseSpeed: 2.5,
+/**
+ * AetherForge Neural Core Registry (v4.0)
+ * Defines the personalities, aesthetics, and behavioral logic for the Stark-grade orb system.
+ */
+
+export const ORB_DATA = {
+  nova: {
+    id: "nova",
+    name: "Nova Core",
+    role: "Cinematic Director",
+    primaryColor: "#fbbf24", // Gold
+    secondaryColor: "#f59e0b", // Amber
+    accentColor: "#fff7ed", // Warm White
+    description: "Showcase renders, presentation mode, and hero lighting composition.",
+    behavior: {
+      pulseSpeed: 1.2,
+      ringSpeed: 0.05,
+      bloomIntensity: 1.5,
+      coreDistortion: 0.4
+    }
   },
-  {
-    id: 'echo',
-    name: 'ECHO CORE',
-    color: '#581c87', // Deep Indigo
-    secondaryColor: '#2e1065',
-    description: 'Bioluminescent neural lattice for intuitive scene assembly.',
-    coreType: 'Neural Lattice',
-    particleCount: 60,
-    pulseSpeed: 1.2,
+  sentinel: {
+    id: "sentinel",
+    name: "Sentinel Core",
+    role: "Technical Architect",
+    primaryColor: "#06b6d4", // Cyan
+    secondaryColor: "#0e7490", // Cool Blue
+    accentColor: "#ecfeff", // Cool White
+    description: "System analysis, structural integrity, and structural optimization workflows.",
+    behavior: {
+      pulseSpeed: 0.8,
+      ringSpeed: 0.08,
+      bloomIntensity: 1.0,
+      coreDistortion: 0.2
+    }
   },
-  {
-    id: 'sentinel',
-    name: 'SENTINEL CORE',
-    color: '#0e7490', // Deep Ocean Cyan (Mature)
-    secondaryColor: '#083344',
-    description: 'Analytical shell for scene structural auditing and optimization.',
-    coreType: 'Logic Matrix',
-    particleCount: 40,
-    pulseSpeed: 1.0,
+  echo: {
+    id: "echo",
+    name: "Echo Core",
+    role: "Voice Companion",
+    primaryColor: "#a855f7", // Violet
+    secondaryColor: "#d946ef", // Magenta
+    accentColor: "#fdf4ff", // Soft Blue-Violet
+    description: "Voice-native prompting, multilingual communication, and sentient assistance.",
+    behavior: {
+      pulseSpeed: 2.5, // Reactive
+      ringSpeed: 0.12,
+      bloomIntensity: 1.2,
+      coreDistortion: 0.8 // Fluid waveform
+    }
   },
-  {
-    id: 'prism',
-    name: 'PRISM CORE',
-    color: '#155e75', // Dark Cyan
-    secondaryColor: '#164e63',
-    description: 'Refractive array for procedural design and material synthesis.',
-    coreType: 'Refractive Array',
-    particleCount: 100,
-    pulseSpeed: 1.8,
+  forge: {
+    id: "forge",
+    name: "Forge Core",
+    role: "Build Engineer",
+    primaryColor: "#f97316", // Orange
+    secondaryColor: "#dc2626", // Red-Orange
+    accentColor: "#fef3c7", // Warm Gold
+    description: "Asset creation, object generation, and industrial-grade modeling protocols.",
+    behavior: {
+      pulseSpeed: 1.8,
+      ringSpeed: 0.15,
+      bloomIntensity: 2.0, // High power
+      coreDistortion: 0.6 // Denser energy
+    }
   },
-  {
-    id: 'forge',
-    name: 'FORGE CORE',
-    color: '#9f1239', // Deep Rose
-    secondaryColor: '#4c0519',
-    description: 'Heavy-duty constructor module for complex object manufacturing.',
-    coreType: 'Matter Replicator',
-    particleCount: 120,
-    pulseSpeed: 2.0,
+  prism: {
+    id: "prism",
+    name: "Prism Core",
+    role: "Style Explorer",
+    primaryColor: "#2dd4bf", // Teal
+    secondaryColor: "#6366f1", // Indigo
+    accentColor: "#f0f9ff", // Iridescent White
+    description: "Visual concept generation, style explorer, and iridescent creative variations.",
+    behavior: {
+      pulseSpeed: 1.0,
+      ringSpeed: 0.02, // Slow elegant
+      bloomIntensity: 1.8,
+      coreDistortion: 0.9 // Highly refractive
+    }
   },
-  {
-    id: 'quantum',
-    name: 'QUANTUM CORE',
-    color: '#166534', // Deep Forest Green
-    secondaryColor: '#052e16',
-    description: 'Super-cooled processor core for real-time physics and simulation.',
-    coreType: 'Qubit Processor',
-    particleCount: 150,
-    pulseSpeed: 3.0,
+  quantum: {
+    id: "quantum",
+    name: "Quantum Core",
+    role: "Experimental Intelligence",
+    primaryColor: "#ffffff", // Pure White
+    secondaryColor: "#06b6d4", // Pale Cyan
+    accentColor: "#e2e8f0", // Silver
+    description: "Advanced simulation, experimental systems, and quantum-state intelligence.",
+    behavior: {
+      pulseSpeed: 0.5, // Mysterious
+      ringSpeed: 0.25, // Deep turbulence
+      bloomIntensity: 1.4,
+      coreDistortion: 1.2 // Unstable but controlled
+    }
   }
-];
+};
+
+export const ORB_MODES = {
+  IDLE: 'idle',
+  LISTENING: 'listening',
+  PROCESSING: 'processing',
+  ALERT: 'alert'
+};
+
+export const getOrbById = (id) => ORB_DATA[id] || ORB_DATA.sentinel;

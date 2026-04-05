@@ -13,6 +13,10 @@ import { Canvas, useFrame, useThree, useLoader } from "@react-three/fiber";
 import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport, Environment, Float, Sphere, MeshDistortMaterial, Line, useVideoTexture } from '@react-three/drei';
 import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from 'three';
+import { useHands } from '../hooks/useHands';
+import { useAIEngine } from '../hooks/useAIEngine';
+import StarkOrb from '../components/common/AssistantOrb';
+import { ORB_MODES } from '../data/orbs';
 import {
   Settings, Activity, Plus, Hand, Move, RotateCw, Maximize,
   MousePointer2, Eye, Layers, Film, Trash2, Copy, Clock,
@@ -21,8 +25,6 @@ import {
   Globe, Square, CopyCheck, Play, Save, HelpCircle
 } from "lucide-react";
 import "./Editor.css";
-import { useHands } from "../hooks/useHands";
-import { useAIEngine } from "../hooks/useAIEngine";
 import { ChestHero3D } from "../components/landing/ChestHero3D";
 import { MODEL_TEMPLATES, assembleFromAI, applyAnimation } from '../utils/ModelFactory';
 
@@ -1022,6 +1024,50 @@ export default function Editor() {
           <ToolBtn icon={RotateCw} active={transformMode==='rotate'}    label="Rotate"      sub="R" onClick={()=>setTransformMode('rotate')}    accent={orb.accent} />
           <ToolBtn icon={Maximize} active={transformMode==='scale'}     label="Scale"       sub="S" onClick={()=>setTransformMode('scale')}     accent={orb.accent} />
 
+          <div className="shelf-section-label">AI PROTOCOL</div>
+          <div style={{ height: '120px', position: 'relative', width: '100%', overflow: 'hidden', pointerEvents: 'none' }}>
+            <Canvas camera={{ position: [0, 0, 5], fov: 40 }}>
+              <ambientLight intensity={1} />
+              <StarkOrb 
+                config={orb} 
+                active={isVoiceActive || isAssistantSpeaking} 
+                processing={isSynthesizing || isVisionRunning}
+                scale={1}
+              />
+            </Canvas>
+          </div>
+          
+          <div className="shelf-section-label">NEURAL SELECTOR</div>
+          <div className="orb-selection-grid">
+            {ORB_MODES.map(o => (
+              <div 
+                key={o.id} 
+                className={`orb-selection-item ${orb.id === o.id ? 'active' : ''}`}
+                onClick={() => setOrb(o)}
+                title={o.name}
+              >
+                 <div className="orb-preview-container">
+                    <Canvas orthographic camera={{ zoom: 35, position: [0, 0, 5] }}>
+                       <ambientLight intensity={1} />
+                       <StarkOrb 
+                         config={o} 
+                         active={orb.id === o.id} 
+                         processing={false} 
+                         scale={0.25} 
+                       />
+                    </Canvas>
+                 </div>
+              </div>
+            ))}
+          </div>
+
+          <ToolBtn 
+            icon={Bot} 
+            label="Vision" 
+            active={isVisionRunning || gestureRef.current[0] === 'PEACE'}
+            onClick={handleVisionAI}
+          />
+
           <div className="shelf-section-label">MESH</div>
           <ToolBtn icon={Plus}     label="Add Mesh"   sub="⇧A" onClick={()=>setShowAddPanel(v=>!v)}     accent={orb.accent} />
           <ToolBtn icon={Copy}     label="Duplicate"  sub="⇧D" onClick={handleDuplicate}     accent={orb.accent} />
@@ -1033,10 +1079,9 @@ export default function Editor() {
 
           <div className="shelf-spacer"/>
           <div className="shelf-section-label">AI PROTOCOL</div>
-          <AssistantOrb 
+          <StarkOrb 
             orbId={orb.id} 
-            active={isVoiceActive || isAssistantSpeaking} 
-            processing={isSynthesizing || isVisionRunning}
+            state={isSynthesizing || isVisionRunning ? 'processing' : isVoiceActive || isAssistantSpeaking ? 'listening' : 'idle'}
           />
           <ToolBtn 
             icon={Bot} 

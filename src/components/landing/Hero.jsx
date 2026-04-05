@@ -32,7 +32,7 @@ const ORBS = [
   {
     id: "sentinel",
     name: "Sentinel Core",
-    accent: "#22d3ee",
+    accent: "#a5f3fc", // Cyan 200
     desc: "Technical analysis, scene structure, and precision workflows.",
     personality: "Technical Architect",
     status: "Active"
@@ -46,20 +46,28 @@ const ORBS = [
     status: "Standby"
   },
   {
+    id: "forge",
+    name: "Forge Core",
+    accent: "#f97316",
+    desc: "Asset creation, object generation, and industrial workflows.",
+    personality: "Build Engineer",
+    status: "Offline"
+  },
+  {
     id: "prism",
     name: "Prism Core",
-    accent: "#818cf8",
+    accent: "#2dd4bf",
     desc: "Creative catalyst for color theory and aesthetic refinement.",
-    personality: "Creative Catalyst",
+    personality: "Style Explorer",
     status: "Optimization"
   },
   {
     id: "quantum",
     name: "Quantum Core",
-    accent: "#34d399",
-    desc: "Performance tuning and high-frequency creative geometry.",
-    personality: "Efficiency Engine",
-    status: "Active"
+    accent: "#e2e8f0",
+    desc: "Advanced logic, simulation, and high-frequency creative geometry.",
+    personality: "Experimental Intel",
+    status: "Restricted"
   }
 ];
 
@@ -146,7 +154,12 @@ export default function Hero({ isSelectionMode, onConfirm }) {
 
             {/* 3D HERO STAGE - RE-ENABLED */}
             <div className="hero-3d-stage">
-              <Canvas camera={{ position: [0, 0, 3.5], fov: 45 }}>
+              <div className="stage-glow-fallback" />
+              <Canvas 
+                id="stark-hero-canvas"
+                gl={{ antialias: false, powerPreference: "high-performance", alpha: true }}
+                camera={{ position: [0, 0, 3.5], fov: 45 }}
+              >
                 <ambientLight intensity={0.4} />
                 <ChestHero3D orb={activeOrb} />
               </Canvas>

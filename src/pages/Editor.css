@@ -732,3 +732,50 @@
 .cam-dot.denied  { background: #f87171; }
 .pulse-dot { width: 7px; height: 7px; border-radius: 50%; animation: pulseAnim 1.2s infinite; }
 @keyframes pulseAnim { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.4); opacity: 0; } }
+
+/* ─── NEURAL ORB SELECTOR ─── */
+.orb-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.orb-selection-item {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.orb-selection-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.orb-selection-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--orb-accent);
+  box-shadow: 0 0 12px rgba(var(--orb-accent-rgb), 0.3);
+}
+
+.orb-preview-container {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.5));
+}
+
