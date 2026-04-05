@@ -53,9 +53,8 @@ export function ChestHero3D({ orb }) {
           Ensures absolute aesthetic parity across the entire platform.
       */}
       <StarkOrb 
-         config={orbConfig} 
-         active={true} 
-         processing={false} 
+         orbId={orb?.id || 'sentinel'} 
+         state="activated"
          scale={1.2}
       />
 
