@@ -742,6 +742,20 @@ export default function Editor() {
     setChatHistory(prev => [...prev, { role:'assistant', content:'Commands: generate [type] · move up/down/left/right/forward/back [n] · rotate [axis] [deg] · scale [n] · spin on/off · wireframe on/off · delete' }]);
   }, [selectedId, selectedObj, updateSelected, deleteSelected, setRotDeg, addObject]);
 
+  // --- SPATIAL AIR DRAWING MONITOR ---
+  useEffect(() => {
+    const handleDrawn = (e) => {
+       const shape = e.detail;
+       if (Date.now() > creationCooldownRef.current) {
+          addObject(shape);
+          setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Air-Drawn Geometry Detected. Instantiating ${shape.toUpperCase()} Matrix.` }]);
+          creationCooldownRef.current = Date.now() + 2000;
+       }
+    };
+    window.addEventListener('stark:drawn', handleDrawn);
+    return () => window.removeEventListener('stark:drawn', handleDrawn);
+  }, [addObject]);
+
   // PUSH-TO-CREATE MONITOR (Stark Spatial Protocol)
   useEffect(() => {
      const interval = setInterval(() => {
@@ -1019,6 +1033,11 @@ export default function Editor() {
 
           <div className="shelf-spacer"/>
           <div className="shelf-section-label">AI PROTOCOL</div>
+          <AssistantOrb 
+            orbId={orb.id} 
+            active={isVoiceActive || isAssistantSpeaking} 
+            processing={isSynthesizing || isVisionRunning}
+          />
           <ToolBtn 
             icon={Bot} 
             label="Vision Scan" 

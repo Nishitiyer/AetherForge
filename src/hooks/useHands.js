@@ -53,6 +53,9 @@ export function useHands() {
       setConfidenceList(data.confidenceList.length ? data.confidenceList : [0, 0]);
       
       if (data.image) setFrameData(data.image);
+      if (data.drawnShape && data.drawnShape !== 'unknown') {
+         window.dispatchEvent(new CustomEvent('stark:drawn', { detail: data.drawnShape }));
+      }
     };
     
     socket.onclose = () => {
