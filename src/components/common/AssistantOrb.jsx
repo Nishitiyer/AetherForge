@@ -95,7 +95,7 @@ const StarkOrb = ({
           <sphereGeometry args={[0.35, 32, 32]} />
           <MeshDistortMaterial
             color={orb.color}
-            speed={processing ? 15 : 4}
+            speed={state === 'processing' ? 15 : 4}
             distort={orb.distort}
             radius={1}
             wireframe
