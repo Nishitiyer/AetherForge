@@ -78,6 +78,6 @@ class AEPulseEngine:
         }
 
     def get_template(self, category, color="#ffffff"):
-        # (Existing specialized templates)
-        ...
-        return self.synthesize(category, None, color) # Redirect to universal for now
+        return self.synthesize(category, None, color)
+
+ai_engine = AEPulseEngine()

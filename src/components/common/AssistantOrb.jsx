@@ -92,27 +92,27 @@ const StarkOrb = ({
 
         {/* PHASE 1: INTERNAL NEURAL ENERGY (Distorted Core) */}
         <mesh ref={innerCoreRef}>
-          <sphereGeometry args={[0.35, 32, 32]} />
+          <sphereGeometry args={[0.35, 16, 16]} />
           <MeshDistortMaterial
             color={orb.color}
-            speed={state === 'processing' ? 15 : 4}
+            speed={state === 'processing' ? 10 : 4}
             distort={orb.distort}
             radius={1}
             wireframe
             transparent
             opacity={0.8}
             emissive={orb.color}
-            emissiveIntensity={50}
+            emissiveIntensity={10}
             toneMapped={false}
           />
         </mesh>
 
-        {/* PHASE 2: PRIMARY STARK-GLASS SHELL (Refraction) */}
+        {/* PHASE 2: PRIMARY STARK-GLASS SHELL (Refraction) - Performance Optimized */}
         <mesh>
-          <sphereGeometry args={[0.95, 48, 48]} />
+          <sphereGeometry args={[0.95, 32, 32]} />
           <MeshTransmissionMaterial
-            samples={6}
-            resolution={128}
+            samples={2}
+            resolution={64}
             thickness={2.2}
             roughness={0.04}
             chromaticAberration={0.6}
@@ -123,7 +123,7 @@ const StarkOrb = ({
             attenuationDistance={1.5}
             attenuationColor={orb.color}
             transmission={1.0}
-            envMapIntensity={2.5}
+            envMapIntensity={1.0}
           />
         </mesh>
 
@@ -137,7 +137,6 @@ const StarkOrb = ({
               position={[0, 1.35, 0]} 
               fontSize={0.06} 
               color={orb.color} 
-              font="https://fonts.gstatic.com/s/orbitron/v11/yBbg7gzZ3ol6L5TMaW2UfA.woff"
               anchorX="center"
               emissive={orb.color}
               emissiveIntensity={5}

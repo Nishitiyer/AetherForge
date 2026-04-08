@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, OrbitControls } from '@react-three/drei';
 import Orb3D from '../landing/Orb3D';
-import { ORB_MODES } from '../../data/orbs';
+import { ORB_DATA } from '../../data/orbs';
 import { useSession } from '../../context/SessionContext';
 import './ActiveVoiceAssistant.css';
 
@@ -19,7 +19,7 @@ const ActiveVoiceAssistant = ({ isListening, onClick }) => {
     return () => window.removeEventListener('aether-ai-command', handleAI);
   }, []);
 
-  const config = ORB_MODES.find(o => o.id === selectedOrbId) || ORB_MODES[0];
+  const config = ORB_DATA[selectedOrbId] || ORB_DATA.sentinel;
   const isActive = isListening || isProcessing;
 
   return (

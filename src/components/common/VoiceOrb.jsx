@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, Sparkles, Globe } from 'lucide-react';
-import { ORB_MODES } from '../../data/orbs.js';
+import { ORB_DATA } from '../../data/orbs.js';
 import './VoiceOrb.css';
 
 const VoiceOrb = ({ onTranscription, settings }) => {
@@ -8,8 +8,8 @@ const VoiceOrb = ({ onTranscription, settings }) => {
   const [pulseScale, setPulseScale] = useState(1);
   const recognitionRef = useRef(null);
   
-  // Find the current orb config based on the settings/id
-  const orbConfig = ORB_MODES.find(o => o.id === settings.id) || ORB_MODES[0];
+  // Find the current orb config based on the settings/id from the ORB_DATA registry
+  const orbConfig = ORB_DATA[settings?.id] || ORB_DATA.sentinel;
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

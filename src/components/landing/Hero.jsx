@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ChestHero3D } from "./ChestHero3D";
 import { Canvas } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
 import { useSession } from "../../context/SessionContext.jsx";
 import "./Hero.css";
 
@@ -162,6 +163,7 @@ export default function Hero({ isSelectionMode, onConfirm }) {
               >
                 <ambientLight intensity={1.5} />
                 <Suspense fallback={null}>
+                   <Environment preset="city" />
                    <ChestHero3D orb={activeOrb} />
                 </Suspense>
               </Canvas>

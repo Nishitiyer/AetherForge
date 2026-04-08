@@ -12,6 +12,7 @@ import numpy as np
 
 class HandPulseEngine:
     def __init__(self, model_filename='hand_landmarker.task'):
+        # ... existing init code ...
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         model_path = os.path.join(base_dir, 'server', model_filename)
         
@@ -28,14 +29,35 @@ class HandPulseEngine:
         )
         self.detector = vision.HandLandmarker.create_from_options(options)
         
-        # AIR DRAWING STATE
-        self.drawing_buffer = []  # Buffer for current stroke
+        # AIR DRAWING & KINETIC STATE
+        self.drawing_buffer = [] 
         self.is_drawing = False
-        self.drawing_cooldown = 0
-    
+        self.last_hp = [None, None] # To track velocity
+        self.last_timestamp = 0
+
     def dist(self, p1, p2):
-        return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2)
-    
+        # MediaPipe landmarks can be objects with x,y,z or dicts
+        try:
+            return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2)
+        except AttributeError:
+            return math.sqrt((p1['x'] - p2['x'])**2 + (p1['y'] - p2['y'])**2 + (p1['z'] - p2['z'])**2)
+
+    def calculate_velocity(self, current_hp, hand_idx):
+        if self.last_hp[hand_idx] is None:
+            return 0, 0, 0
+        
+        # Calculate deltas (1.0 = full screen)
+        dx = current_hp['x'] - self.last_hp[hand_idx]['x']
+        dy = current_hp['y'] - self.last_hp[hand_idx]['y']
+        
+        # Scale for JARVIS-grade sensitivity (matching Editor.jsx 120 threshold)
+        # Assuming 30fps, 1.0 unit across screen should be high velocity
+        vx = dx * 1000 
+        vy = dy * 1000
+        v = math.sqrt(vx**2 + vy**2)
+        
+        return vx, vy, v
+
     def process_frame(self, frame_np):
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_np)
         results = self.detector.detect(mp_image)
@@ -45,21 +67,29 @@ class HandPulseEngine:
             "landmarksList": [],
             "handPosList": [],
             "confidenceList": [],
-            "drawnShape": None  # Shape detected from buffer
+            "drawnShape": None 
         }
         
         if results.hand_landmarks:
             for i, landmarks in enumerate(results.hand_landmarks):
                 gesture = self.classify(landmarks)
                 lms = [{"x": lm.x, "y": lm.y, "z": lm.z} for lm in landmarks]
-                hp = {"x": 1.0 - landmarks[8].x, "y": landmarks[8].y, "z": landmarks[8].z, "vx": 0, "vy": 0}
+                
+                # Raw position (Index tip)
+                hp_now = {"x": 1.0 - landmarks[8].x, "y": landmarks[8].y, "z": landmarks[8].z}
+                
+                # Velocity synthesis
+                vx, vy, v = self.calculate_velocity(hp_now, i)
+                hp_now.update({"vx": vx, "vy": vy, "v": v})
+                
+                # Update history
+                self.last_hp[i] = hp_now
                 
                 # --- AIR DRAWING PROTOCOL ---
-                if i == 0: # Only primary hand draws
+                if i == 0: 
                     if gesture == "POINT":
                         self.is_drawing = True
-                        self.drawing_buffer.append((hp['x'], hp['y']))
-                        # Limit buffer to last 100 points
+                        self.drawing_buffer.append((hp_now['x'], hp_now['y']))
                         if len(self.drawing_buffer) > 100: self.drawing_buffer.pop(0)
                     else:
                         if self.is_drawing and len(self.drawing_buffer) > 10:
@@ -69,8 +99,15 @@ class HandPulseEngine:
                 
                 payload["gestures"].append(gesture)
                 payload["landmarksList"].append(lms)
-                payload["handPosList"].append(hp)
-                payload["confidenceList"].append(results.hand_score[i] if results.hand_score else 0.9)
+                payload["handPosList"].append(hp_now)
+                
+                score = 0.9
+                if results.handedness and i < len(results.handedness):
+                    score = results.handedness[i][0].score
+                payload["confidenceList"].append(score)
+        else:
+            # Clear history if hands lost
+            self.last_hp = [None, None]
                 
         return payload
 
@@ -111,17 +148,54 @@ class HandPulseEngine:
         middle_tip = landmarks[12]
         ring_tip = landmarks[16]
         pinky_tip = landmarks[20]
-        hand_size = self.dist(wrist, landmarks[9]) or 0.1
         
-        def is_ext(tip, base): return self.dist(tip, wrist) > self.dist(base, wrist) * 1.2
-        ix_ext, md_ext, rg_ext, pk_ext = is_ext(index_tip, landmarks[6]), is_ext(middle_tip, landmarks[10]), is_ext(ring_tip, landmarks[14]), is_ext(pinky_tip, landmarks[18])
+        # Base of fingers for extension check
+        thumb_ip = landmarks[3]
+        index_mcp = landmarks[5]
+        middle_mcp = landmarks[9]
+        ring_mcp = landmarks[13]
+        pinky_mcp = landmarks[17]
 
-        if self.dist(thumb_tip, index_tip) < hand_size * 0.4: return "PINCH"
-        if not any([ix_ext, md_ext, rg_ext, pk_ext]): return "GRAB"
+        hand_size = self.dist(wrist, middle_mcp) or 0.1
+        
+        def is_ext(tip, mcp): return self.dist(tip, wrist) > self.dist(mcp, wrist) * 1.15
+        
+        ix_ext = is_ext(index_tip, index_mcp)
+        md_ext = is_ext(middle_tip, middle_mcp)
+        rg_ext = is_ext(ring_tip, ring_mcp)
+        pk_ext = is_ext(pinky_tip, pinky_mcp)
+        th_ext = is_ext(thumb_tip, thumb_ip)
+
+        # 1. PINCH / OK (Precision checks)
+        dist_th_ix = self.dist(thumb_tip, index_tip)
+        if dist_th_ix < hand_size * 0.3:
+            if md_ext and rg_ext and pk_ext: return "OK"
+            return "PINCH"
+
+        # 2. GRAB / FIST (All closed)
+        if not any([ix_ext, md_ext, rg_ext, pk_ext]):
+            return "GRAB"
+
+        # 3. THUMBS UP / DOWN
+        if th_ext and not any([ix_ext, md_ext, rg_ext, pk_ext]):
+            if thumb_tip.y < thumb_ip.y: return "THUMBS_UP"
+            return "THUMBS_DOWN"
+
+        # 4. GUN (L-SIGN) - Thumb and Index extended
+        if th_ext and ix_ext and not any([md_ext, rg_ext, pk_ext]):
+            return "GUN"
+
+        # 5. POINT
         if ix_ext and not any([md_ext, rg_ext, pk_ext]): return "POINT"
+
+        # 6. PEACE
         if ix_ext and md_ext and not rg_ext and not pk_ext: return "PEACE"
+
+        # 7. ROCK ON
         if ix_ext and pk_ext and not md_ext and not rg_ext: return "ROCK_ON"
-        if ix_ext and pk_ext and md_ext and rg_ext: return "PALM"
+
+        # 8. PALM / STOP
+        if ix_ext and md_ext and rg_ext and pk_ext: return "PALM"
         
         return "IDLE"
 

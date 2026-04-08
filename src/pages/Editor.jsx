@@ -36,31 +36,34 @@ function ARBackground({ videoRef, isEnabled, frameData }) {
 
 function ARBackgroundInside({ videoRef, frameData }) {
   const { scene } = useThree();
-  const [texture, setTexture] = useState(null);
-  const videoTexture = useVideoTexture(videoRef.current || document.createElement('video'));
+  const textureRef = useRef(null);
   
   useEffect(() => {
+    if (!textureRef.current) {
+        textureRef.current = new THREE.Texture();
+        textureRef.current.encoding = THREE.sRGBEncoding;
+        scene.background = textureRef.current;
+    }
+
     if (frameData) {
-      const loader = new THREE.TextureLoader();
-      loader.load(frameData, (tex) => {
-        setTexture(tex);
-      });
+        const img = new Image();
+        img.onload = () => {
+            if (textureRef.current) {
+                textureRef.current.image = img;
+                textureRef.current.needsUpdate = true;
+            }
+        };
+        img.src = frameData;
     }
-  }, [frameData]);
 
-  useFrame(() => {
-    if (frameData && texture) {
-      scene.background = texture;
-    } else if (videoRef.current?.srcObject && videoTexture) {
-      scene.background = videoTexture;
-    }
-  });
-
-  useEffect(() => {
     return () => {
-      scene.background = new THREE.Color('#000');
+      if (textureRef.current) {
+          textureRef.current.dispose();
+          textureRef.current = null;
+      }
+      scene.background = new THREE.Color('#0f1115'); // Reset to AetherForge dark
     };
-  }, [scene]);
+  }, [frameData, scene]);
 
   return null;
 }
@@ -159,7 +162,7 @@ function freshObject(primKey) {
   };
 }
 
-function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosRef, isGestureEnabled, orb }) {
+const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRef, handPosRef, isGestureEnabled, orb, onTransformCommit }) => {
   const meshRef = useRef();
   const dualHandBaseDistRef = useRef(null);
   const dualHandBaseScaleRef = useRef(null);
@@ -180,13 +183,15 @@ function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosR
     }
     
     // ── HIGH-PERFORMANCE JARVIS GESTURE LOOP ──
+    if (!isGestureEnabled) return;
+
     const gList = gestureRef.current;
     const hpList = handPosRef.current;
     
     const g0 = gList[0];
     const hp0 = hpList[0];
 
-    if (!meshRef.current) return;
+    if (!meshRef.current || !hp0) return;
 
     // ── DISTANCE-BASED SPATIAL ATTENTION ──
     const camPos = new THREE.Vector3((hp0.x - 0.5) * 14, (0.5 - hp0.y) * 10, hp0.z * -10);
@@ -194,33 +199,47 @@ function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosR
     const isNear = distToHand < 3.0;
 
     // A. GRAB TO MOVE (Unified for all objects)
-    if (hp0 && (g0 === 'GRAB' || g0 === 'FIST') && (isSelected || isNear)) {
-      meshRef.current.position.lerp(camPos, 0.15);
+    if ((g0 === 'GRAB' || g0 === 'FIST') && (isSelected || isNear)) {
+      // Direct position follow with high responsive lerp (feels normal)
+      meshRef.current.position.lerp(camPos, 0.25);
+
+      // Rotational mirroring (Subtle tilt matching hand)
+      const tiltX = (hp0.vy * 0.01);
+      const tiltY = (hp0.vx * 0.01);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, tiltX, 0.1);
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, tiltY, 0.1);
 
       // FLICK-TO-DELETE (Stark Discard)
-      if (Math.abs(hp0.vx) > 120 || Math.abs(hp0.vy) > 120) {
+      if (Math.abs(hp0.vx) > 150 || Math.abs(hp0.vy) > 150) {
           onDelete(); 
       }
     }
     
+    // COMMIT PINCH WORK
+    if (g0 !== 'PINCH' && g0 !== 'GRAB' && (isSelected || isNear)) {
+       // Check if we need to commit
+       if (meshRef.current.position.distanceTo(obj.position) > 0.1 || meshRef.current.scale.distanceTo(obj.scale) > 0.05) {
+          onTransformCommit(obj.id, { position: meshRef.current.position.clone(), scale: meshRef.current.scale.clone() });
+       }
+    }
+    
     // B. PINCH TO SCULPT (Neural Deformation)
-    if (hp0 && g0 === 'PINCH' && isNear) {
-       // Stark Sculp logic: Distort towards hand
-       const pullIntensity = (1.0 - (distToHand / 3.0)) * 0.1;
-       meshRef.current.scale.x += (Math.abs(hp0.vx) * 0.002);
-       meshRef.current.scale.y += (Math.abs(hp0.vy) * 0.002);
-       meshRef.current.position.lerp(camPos, pullIntensity);
-       
-       // Visual feedback (Neural glow)
+    if (g0 === 'PINCH' && (isSelected || isNear)) {
+       // Stark Sculp logic: Bidirectional scale based on movement direction
+       meshRef.current.scale.x += (hp0.vx * 0.0015);
+       meshRef.current.scale.y -= (hp0.vy * 0.0015); // Inverted Y for intuitive drag
+       meshRef.current.position.lerp(camPos, 0.05);
+
+       // "Detailing" HUD effect
        if (isSelected) {
-          meshRef.current.scale.multiplyScalar(1 + Math.sin(time * 20) * 0.01);
+          meshRef.current.scale.multiplyScalar(1 + Math.sin(time * 30) * 0.005);
        }
     }
     
     // C. DUAL-HAND PINCH (SCALE)
     const g1 = gList[1];
     const hp1 = hpList[1];
-    if (hp0 && hp1 && g0 === 'PINCH' && g1 === 'PINCH' && isSelected) {
+    if (hp1 && g0 === 'PINCH' && g1 === 'PINCH' && isSelected) {
        const dist = Math.sqrt((hp0.x-hp1.x)**2 + (hp0.y-hp1.y)**2);
        if (dualHandBaseDistRef.current === null) {
          dualHandBaseDistRef.current = dist;
@@ -230,6 +249,10 @@ function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosR
          meshRef.current.scale.setScalar(dualHandBaseScaleRef.current * factor);
        }
     } else {
+       if (dualHandBaseDistRef.current !== null) {
+          // Gesture released: COMMIT SCALE
+          onTransformCommit(obj.id, { scale: meshRef.current.scale.clone() });
+       }
        dualHandBaseDistRef.current = null;
     }
 
@@ -270,15 +293,26 @@ function SceneObject({ obj, isSelected, onSelect, onDelete, gestureRef, handPosR
       ) : (
         <mesh castShadow receiveShadow>
           <primitive object={makeGeo(obj.type.toLowerCase(), PRIMITIVES[obj.type]?.args || [1,1,1])} attach="geometry" />
-          <meshStandardMaterial color={obj.color} wireframe={obj.wireframe} emissive={obj.emissive} emissiveIntensity={obj.emissiveIntensity} />
+          {isSelected && (g0 === 'PINCH') ? (
+            <MeshDistortMaterial 
+              color={obj.color} 
+              speed={5} 
+              distort={0.4} 
+              wireframe={obj.wireframe} 
+              emissive={orb.accent} 
+              emissiveIntensity={1}
+            />
+          ) : (
+            <meshStandardMaterial color={obj.color} wireframe={obj.wireframe} emissive={obj.emissive} emissiveIntensity={obj.emissiveIntensity} />
+          )}
         </mesh>
       )}
     </group>
   );
-}
+});
 
 /* ────────────────── STARK WORKSPACE GRID ────────────────── */
-function StarkWorkspace({ handPos, accent }) {
+function StarkWorkspace({ accent }) {
   const meshRef = useRef();
   
   useFrame(({ clock }) => {
@@ -335,7 +369,7 @@ function FingertipHUD({ handPosRef, gestureRef, orb }) {
 }
 
 /* ────────────────── TOP TELEMETRY PANEL ────────────────── */
-function TopTelemetry({ orb, gestures, handPosList, confidenceList }) {
+const TopTelemetry = React.memo(({ orb, gestures, handPosList, confidenceList }) => {
   const g0 = gestures[0] || 'IDLE';
   const c0 = confidenceList[0] || 0;
   
@@ -363,40 +397,32 @@ function TopTelemetry({ orb, gestures, handPosList, confidenceList }) {
       </div>
     </div>
   );
-}
+});
 
 function TetherHUD({ handPosRef, selectedObj, orb }) {
-  const lineRef = useRef();
+  const geomRef = useRef();
 
   useFrame(() => {
-    if (!lineRef.current || !selectedObj) return;
+    if (!geomRef.current || !selectedObj) return;
     const hp = handPosRef.current[0];
     if (!hp) {
-      lineRef.current.visible = false;
+      geomRef.current.setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
       return;
     }
-    lineRef.current.visible = true;
     const h3d = new THREE.Vector3((hp.x - 0.5) * 14, (0.5 - hp.y) * 10, 0);
-    lineRef.current.setPoints([h3d, selectedObj.position]);
+    geomRef.current.setFromPoints([h3d, selectedObj.position]);
   });
 
   return (
-    <Line
-      ref={lineRef}
-      points={[new THREE.Vector3(), new THREE.Vector3()]}
-      color={orb.accent}
-      lineWidth={1.5}
-      transparent
-      opacity={0.5}
-      dashed
-      dashSize={0.2}
-      gapSize={0.1}
-    />
+    <line>
+      <bufferGeometry ref={geomRef} />
+      <lineBasicMaterial color={orb.accent} transparent opacity={0.5} />
+    </line>
   );
 }
 
 /* ────────────────── VIEWPORT SCENE ────────────────── */
-function ViewportScene({ objects, selectedId, onSelect, onDelete, onTransformCommit, transformMode, gestureRef, handPosRef, isGestureEnabled, orb, gestures, handPosList, videoRef, frameData }) {
+const ViewportScene = React.memo(({ objects, selectedId, onSelect, onDelete, onTransformCommit, transformMode, gestureRef, handPosRef, orb, isGestureEnabled }) => {
   const selectedObj = useMemo(() => objects.find(o => o.id === selectedId), [objects, selectedId]);
   const tcGroupRef  = useRef();
 
@@ -411,19 +437,16 @@ function ViewportScene({ objects, selectedId, onSelect, onDelete, onTransformCom
     // ── JARVIS INTERACTION GRID ──
   return (
     <>
-      <ARBackground videoRef={videoRef} isEnabled={isGestureEnabled} frameData={frameData} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[8, 12, 6]}  intensity={1.4} castShadow />
       <directionalLight position={[-6, 4, -4]} intensity={0.4} color="#8ab4f8" />
       <pointLight position={[0, 6, 0]} intensity={0.3} />
 
-      <StarkWorkspace handPos={handPosList[0]} accent={orb.accent} />
+      <StarkWorkspace accent={orb.accent} />
 
-      {isGestureEnabled && (
-        <FingertipHUD handPosRef={handPosRef} gestureRef={gestureRef} orb={orb} />
-      )}
+      <FingertipHUD handPosRef={handPosRef} gestureRef={gestureRef} orb={orb} />
 
-      {selectedObj && gestureRef.current[0] === 'PINCH' && (
+      {selectedObj && (
         <TetherHUD handPosRef={handPosRef} selectedObj={selectedObj} orb={orb} />
       )}
 
@@ -438,6 +461,7 @@ function ViewportScene({ objects, selectedId, onSelect, onDelete, onTransformCom
           isSelected={obj.id === selectedId}
           onSelect={onSelect}
           onDelete={() => onDelete(obj.id)}
+          onTransformCommit={onTransformCommit}
           gestureRef={gestureRef}
           handPosRef={handPosRef}
           isGestureEnabled={isGestureEnabled}
@@ -458,13 +482,6 @@ function ViewportScene({ objects, selectedId, onSelect, onDelete, onTransformCom
               });
             }
           }}
-          onChange={(e) => {
-            // Real-time synchronization during a drag
-            if (tcGroupRef.current) {
-               // Notify other parts of the system if needed, or let Drei handle mesh visuals
-               // Usually for preview we just let tcGroupRef do its job as a visual gizmo.
-            }
-          }}
         >
           <group
             ref={tcGroupRef}
@@ -481,7 +498,7 @@ function ViewportScene({ objects, selectedId, onSelect, onDelete, onTransformCom
       </GizmoHelper>
     </>
   );
-}
+});
 
 /* ════════════════════════════════════════════════════════════
                      MAIN EDITOR PAGE
@@ -504,6 +521,8 @@ export default function Editor() {
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDiagnostic, setIsDiagnostic] = useState(false);
+  const [isVisionRunning, setIsVisionRunning] = useState(false);
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const [mockLandmarks, setMockLandmarks] = useState(null);
   const recognitionRef = useRef(null);
 
@@ -776,8 +795,15 @@ export default function Editor() {
         }
 
         if (gestures[0] === 'PEACE' && Date.now() > creationCooldownRef.current) {
-          handleVisionAI();
-          creationCooldownRef.current = Date.now() + 5000;
+          if (selectedId) {
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Engaged: Analyzing Geometry for Neural Refinement...' }]);
+             // Simulate "detailing" by slightly randomized scaling of parts or calling vision
+             updateSelected({ scale: selectedObj.scale.clone().multiplyScalar(1.1) });
+             creationCooldownRef.current = Date.now() + 1000;
+          } else {
+             handleVisionAI();
+             creationCooldownRef.current = Date.now() + 5000;
+          }
         }
 
         // NEW STARK GESTURES
@@ -818,6 +844,19 @@ export default function Editor() {
              addObject('torus');
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Toroidal Geometry Synchronized.' }]);
              creationCooldownRef.current = Date.now() + 1500;
+          } else if (gestures[0] === 'GUN' && selectedId) {
+             // Explode effect logic
+             updateSelected({ animation: 'EXPLODE' });
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Kinetic Disruption Initialized.' }]);
+             creationCooldownRef.current = Date.now() + 2000;
+          } else if (gestures[0] === 'OK' && !selectedId) {
+             // Auto-select nearest
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Analysis Context Locked.' }]);
+             creationCooldownRef.current = Date.now() + 1000;
+          } else if (gestures[0] === 'THUMBS_UP') {
+             // Zoom In (Perspective adjust)
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Magnifying Spatial Grid.' }]);
+             creationCooldownRef.current = Date.now() + 500;
           }
         }
 
@@ -1025,37 +1064,30 @@ export default function Editor() {
           <ToolBtn icon={Maximize} active={transformMode==='scale'}     label="Scale"       sub="S" onClick={()=>setTransformMode('scale')}     accent={orb.accent} />
 
           <div className="shelf-section-label">AI PROTOCOL</div>
-          <div style={{ height: '120px', position: 'relative', width: '100%', overflow: 'hidden', pointerEvents: 'none' }}>
-            <Canvas camera={{ position: [0, 0, 5], fov: 40 }}>
-              <ambientLight intensity={1} />
-              <StarkOrb 
-                config={orb} 
-                active={isVoiceActive || isAssistantSpeaking} 
-                processing={isSynthesizing || isVisionRunning}
-                scale={1}
-              />
-            </Canvas>
+          <div style={{ height: '80px', position: 'relative', width: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+             {/* Unified Assistant Orb Preview */}
+             <div className={`status-orb-css ${isVoiceActive ? 'active' : ''}`} style={{ 
+               width: '40px', 
+               height: '40px', 
+               borderRadius: '50%', 
+               background: orb.accent,
+               boxShadow: `0 0 20px ${orb.accent}`,
+               animation: isProcessing ? 'pulse 1s infinite' : 'none'
+             }} />
           </div>
           
           <div className="shelf-section-label">NEURAL SELECTOR</div>
           <div className="orb-selection-grid">
-            {ORB_MODES.map(o => (
+            {Object.entries(ORBS).map(([id, o]) => (
               <div 
-                key={o.id} 
-                className={`orb-selection-item ${orb.id === o.id ? 'active' : ''}`}
-                onClick={() => setOrb(o)}
+                key={id} 
+                className={`orb-selection-item ${selectedOrbId === id ? 'active' : ''}`}
+                onClick={() => setSelectedOrbId(id)}
                 title={o.name}
               >
-                 <div className="orb-preview-container">
-                    <Canvas orthographic camera={{ zoom: 35, position: [0, 0, 5] }}>
-                       <ambientLight intensity={1} />
-                       <StarkOrb 
-                         config={o} 
-                         active={orb.id === o.id} 
-                         processing={false} 
-                         scale={0.25} 
-                       />
-                    </Canvas>
+                 <div className="orb-preview-container" style={{ background: o.accent + '22', borderRadius: '50%', width: '100%', height: '100%', border: `1px solid ${o.accent}44` }}>
+                    {/* Replaced per-item Canvas with CSS preview to save WebGL contexts */}
+                    <div className="orb-preview-glow" style={{ boxShadow: `0 0 15px ${o.accent}` }} />
                  </div>
               </div>
             ))}
@@ -1079,12 +1111,16 @@ export default function Editor() {
 
           <div className="shelf-spacer"/>
           <div className="shelf-section-label">AI PROTOCOL</div>
-          <Suspense fallback={null}>
-            <StarkOrb 
-              orbId={orb.id} 
-              state={isSynthesizing || isVisionRunning ? 'processing' : isVoiceActive || isAssistantSpeaking ? 'listening' : 'idle'}
-            />
-          </Suspense>
+          <div style={{ height: '60px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className={`status-orb-css ${isVoiceActive ? 'active' : ''}`} style={{ 
+               width: '30px', 
+               height: '30px', 
+               borderRadius: '50%', 
+               background: orb.accent,
+               boxShadow: `0 0 20px ${orb.accent}`,
+               animation: isProcessing ? 'pulse 1s infinite' : 'none'
+             }} />
+          </div>
           <ToolBtn 
             icon={Bot} 
             label="Vision Scan" 
@@ -1096,28 +1132,7 @@ export default function Editor() {
           <div className="shelf-section-label">SPATIAL</div>
           <ToolBtn icon={Hand} active={isGestureEnabled} label="Gesture" sub="CAM" onClick={toggleGestures} accent={orb.accent} danger={permissionState==='denied'} />
           
-          <div className="shelf-monitor-container">
-            <div className="shelf-monitor-label">
-              <Camera size={8}/> <span>NEURAL_HUB</span>
-            </div>
-            <div className={`shelf-monitor ${isGestureEnabled && permissionState === 'granted' ? 'active' : ''}`}>
-              <video 
-                ref={videoRef}
-                className="shelf-vid"
-                playsInline 
-                muted 
-              />
-              {/* Hand HUD Overlay in Shelf */}
-              {isGestureEnabled && permissionState === 'granted' && landmarksList[0] && (
-                <div className="shelf-hud-overlay">
-                  <HandHUD landmarks={landmarksList[0]} accent={orb.accent} gesture={gestures[0]} confidence={confidenceList[0]} />
-                </div>
-              )}
-            </div>
-            <div className={`shelf-status-bar`}>
-              <div className="shelf-status-fill" style={{ width: isInitializing ? '100%' : (isGestureEnabled ? '100%' : '0%'), opacity: isInitializing ? 0.3 : 1 }} />
-            </div>
-          </div>
+          {/* Removed shelf-monitor-container from here to move to PIP window */}
         </aside>
 
         {/* ── CENTRAL VIEWPORT ── */}
@@ -1135,29 +1150,27 @@ export default function Editor() {
           </div>
 
           {/* ADD MESH PANEL */}
-          <AnimatePresence>
-            {showAddPanel && (
-              <motion.div className="add-object-panel"
-                initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}>
-                <div className="aop-header">
-                  <span className="aop-title">ADD MESH PRIMITIVE</span>
-                  <button className="aop-close" onClick={()=>setShowAddPanel(false)}>✕</button>
-                </div>
-                <div className="aop-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                  {Object.entries(PRIMITIVES).map(([key, p]) => (
-                    <button key={key} className="aop-item" onClick={()=>addObject(key)}
-                      style={{borderColor: p.color+'44'}}>
-                      <span className="aop-icon" style={{color: p.color}}>{p.icon}</span>
-                      <span>{p.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* MESH PANEL - Simplified for stability */}
+          {showAddPanel && (
+            <div className="add-object-panel glass-panel">
+              <div className="aop-header">
+                <span className="aop-title">ADD MESH PRIMITIVE</span>
+                <button className="aop-close" onClick={()=>setShowAddPanel(false)}>✕</button>
+              </div>
+              <div className="aop-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                {Object.entries(PRIMITIVES).map(([key, p]) => (
+                  <button key={key} className="aop-item" onClick={()=>addObject(key)}
+                    style={{borderColor: p.color+'44'}}>
+                    <span className="aop-icon" style={{color: p.color}}>{p.icon}</span>
+                    <span>{p.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── HOLOGRAM OVERLAY ── */}
-          {isGestureEnabled && permissionState === 'granted' && (
+          {isGestureEnabled && permissionState === 'granted' && !isInitializing && (
             <>
               <TopTelemetry orb={orb} gestures={gestures} handPosList={handPosList} confidenceList={confidenceList} />
               <div className="viewport-hologram-overlay">
@@ -1169,17 +1182,25 @@ export default function Editor() {
             </>
           )}
 
-          {/* REAL THREE.JS CANVAS */}
+          {/* ── REAL THREE.JS CANVAS ── */}
           <div className="viewport-canvas-area">
-            {isGenerating && (
-              <div className="generation-overlay">
-                <motion.div className="loader-ring"
-                  animate={{rotate:360}}
-                  transition={{repeat:Infinity,duration:0.8,ease:'linear'}}
-                  style={{borderTopColor:orb.accent}}/>
-                <span className="loader-text">GENERATING...</span>
-              </div>
-            )}
+            <AnimatePresence>
+              {isGenerating && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="generation-overlay"
+                  key="gen-overlay"
+                >
+                  <motion.div className="loader-ring"
+                    animate={{rotate:360}}
+                    transition={{repeat:Infinity,duration:0.8,ease:'linear'}}
+                    style={{borderTopColor:orb.accent}}/>
+                  <span className="loader-text">GENERATING...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <Canvas
               shadows
@@ -1192,18 +1213,18 @@ export default function Editor() {
               }}
             >
               <Suspense fallback={null}>
-                <ARBackground videoRef={videoRef} isEnabled={isGestureEnabled} />
+                <Environment preset="city" />
+                <ARBackground videoRef={videoRef} isEnabled={isGestureEnabled} frameData={frameData} />
                 
                 <ViewportScene
                   objects={objects}
                   selectedId={selectedId}
                   onSelect={setSelectedId}
+                  onDelete={deleteSelected}
                   onTransformCommit={commitTransform}
                   transformMode={transformMode}
                   gestureRef={gestureRef}
                   handPosRef={handPosRef}
-                  gestures={gestures}
-                  handPosList={handPosList}
                   isGestureEnabled={isGestureEnabled}
                   orb={orb}
                 />
@@ -1223,10 +1244,7 @@ export default function Editor() {
               </div>
             )}
             
-            {/* Cinematic Stark HUD Overlay */}
-            {isGestureEnabled && permissionState === 'granted' && !isInitializing && (
-              <StarkHUD accent={orb.accent} handPos={handPos} gesture={gesture} confidence={confidence} />
-            )}
+
 
             {/* User Guidance Overlay */}
             {isGestureEnabled && permissionState === 'granted' && !selectedId && (
@@ -1239,6 +1257,42 @@ export default function Editor() {
                 <Hand size={14}/> Waiting for hand... (Move hand closer to camera)
               </div>
             )}
+
+            {/* ── STARK NEURAL MONITOR PIP ── */}
+            <div className={`stark-monitor-pip ${isGestureEnabled ? 'active' : ''}`} style={{"--orb-accent": orb.accent}}>
+              <div className="pip-header">
+                <div className="pip-signal">
+                   <div className="pip-dot pulse" />
+                   <span>NEURAL_LINK_085</span>
+                </div>
+                <div className="signal-bars">
+                  {[1,2,3,4,5].map(i => <div key={i} className={`sig-bar ${i<4?'active':''}`} />)}
+                </div>
+              </div>
+              <div className="pip-content">
+                {frameData ? (
+                  <img src={frameData} className="pip-video" alt="Neural Feed" />
+                ) : (
+                  <div className="pip-placeholder">
+                    <Camera size={32} opacity={0.2} />
+                    <span>LINKING_SENSORS...</span>
+                  </div>
+                )}
+                <div className="pip-status-overlay">
+                   <span className="status-label">SYS_READY</span>
+                   <span className="status-gesture">{gestures[0] || 'IDLE'}</span>
+                </div>
+                <div className="holographic-pip-overlay">
+                  {/* Miniature Hand HUD in PIP */}
+                  {landmarksList[0] && (
+                    <HandHUD landmarks={landmarksList[0]} accent={orb.accent} gesture={gestures[0]} confidence={confidenceList[0]} isMini />
+                  )}
+                </div>
+              </div>
+              <div className="pip-footer" style={{ height: '4px', background: 'rgba(255,255,255,0.05)', position: 'relative' }}>
+                 <div className="pip-footer-fill" style={{ width: (confidenceList[0]*100)+'%', background: orb.accent, height: '100%', transition: 'width 0.1s' }} />
+              </div>
+            </div>
 
           {/* TIMELINE */}
           <div className="timeline-zone">
@@ -1270,14 +1324,18 @@ export default function Editor() {
 
           {/* AI CORE (CSS orb — no second Canvas!) */}
           <div className="assistant-core-panel">
-            <div className="sidebar-3d-orb-container" style={{height: 140, position:'relative'}}>
-              <Canvas camera={{ position: [0, 0, 2.5], fov: 40 }}>
-                <ambientLight intensity={0.5} />
-                <ChestHero3D orb={ORBS[selectedOrbId] || ORBS.sentinel} active={isProcessing || isVoiceActive} />
-              </Canvas>
-              <div className="core-info-overlay">
-                <h2 className="core-title">{orb.name}</h2>
-                <div className="core-subtitle">{orb.personality}</div>
+            <div className="sidebar-3d-orb-container" style={{height: 100, position:'relative', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+               <div className={`status-orb-css ${isProcessing || isVoiceActive ? 'active' : ''}`} style={{ 
+                width: '60px', 
+                height: '60px', 
+                borderRadius: '50%', 
+                background: orb.accent,
+                boxShadow: `0 0 30px ${orb.accent}`,
+                animation: isProcessing ? 'pulse 0.8s infinite' : 'none'
+              }} />
+              <div className="core-info-overlay" style={{ textAlign: 'center', marginTop: 10 }}>
+                <h2 className="core-title" style={{ fontSize: '10px', color: orb.accent, fontStyle: 'italic' }}>{orb.name}</h2>
+                <div className="core-subtitle" style={{ fontSize: '8px', opacity: 0.5 }}>{orb.personality}</div>
               </div>
             </div>
             <div className="core-actions">
@@ -1456,7 +1514,7 @@ export default function Editor() {
 }
 
 /* ── Sub-components ── */
-function HandHUD({ landmarks, accent, gesture, confidence, isSecondary }) {
+const HandHUD = React.memo(({ landmarks, accent, gesture, confidence, isSecondary }) => {
   if (!landmarks || landmarks.length === 0) return null;
   const hand = landmarks; 
   
@@ -1491,16 +1549,26 @@ function HandHUD({ landmarks, accent, gesture, confidence, isSecondary }) {
         const isCritical = [0, 4, 8, 12, 16, 20].includes(i);
         return (
           <g key={i}>
-            <circle cx={pt.x} cy={pt.y} r={isCritical ? "0.008" : "0.004"} 
+            <circle cx={pt.x} cy={pt.y} r={isCritical ? "0.012" : "0.006"} 
               fill={isCritical ? '#fff' : accent} className={`hud-dot-stark ${isCritical ? 'pulse' : ''}`} />
             
+            {/* Holographic Projection Lines */}
+            {isCritical && (
+               <line 
+                 x1={pt.x} y1={pt.y} x2={pt.x + 0.05} y2={pt.y - 0.05} 
+                 stroke={accent} strokeWidth="0.001" opacity="0.3" 
+               />
+            )}
+
             {/* Geometric Lock Frames on Tips */}
             {isCritical && i !== 0 && (
-              <rect 
-                x={pt.x - 0.015} y={pt.y - 0.015} width="0.03" height="0.03" 
-                fill="none" stroke={accent} strokeWidth="0.001" opacity="0.4"
-                transform={`rotate(45, ${pt.x}, ${pt.y})`}
-              />
+              <g transform={`rotate(45, ${pt.x}, ${pt.y})`}>
+                <rect 
+                  x={pt.x - 0.015} y={pt.y - 0.015} width="0.03" height="0.03" 
+                  fill="none" stroke={accent} strokeWidth="0.001" opacity="0.5"
+                />
+                <circle cx={pt.x} cy={pt.y} r="0.02" fill="none" stroke={accent} strokeWidth="0.0005" strokeDasharray="0.005 0.005" />
+              </g>
             )}
           </g>
         );
@@ -1515,9 +1583,9 @@ function HandHUD({ landmarks, accent, gesture, confidence, isSecondary }) {
       </g>
     </svg>
   );
-}
+});
 
-function StarkHUD({ accent, handPos, gesture, confidence }) {
+const StarkHUD = React.memo(({ accent, handPos, gesture, confidence }) => {
   return (
     <div className="stark-hud-container">
       {/* Target Crosshair */}
@@ -1538,14 +1606,14 @@ function StarkHUD({ accent, handPos, gesture, confidence }) {
       <div className="stark-corner bottom-left" style={{ borderColor: accent }}>
         <div className="telem-row"><span className="label">POS_X:</span> <span className="val">{handPos.x.toFixed(4)}</span></div>
         <div className="telem-row"><span className="label">POS_Y:</span> <span className="val">{handPos.y.toFixed(4)}</span></div>
-        <div className="telem-row"><span className="label">CONF:</span> <span className="val text-green-400">{(confidence*100).toFixed(0)}%</span></div>
+        <div className="telem-row"><span className="label">CONF:</span> <span className="val" style={{ color: '#4ade80' }}>{(confidence*100).toFixed(0)}%</span></div>
       </div>
       
       {/* Scanline Effect */}
       <div className="stark-scanlines" />
     </div>
   );
-}
+});
 
 function ToolBtn({ icon: Icon, active, label, sub, onClick, accent, danger, tinyLabel }) {
   return (

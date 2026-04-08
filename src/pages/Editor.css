@@ -406,8 +406,32 @@
   opacity: 0.8;
 }
 
-.reticle-line-h { width: 120px; height: 1px; left: -20px; top: 50%; offset: -20px; }
-.reticle-line-v { width: 1px; height: 120px; top: -20px; left: 50%; }
+.reticle-line-h { width: 120px; height: 1px; left: -20px; top: 50%; opacity: 0.8; }
+.reticle-line-v { width: 1px; height: 120px; top: -20px; left: 50%; opacity: 0.8; }
+
+.pip-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+  color: rgba(255,255,255,0.2);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.pip-footer-fill {
+  box-shadow: 0 0 10px var(--orb-accent);
+}
+
+.hud-stark-text {
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 5px var(--orb-accent);
+  pointer-events: none;
+}
 
 .reticle-label {
   position: absolute;

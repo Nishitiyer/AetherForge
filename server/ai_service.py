@@ -14,18 +14,32 @@ from typing import List, Optional
 import uvicorn
 
 # --- Stark Neural Path Injection ---
-# Injecting the 'src/hooks' directory into the Python path to load the STARK hooks directly.
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOKS_DIR = os.path.join(ROOT_DIR, 'src', 'hooks')
+sys.path.append(ROOT_DIR)
 sys.path.append(HOOKS_DIR)
+
+print(f"[AetherForge] Project Root: {ROOT_DIR}")
+print(f"[AetherForge] Hooks Dir: {HOOKS_DIR}")
+print(f"[AetherForge] Current Path: {os.getcwd()}")
 
 # Importing the STARK Python Hooks as requested by the user.
 try:
-    from useHands import hand_engine
-    from useAIEngine import ai_engine
+    import useHands
+    import useAIEngine
+    hand_engine = useHands.hand_engine
+    ai_engine = useAIEngine.ai_engine
+    print("[AetherForge] Neural Hooks: SYNCHRONIZED")
 except ImportError as e:
-    print(f"[CRITICAL] AetherForge Stark Hooks not found: {e}. Check src/hooks/ directory.")
-    sys.exit(1)
+    print(f"[CRITICAL] AetherForge Stark Hooks failure: {e}")
+    # Fallback to local import if needed
+    try:
+        from src.hooks import useHands, useAIEngine
+        hand_engine = useHands.hand_engine
+        ai_engine = useAIEngine.ai_engine
+        print("[AetherForge] Neural Hooks: FIXED (src prefix)")
+    except:
+        sys.exit(1)
 
 app = FastAPI(title="AetherForge AI Engine (Python Native Hooks)")
 
