@@ -771,96 +771,7 @@ export default function Editor() {
     setChatHistory(prev => [...prev, { role: 'assistant', content: 'Analyzing semantic patterns...' }]);
   }, [selectedId, selectedObj, updateSelected, deleteSelected, addObject, generateFromPython, orb.accent]);
 
-  // PUSH-TO-CREATE MONITOR (Stark Spatial Protocol)
-  const lastGestureRef = useRef(['IDLE', 'IDLE']);
-  
-  useEffect(() => {
-     const interval = setInterval(() => {
-        if (!isGestureEnabled) return;
-        const gList = gestureRef.current;
-        const hpList = handPosRef.current;
-        const h0 = hpList[0];
-        
-        if (!h0) return;
 
-        // 1. STATE TRACKING (To detect gesture onset)
-        const g0 = gList[0];
-        const prevG0 = lastGestureRef.current[0];
-        lastGestureRef.current = [...gList];
-
-        // 2. CREATION LOGIC (PUSH / THUMBS_UP)
-        const isPushing = h0.v > 80; 
-        const isCreating = isPushing && Date.now() > creationCooldownRef.current && !selectedId;
-
-        if (g0 === 'THUMBS_UP' && prevG0 !== 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
-            setShowAddPanel(true);
-            setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Initiated: Accessing Mesh Primitives.' }]);
-            creationCooldownRef.current = Date.now() + 2000;
-        }
-
-        // 3. SELECTION / VISION
-        if (g0 === 'PEACE' && Date.now() > creationCooldownRef.current) {
-          if (selectedId) {
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Engaged: Analyzing Geometry for Neural Refinement...' }]);
-             updateSelected({ scale: selectedObj.scale.clone().multiplyScalar(1.1) });
-             creationCooldownRef.current = Date.now() + 1000;
-          } else {
-             handleVisionAI();
-             creationCooldownRef.current = Date.now() + 5000;
-          }
-        }
-
-        // 4. TRANSFORM TOGGLES
-        if (g0 === 'ROCK_ON' && prevG0 !== 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
-          updateSelected({ wireframe: !selectedObj.wireframe });
-          setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Telemetry Wireframe ${!selectedObj.wireframe ? 'Engaged' : 'Dismissed'}.` }]);
-          creationCooldownRef.current = Date.now() + 1500;
-        }
-
-        if (g0 === 'PALM' && prevG0 !== 'PALM' && Date.now() > creationCooldownRef.current) {
-          setSelectedId(null);
-          setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Global Selection Flush.' }]);
-          creationCooldownRef.current = Date.now() + 1500;
-        }
-
-        // 5. SYSTEM RESET
-        if (g0 === 'L_SIGN' && prevG0 !== 'L_SIGN' && Date.now() > creationCooldownRef.current) {
-           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: JARVIS UI System Reboot.' }]);
-           // Visual feedback: brief overlay flash
-           setIsInitializing(true);
-           setTimeout(() => setIsInitializing(false), 800);
-           creationCooldownRef.current = Date.now() + 3000;
-        }
-
-        // 6. INSTANT PRIMITIVES
-        if (Date.now() > creationCooldownRef.current) {
-          if (g0 === 'C_SIGN' && prevG0 !== 'C_SIGN') { addObject('box'); creationCooldownRef.current = Date.now() + 1500; }
-          else if (g0 === 'O_SIGN' && prevG0 !== 'O_SIGN') { addObject('sphere'); creationCooldownRef.current = Date.now() + 1500; }
-        }
-
-        // 7. SPATIAL SPAWNING (AI Ghost Path)
-        if (isCreating) {
-           setIsSynthesizingLocal(true);
-           setTimeout(() => setIsSynthesizingLocal(false), 1000);
-           
-           const obj = freshObject(ghostObject.type);
-           const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
-           
-           const newObj = { 
-             ...obj, 
-             position: spawnPos,
-             parts: ghostObject.parts ? JSON.parse(JSON.stringify(ghostObject.parts)) : null, 
-             name: ghostObject.name || 'AI_SPATIAL_SPAWN',
-             animation: 'PULSE'
-           };
-           
-           setObjects(prev => [...prev, newObj]);
-           setSelectedId(newObj.id);
-           creationCooldownRef.current = Date.now() + 1200; 
-        }
-     }, 40);
-     return () => clearInterval(interval);
-  }, [isGestureEnabled, ghostObject, addObject, selectedId, selectedObj, updateSelected, handleVisionAI]);
 
   /* ── External Command Link ── */
   useEffect(() => {
@@ -975,6 +886,97 @@ export default function Editor() {
     }
     setIsGenerating(false);
   }, [generateFromPython, orb.accent]);
+
+  // PUSH-TO-CREATE MONITOR (Stark Spatial Protocol)
+  const lastGestureRef = useRef(['IDLE', 'IDLE']);
+  
+  useEffect(() => {
+     const interval = setInterval(() => {
+        if (!isGestureEnabled) return;
+        const gList = gestureRef.current;
+        const hpList = handPosRef.current;
+        const h0 = hpList[0];
+        
+        if (!h0) return;
+
+        // 1. STATE TRACKING (To detect gesture onset)
+        const g0 = gList[0];
+        const prevG0 = lastGestureRef.current[0];
+        lastGestureRef.current = [...gList];
+
+        // 2. CREATION LOGIC (PUSH / THUMBS_UP)
+        const isPushing = h0.v > 80; 
+        const isCreating = isPushing && Date.now() > creationCooldownRef.current && !selectedId;
+
+        if (g0 === 'THUMBS_UP' && prevG0 !== 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
+            setShowAddPanel(true);
+            setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Initiated: Accessing Mesh Primitives.' }]);
+            creationCooldownRef.current = Date.now() + 2000;
+        }
+
+        // 3. SELECTION / VISION
+        if (g0 === 'PEACE' && Date.now() > creationCooldownRef.current) {
+          if (selectedId) {
+             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Engaged: Analyzing Geometry for Neural Refinement...' }]);
+             updateSelected({ scale: selectedObj.scale.clone().multiplyScalar(1.1) });
+             creationCooldownRef.current = Date.now() + 1000;
+          } else {
+             handleVisionAI();
+             creationCooldownRef.current = Date.now() + 5000;
+          }
+        }
+
+        // 4. TRANSFORM TOGGLES
+        if (g0 === 'ROCK_ON' && prevG0 !== 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
+          updateSelected({ wireframe: !selectedObj.wireframe });
+          setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Telemetry Wireframe ${!selectedObj.wireframe ? 'Engaged' : 'Dismissed'}.` }]);
+          creationCooldownRef.current = Date.now() + 1500;
+        }
+
+        if (g0 === 'PALM' && prevG0 !== 'PALM' && Date.now() > creationCooldownRef.current) {
+          setSelectedId(null);
+          setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Global Selection Flush.' }]);
+          creationCooldownRef.current = Date.now() + 1500;
+        }
+
+        // 5. SYSTEM RESET
+        if (g0 === 'L_SIGN' && prevG0 !== 'L_SIGN' && Date.now() > creationCooldownRef.current) {
+           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: JARVIS UI System Reboot.' }]);
+           // Visual feedback: brief overlay flash
+           setIsInitializing(true);
+           setTimeout(() => setIsInitializing(false), 800);
+           creationCooldownRef.current = Date.now() + 3000;
+        }
+
+        // 6. INSTANT PRIMITIVES
+        if (Date.now() > creationCooldownRef.current) {
+          if (g0 === 'C_SIGN' && prevG0 !== 'C_SIGN') { addObject('box'); creationCooldownRef.current = Date.now() + 1500; }
+          else if (g0 === 'O_SIGN' && prevG0 !== 'O_SIGN') { addObject('sphere'); creationCooldownRef.current = Date.now() + 1500; }
+        }
+
+        // 7. SPATIAL SPAWNING (AI Ghost Path)
+        if (isCreating) {
+           setIsSynthesizingLocal(true);
+           setTimeout(() => setIsSynthesizingLocal(false), 1000);
+           
+           const obj = freshObject(ghostObject.type);
+           const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
+           
+           const newObj = { 
+             ...obj, 
+             position: spawnPos,
+             parts: ghostObject.parts ? JSON.parse(JSON.stringify(ghostObject.parts)) : null, 
+             name: ghostObject.name || 'AI_SPATIAL_SPAWN',
+             animation: 'PULSE'
+           };
+           
+           setObjects(prev => [...prev, newObj]);
+           setSelectedId(newObj.id);
+           creationCooldownRef.current = Date.now() + 1200; 
+        }
+     }, 40);
+     return () => clearInterval(interval);
+  }, [isGestureEnabled, ghostObject, addObject, selectedId, selectedObj, updateSelected, handleVisionAI]);
 
   /* ── Euler from selected quaternion ── */
   const selEuler = useMemo(() => {
