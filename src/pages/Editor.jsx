@@ -722,10 +722,24 @@ export default function Editor() {
           setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ [STARK_LINK] Neural Synthesis complete: ${data.name}` }]);
         } else { throw new Error(); }
       } catch (err) {
-        setChatHistory(prev => [...prev, { role: 'assistant', content: '⚠ Python Engine Offline. Using local procedural fallback.' }]);
-        const dummyKey = (entity && PRIMITIVES[entity]) ? entity : 'cube';
-        const dummy = freshObject(dummyKey);
-        setObjects(prev => [...prev, dummy]); setSelectedId(dummy.id);
+        setChatHistory(prev => [...prev, { role: 'assistant', content: '⚠ Python Engine Offline. Manifesting Local Procedural Script.' }]);
+        
+        // Stark Intelligent Fallback
+        const key = entity?.toLowerCase() || 'cube';
+        const template = MODEL_TEMPLATES[key.toUpperCase()] || assembleFromAI(key, orb.accent);
+        
+        const base = freshObject((entity && PRIMITIVES[entity]) ? entity : 'cube');
+        const generated = (typeof template === 'function') ? template(orb.accent) : template;
+        
+        const finalObj = {
+           ...base,
+           name: generated.name || base.name,
+           parts: generated.parts || null,
+           id: ++_id // Manual ID bump for local safety
+        };
+
+        setObjects(prev => [...prev, finalObj]);
+        setSelectedId(finalObj.id);
       }
       setIsGenerating(false); return;
     }

@@ -72,6 +72,19 @@ export const MODEL_TEMPLATES = {
     ]
   }),
 
+  GUN: (color) => MODEL_TEMPLATES.BLASTER(color),
+
+  SATELLITE: (color = '#94a3b8') => ({
+    type: 'Group',
+    name: 'Orbital Satellite',
+    parts: [
+      { type: 'Box', position: [0, 0, 0], scale: [0.4, 0.4, 0.4], color }, // Core
+      { type: 'Box', position: [0.8, 0, 0], scale: [1, 0.3, 0.05], color: '#4444ff' }, // Solar L
+      { type: 'Box', position: [-0.8, 0, 0], scale: [1, 0.3, 0.05], color: '#4444ff' }, // Solar R
+      { type: 'Cylinder', position: [0, 0.3, 0], scale: [0.05, 0.4, 0.05], color: '#fff' } // Antenna
+    ]
+  }),
+
   SABER: (color = '#00f2fe') => ({
     type: 'Group',
     name: 'Plasma Saber',
