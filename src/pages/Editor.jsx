@@ -1121,7 +1121,7 @@ export default function Editor() {
            <ToolBtn 
             icon={Bot} 
             label="Vision" 
-            active={isVisionRunning || (gestureRef.current && gestureRef.current[0] === 'PEACE')}
+            active={isAISynthesizing || (gestureRef.current && gestureRef.current[0] === 'PEACE')}
             onClick={handleVisionAI}
           />
 
