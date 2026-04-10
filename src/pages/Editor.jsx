@@ -758,16 +758,13 @@ export default function Editor() {
         return;
       }
     }
-    setChatHistory(prev => [...prev, { role: 'assistant', content: 'Processing semantic patterns...' }]);
-  }, [selectedId, selectedObj, updateSelected, deleteSelected, addObject, generateFromPython, orb.accent]);
-    if (/spin on/i.test(p)) { updateSelected({ spin:true });  setChatHistory(prev=>[...prev,{role:'assistant',content:'✓ Spin enabled.'}]); return; }
-    if (/spin off/i.test(p)){ updateSelected({ spin:false }); setChatHistory(prev=>[...prev,{role:'assistant',content:'✓ Spin stopped.'}]); return; }
-    if (/delete|remove/i.test(p)) { deleteSelected(); setChatHistory(prev=>[...prev,{role:'assistant',content:'✓ Deleted.'}]); return; }
-    if (/wireframe on/i.test(p)) { updateSelected({ wireframe:true }); return; }
-    if (/wireframe off/i.test(p)){ updateSelected({ wireframe:false }); return; }
+    if (/spin on/i.test(p)) { updateSelected({ spin: true }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Spin enabled.' }]); return; }
+    if (/spin off/i.test(p)) { updateSelected({ spin: false }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Spin stopped.' }]); return; }
+    if (/wireframe on/i.test(p)) { updateSelected({ wireframe: true }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Wireframe enabled.' }]); return; }
+    if (/wireframe off/i.test(p)) { updateSelected({ wireframe: false }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Wireframe disabled.' }]); return; }
 
-    setChatHistory(prev => [...prev, { role:'assistant', content:'Commands: generate [type] · move up/down/left/right/forward/back [n] · rotate [axis] [deg] · scale [n] · spin on/off · wireframe on/off · delete' }]);
-  }, [selectedId, selectedObj, updateSelected, deleteSelected, setRotDeg, addObject]);
+    setChatHistory(prev => [...prev, { role: 'assistant', content: 'Analyzing semantic patterns...' }]);
+  }, [selectedId, selectedObj, updateSelected, deleteSelected, addObject, generateFromPython, orb.accent]);
 
   // --- SPATIAL AIR DRAWING MONITOR ---
   useEffect(() => {
