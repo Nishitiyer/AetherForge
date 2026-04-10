@@ -302,7 +302,13 @@ const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRe
         <group>{parts.map((p, i) => renderPart(p, i))}</group>
       ) : (
         <mesh castShadow receiveShadow>
-          <primitive object={makeGeo(obj.type.toLowerCase(), PRIMITIVES[obj.type]?.args || [1,1,1])} attach="geometry" />
+          <primitive 
+            object={makeGeo(
+              PRIMITIVES[obj.type]?.geometry || obj.type, 
+              PRIMITIVES[obj.type]?.args || [1, 1, 1]
+            )} 
+            attach="geometry" 
+          />
           {isSelected && (gestureRef.current?.[0] === 'PINCH') ? (
             <MeshDistortMaterial 
               color={obj.color} speed={5} distort={0.4} wireframe={obj.wireframe} 
@@ -1662,7 +1668,7 @@ function VecInput({ label, obj, prop, onChange }) {
           <span className={`axis-badge ${ax}`}>{ax.toUpperCase()}</span>
           <input type="number" step={prop==='scale'?0.05:0.1}
             value={(obj[prop][ax] || 0).toFixed(3)}
-            onChange={e=>onChange(prop,ax,e.target.value)}
+            onChange={e=>onChange(ax, e.target.value, prop)}
             className="prop-num-input"/>
         </div>
       ))}
