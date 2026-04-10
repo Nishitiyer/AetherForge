@@ -73,11 +73,32 @@ class AEPulseEngine:
                 {"type": "Cylinder", "position": [0, 0.8, 0], "scale": [0.1, 0.4, 0.1], "color": "#ffffff"}, # Antenna
             ]
         else:
-            # GENERIC CATEGORICAL SYNTHESIS
-            parts = [
-                {"type": "Box", "position": [0, 0, 0], "scale": [1, 1, 1], "color": color},
-                {"type": "Sphere", "position": [0, 1.2, 0], "scale": [0.6, 0.6, 0.6], "color": color, "emissive": color, "emissiveIntensity": 0.5},
-            ]
+            # UNIVERSAL PROCEDURAL ASSEMBLER (A-Z fallback)
+            # Seeds a random assembly based on the prompt hash to ensure "anything" generates a object
+            random.seed(sum(ord(c) for c in p))
+            part_count = random.randint(3, 7)
+            parts = []
+            
+            # Base structure
+            parts.append({"type": random.choice(["Box", "Cylinder", "Sphere"]), "position": [0, 0, 0], "scale": [1, 1, 1], "color": color})
+            
+            # Procedural attachments
+            for i in range(part_count):
+                type_p = random.choice(["Box", "Sphere", "Cylinder", "Cone", "Torus"])
+                pos = [
+                    (random.random() - 0.5) * 1.5,
+                    (random.random() - 0.5) * 1.5,
+                    (random.random() - 0.5) * 1.5
+                ]
+                size = [random.uniform(0.1, 0.8) for _ in range(3)]
+                parts.append({
+                    "type": type_p, 
+                    "position": pos, 
+                    "scale": size, 
+                    "color": color, 
+                    "emissive": color if random.random() > 0.7 else None,
+                    "emissiveIntensity": 1.0 if random.random() > 0.7 else 0
+                })
 
         return {
             "id": f"rodin-{random.randint(10000, 99999)}",
