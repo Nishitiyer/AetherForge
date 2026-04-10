@@ -123,21 +123,28 @@ const PRIMITIVES = {
   capsule:  { label: "Capsule",  icon: "⬭", color: "#34d399", geometry: "capsule",      args: [0.35, 0.8, 4, 16] },
 };
 
+const _geoCache = {};
 function makeGeo(type, args) {
+  const key = `${type}-${args ? args.join(',') : 'default'}`;
+  if (_geoCache[key]) return _geoCache[key];
+  
+  let geo;
   switch (type) {
-    case 'box':          return new THREE.BoxGeometry(...args);
-    case 'sphere':       return new THREE.SphereGeometry(...args);
-    case 'cylinder':     return new THREE.CylinderGeometry(...args);
-    case 'cone':         return new THREE.ConeGeometry(...args);
-    case 'torus':        return new THREE.TorusGeometry(...args);
-    case 'plane':        return new THREE.PlaneGeometry(...args);
-    case 'octahedron':   return new THREE.OctahedronGeometry(...args);
-    case 'dodecahedron': return new THREE.DodecahedronGeometry(...args);
-    case 'torusKnot':    return new THREE.TorusKnotGeometry(...args);
-    case 'icosahedron':  return new THREE.IcosahedronGeometry(...args);
-    case 'capsule':      return new THREE.CapsuleGeometry(...args);
-    default:             return new THREE.BoxGeometry(1,1,1);
+    case 'box':          geo = new THREE.BoxGeometry(...args); break;
+    case 'sphere':       geo = new THREE.SphereGeometry(...args); break;
+    case 'cylinder':     geo = new THREE.CylinderGeometry(...args); break;
+    case 'cone':         geo = new THREE.ConeGeometry(...args); break;
+    case 'torus':        geo = new THREE.TorusGeometry(...args); break;
+    case 'plane':        geo = new THREE.PlaneGeometry(...args); break;
+    case 'octahedron':   geo = new THREE.OctahedronGeometry(...args); break;
+    case 'dodecahedron': geo = new THREE.DodecahedronGeometry(...args); break;
+    case 'torusKnot':    geo = new THREE.TorusKnotGeometry(...args); break;
+    case 'icosahedron':  geo = new THREE.IcosahedronGeometry(...args); break;
+    case 'capsule':      geo = new THREE.CapsuleGeometry(...args); break;
+    default:             geo = new THREE.BoxGeometry(1,1,1); break;
   }
+  _geoCache[key] = geo;
+  return geo;
 }
 
 let _id = 0;
@@ -162,7 +169,7 @@ function freshObject(primKey) {
   };
 }
 
-const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRef, handPosRef, isGestureEnabled, orb, onTransformCommit }) => {
+const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRef, handPosRef, isGestureEnabled, orb, onTransformCommit, transformMode }) => {
   const meshRef = useRef();
   const dualHandBaseDistRef = useRef(null);
   const dualHandBaseScaleRef = useRef(null);
@@ -185,10 +192,10 @@ const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRe
     // ── HIGH-PERFORMANCE JARVIS GESTURE LOOP ──
     if (!isGestureEnabled) return;
 
-    const gList = gestureRef.current;
-    const hpList = handPosRef.current;
+    const gList = gestureRef?.current || ['NONE', 'NONE'];
+    const hpList = handPosRef?.current || [{ x:0.5, y:0.5, z:0 }];
     
-    const g0 = gList[0];
+    const g0 = gList[0] || 'NONE';
     const hp0 = hpList[0];
 
     if (!meshRef.current || !hp0) return;
@@ -218,8 +225,12 @@ const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRe
     // COMMIT PINCH WORK
     if (g0 !== 'PINCH' && g0 !== 'GRAB' && (isSelected || isNear)) {
        // Check if we need to commit
-       if (meshRef.current.position.distanceTo(obj.position) > 0.1 || meshRef.current.scale.distanceTo(obj.scale) > 0.05) {
-          onTransformCommit(obj.id, { position: meshRef.current.position.clone(), scale: meshRef.current.scale.clone() });
+        if (meshRef.current.position.distanceTo(obj.position) > 0.1 || meshRef.current.scale.distanceTo(obj.scale) > 0.05) {
+          onTransformCommit(obj.id, { 
+            position: meshRef.current.position.clone(), 
+            quaternion: meshRef.current.quaternion.clone(),
+            scale: meshRef.current.scale.clone() 
+          });
        }
     }
     
@@ -250,8 +261,11 @@ const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRe
        }
     } else {
        if (dualHandBaseDistRef.current !== null) {
-          // Gesture released: COMMIT SCALE
-          onTransformCommit(obj.id, { scale: meshRef.current.scale.clone() });
+           onTransformCommit(obj.id, { 
+             position: meshRef.current.position.clone(),
+             quaternion: meshRef.current.quaternion.clone(),
+             scale: meshRef.current.scale.clone() 
+           });
        }
        dualHandBaseDistRef.current = null;
     }
@@ -275,37 +289,44 @@ const SceneObject = React.memo(({ obj, isSelected, onSelect, onDelete, gestureRe
     );
   };
 
-  return (
-    <group 
-      ref={meshRef} 
-      name={obj.id.toString()} 
-      onClick={(e) => { e.stopPropagation(); onSelect(obj.id); }}
-    >
+  const renderMeshContent = () => (
+    <>
       {isSelected && (
         <mesh visible={false}>
           <boxGeometry args={[1.2, 1.2, 1.2]} />
           <meshStandardMaterial color="cyan" wireframe transparent opacity={0.3} />
         </mesh>
       )}
-      
       {obj.parts ? (
         <group>{parts.map((p, i) => renderPart(p, i))}</group>
       ) : (
         <mesh castShadow receiveShadow>
           <primitive object={makeGeo(obj.type.toLowerCase(), PRIMITIVES[obj.type]?.args || [1,1,1])} attach="geometry" />
-          {isSelected && (g0 === 'PINCH') ? (
+          {isSelected && (gestureRef.current?.[0] === 'PINCH') ? (
             <MeshDistortMaterial 
-              color={obj.color} 
-              speed={5} 
-              distort={0.4} 
-              wireframe={obj.wireframe} 
-              emissive={orb.accent} 
-              emissiveIntensity={1}
+              color={obj.color} speed={5} distort={0.4} wireframe={obj.wireframe} 
+              emissive={orb?.accent || '#22d3ee'} emissiveIntensity={1}
             />
           ) : (
             <meshStandardMaterial color={obj.color} wireframe={obj.wireframe} emissive={obj.emissive} emissiveIntensity={obj.emissiveIntensity} />
           )}
         </mesh>
+      )}
+    </>
+  );
+
+  return (
+    <group name={obj.id.toString()} onClick={(e) => { e.stopPropagation(); onSelect(obj.id); }}>
+      <group ref={meshRef}>
+        {renderMeshContent()}
+      </group>
+      {isSelected && transformMode !== 'grab' && (
+        <TransformControls 
+           makeDefault
+           object={meshRef} 
+           mode={transformMode} 
+           onMouseUp={() => { if(meshRef.current) onTransformCommit(obj.id, { position: meshRef.current.position.clone(), quaternion: meshRef.current.quaternion.clone(), scale: meshRef.current.scale.clone() }) }} 
+        />
       )}
     </group>
   );
@@ -369,9 +390,9 @@ function FingertipHUD({ handPosRef, gestureRef, orb }) {
 }
 
 /* ────────────────── TOP TELEMETRY PANEL ────────────────── */
-const TopTelemetry = React.memo(({ orb, gestures, handPosList, confidenceList }) => {
-  const g0 = gestures[0] || 'IDLE';
-  const c0 = confidenceList[0] || 0;
+const TopTelemetry = React.memo(({ orb, gestures = [], handPosList = [], confidenceList = [] }) => {
+  const g0 = (gestures && gestures[0]) || 'IDLE';
+  const c0 = (confidenceList && confidenceList[0]) || 0;
   
   return (
     <div className="stark-top-telemetry">
@@ -466,31 +487,10 @@ const ViewportScene = React.memo(({ objects, selectedId, onSelect, onDelete, onT
           handPosRef={handPosRef}
           isGestureEnabled={isGestureEnabled}
           orb={orb}
+          transformMode={transformMode}
         />
       ))}
 
-      {selectedObj && (
-        <TransformControls
-          mode={transformMode}
-          makeDefault
-          onMouseUp={(e) => {
-            if (tcGroupRef.current) {
-              onTransformCommit(selectedId, {
-                position:   tcGroupRef.current.position.clone(),
-                quaternion: tcGroupRef.current.quaternion.clone(),
-                scale:      tcGroupRef.current.scale.clone(),
-              });
-            }
-          }}
-        >
-          <group
-            ref={tcGroupRef}
-            position={selectedObj.position}
-            quaternion={selectedObj.quaternion}
-            scale={selectedObj.scale}
-          />
-        </TransformControls>
-      )}
 
       <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
       <GizmoHelper alignment="bottom-right" margin={[56, 56]}>
@@ -522,9 +522,34 @@ export default function Editor() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDiagnostic, setIsDiagnostic] = useState(false);
   const [isVisionRunning, setIsVisionRunning] = useState(false);
-  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const [mockLandmarks, setMockLandmarks] = useState(null);
   const recognitionRef = useRef(null);
+  
+  // Dragging states for Neural PIP
+  const [pipPos, setPipPos] = useState({ x: 20, y: 20 }); 
+  const pipRef = useRef(null);
+  const [isDraggingPip, setIsDraggingPip] = useState(false);
+  const pipDragStart = useRef({ startX: 0, startY: 0, initialMouseX: 0, initialMouseY: 0 });
+
+  const handlePipPointerDown = (e) => {
+    setIsDraggingPip(true);
+    pipDragStart.current = { startX: pipPos.x, startY: pipPos.y, initialMouseX: e.clientX, initialMouseY: e.clientY };
+    e.target.setPointerCapture(e.pointerId);
+  };
+  const handlePipPointerMove = (e) => {
+    if (!isDraggingPip) return;
+    setPipPos({
+      x: pipDragStart.current.startX - (e.clientX - pipDragStart.current.initialMouseX),
+      y: pipDragStart.current.startY - (e.clientY - pipDragStart.current.initialMouseY)
+    });
+  };
+  const handlePipPointerUp = (e) => {
+    setIsDraggingPip(false);
+    e.target.releasePointerCapture(e.pointerId);
+  };
+
+  const [dockedObject, setDockedObject] = useState(null);
+  const [promptDetails, setPromptDetails] = useState('');
 
   const { 
     videoRef, 
@@ -548,22 +573,23 @@ export default function Editor() {
   // STARK_LINK: Core state for gesture-driven creation
   const [ghostObject, setGhostObject] = useState({ type: 'cube', parts: null }); 
   const creationCooldownRef = useRef(0);
-  const { generateFromPython, isSynthesizing } = useAIEngine();
+  const { generateFromPython, isSynthesizing: isAISynthesizing } = useAIEngine();
 
 
   // Internal state to override useHands during diagnostics
   const [activeGesture, setActiveGesture] = useState('NONE');
   const [activeHandPos, setActiveHandPos] = useState({ x: 0.5, y: 0.5 });
+  const [isSynthesizing, setIsSynthesizing] = useState(false); // Local state for synthesis UI
   
   useEffect(() => {
     if (!isDiagnostic) {
-      setActiveGesture(gestures[0]);
-      setActiveHandPos(handPosList[0]);
+      setActiveGesture(gestures[0] || 'NONE');
+      setActiveHandPos(handPosList[0] || { x: 0.5, y: 0.5 });
     }
   }, [gestures, handPosList, isDiagnostic]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('selectedOrb');
+    const saved = localStorage.getItem('selectedOrbId');
     if (saved && ORBS[saved]) setSelectedOrbId(saved);
   }, []);
 
@@ -861,8 +887,8 @@ export default function Editor() {
         }
 
         if (isCreating && Date.now() > creationCooldownRef.current) {
-           setIsSynthesizing(true);
-           setTimeout(() => setIsSynthesizing(false), 1000);
+           setIsSynthesizingLocal(true);
+           setTimeout(() => setIsSynthesizingLocal(false), 1000);
            
            const obj = freshObject(ghostObject.type);
            const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
@@ -1093,10 +1119,10 @@ export default function Editor() {
             ))}
           </div>
 
-          <ToolBtn 
+           <ToolBtn 
             icon={Bot} 
             label="Vision" 
-            active={isVisionRunning || gestureRef.current[0] === 'PEACE'}
+            active={isVisionRunning || (gestureRef.current && gestureRef.current[0] === 'PEACE')}
             onClick={handleVisionAI}
           />
 
@@ -1108,6 +1134,10 @@ export default function Editor() {
           <div className="shelf-section-label">OBJECT</div>
           <ToolBtn icon={Eye}   label="Hide/Show" sub="H" onClick={()=>updateSelected({visible:!selectedObj?.visible})} accent={orb.accent} />
           <ToolBtn icon={CopyCheck} label="Wireframe" sub="W" onClick={()=>updateSelected({wireframe:!selectedObj?.wireframe})} active={selectedObj?.wireframe} accent={orb.accent} />
+          <ToolBtn icon={Film} label={dockedObject && dockedObject.id === selectedId ? "Undock" : "Holo-Dock"} sub="PIP" active={dockedObject?.id === selectedId} onClick={()=>{
+             if(dockedObject && dockedObject.id === selectedId) setDockedObject(null);
+             else if (selectedObj) setDockedObject(selectedObj);
+          }} accent={orb.accent} />
 
           <div className="shelf-spacer"/>
           <div className="shelf-section-label">AI PROTOCOL</div>
@@ -1185,7 +1215,7 @@ export default function Editor() {
           {/* ── REAL THREE.JS CANVAS ── */}
           <div className="viewport-canvas-area">
             <AnimatePresence>
-              {isGenerating && (
+              {(isGenerating || isAISynthesizing || isSynthesizingLocal) && (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -1259,8 +1289,10 @@ export default function Editor() {
             )}
 
             {/* ── STARK NEURAL MONITOR PIP ── */}
-            <div className={`stark-monitor-pip ${isGestureEnabled ? 'active' : ''}`} style={{"--orb-accent": orb.accent}}>
-              <div className="pip-header">
+            <div className={`stark-monitor-pip ${isGestureEnabled ? 'active' : ''}`} 
+                 ref={pipRef}
+                 style={{"--orb-accent": orb.accent, right: pipPos.x + 'px', bottom: pipPos.y + 'px', position: 'absolute', cursor: isDraggingPip ? 'grabbing' : 'default'}}>
+              <div className="pip-header" onPointerDown={handlePipPointerDown} onPointerMove={handlePipPointerMove} onPointerUp={handlePipPointerUp} onPointerCancel={handlePipPointerUp} style={{cursor: 'grab'}}>
                 <div className="pip-signal">
                    <div className="pip-dot pulse" />
                    <span>NEURAL_LINK_085</span>
@@ -1277,6 +1309,28 @@ export default function Editor() {
                     <Camera size={32} opacity={0.2} />
                     <span>LINKING_SENSORS...</span>
                   </div>
+                )}
+                {dockedObject && (
+                   <div className="pip-docked-hologram" style={{position:'absolute', inset: 0, zIndex: 25}}>
+                     <Canvas gl={{alpha:true}} camera={{position:[0,0,5]}}>
+                        <ambientLight intensity={1}/>
+                        <pointLight position={[5,5,5]} intensity={2} color={orb.accent}/>
+                        <group rotation={[frame * 0.02, frame * 0.03, 0]}>
+                           <SceneObject 
+                             obj={dockedObject} 
+                             isSelected={false} 
+                             onSelect={()=>{}} 
+                             onDelete={()=>{}} 
+                             onTransformCommit={()=>{}} 
+                             orb={orb}
+                             gestureRef={gestureRef}
+                             handPosRef={handPosRef}
+                             isGestureEnabled={isGestureEnabled}
+                           />
+                        </group>
+                        <Environment preset="city"/>
+                     </Canvas>
+                   </div>
                 )}
                 <div className="pip-status-overlay">
                    <span className="status-label">SYS_READY</span>
@@ -1389,7 +1443,20 @@ export default function Editor() {
                   <RotInput label="Rotation" euler={selEuler} onChange={setRotDeg} />
                   <VecInput label="Scale"    obj={selectedObj} prop="scale"    onChange={setNumProp} />
 
-                  <div className="prop-section-title">MATERIAL</div>
+                  <div className="prop-section-title">PROMPT-TO-3D SYNTHESIS</div>
+                  <div className="prop-numrow" style={{flexDirection:'column', alignItems:'stretch', gap:'6px'}}>
+                    <input type="text" value={promptDetails} onChange={e=>setPromptDetails(e.target.value)}
+                      placeholder='e.g. Plasma Gun, Black Hole' className="prop-num-input" style={{width:'100%'}}/>
+                    <button className="anim-btn" style={{background:orb.accent,color:'#000'}} onClick={() => {
+                        if(!promptDetails) return;
+                        handleAI("generate " + promptDetails);
+                        setPromptDetails('');
+                    }}>
+                      GENERATE 3D
+                    </button>
+                  </div>
+
+                  <div className="prop-section-title">MATERIAL DETAILS</div>
                   <div className="prop-numrow">
                     <span className="prop-label">Base Color</span>
                     <input type="color" value={selectedObj.color}

@@ -124,15 +124,17 @@ async def websocket_gestures(websocket: WebSocket):
         while True:
             frame = camera_manager.get_frame()
             if frame is None:
-                await asyncio.sleep(0.1)
-                continue
-            
+                # Fallback synthetic frame if webcam is missing or blocked
+                frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                cv2.putText(frame, "CAM_OFFLINE : SYNTHETIC_MODE", (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+                
             # Offloading all hand tracking logic to src/hooks/useHands.py
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             payload = hand_engine.process_frame(rgb_frame)
             
-            # Encode frame for frontend video display (Holographic MJPEG)
-            _, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 65])
+            # Encode frame for frontend video display (Holographic MJPEG) -> downscale heavily for speed
+            small_frame = cv2.resize(frame, (320, 240))
+            _, buffer = cv2.imencode('.jpg', small_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
             payload["image"] = f"data:image/jpeg;base64,{base64.b64encode(buffer).decode('utf-8')}"
             
             # Send back to React

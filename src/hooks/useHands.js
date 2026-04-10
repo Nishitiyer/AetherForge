@@ -12,7 +12,7 @@ export function useHands() {
   const handPosRef = useRef([{ x:0.5, y:0.5, z:0, v:0 }, { x:0.5, y:0.5, z:0, v:0 }]); 
   
   const [gestures,        setGestures]        = useState(['IDLE', 'IDLE']);
-  const [landmarksList,   setLandmarksList]   = useState([null, null]);
+  const [landmarksList,   setLandmarksList]   = useState([]);
   const [handPosList,     setHandPosList]     = useState([{ x: 0.5, y: 0.5, z: 0 }, { x: 0.5, y: 0.5, z: 0 }]);
   const [confidenceList,  setConfidenceList]  = useState([0, 0]);
   const [permissionState, setPermissionState] = useState('prompt');
@@ -40,21 +40,29 @@ export function useHands() {
     };
     
     socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      // Update high-perf refs
-      gestureRef.current = data.gestures.length ? data.gestures : ['NONE', 'NONE'];
-      handPosRef.current = data.handPosList.length ? data.handPosList : [{ x:0.5, y:0.5, z:0, v:0 }, { x:0.5, y:0.5, z:0, v:0 }];
-      
-      // Update React state
-      setGestures(data.gestures.length ? data.gestures : ['IDLE', 'IDLE']);
-      setLandmarksList(data.landmarksList.length ? data.landmarksList : [null, null]);
-      setHandPosList(data.handPosList.length ? data.handPosList : [{ x: 0.5, y: 0.5, z: 0 }, { x: 0.5, y: 0.5, z: 0 }]);
-      setConfidenceList(data.confidenceList.length ? data.confidenceList : [0, 0]);
-      
-      if (data.image) setFrameData(data.image);
-      if (data.drawnShape && data.drawnShape !== 'unknown') {
-         window.dispatchEvent(new CustomEvent('stark:drawn', { detail: data.drawnShape }));
+      try {
+        const data = JSON.parse(event.data);
+        if (!data) return;
+        
+        // Update high-perf refs with fallbacks
+        const gesturesData = data.gestures || ['NONE', 'NONE'];
+        const handPosData = data.handPosList || [{ x: 0.5, y: 0.5, z: 0, v: 0 }, { x: 0.5, y: 0.5, z: 0, v: 0 }];
+        
+        gestureRef.current = gesturesData.length ? gesturesData : ['NONE', 'NONE'];
+        handPosRef.current = handPosData.length ? handPosData : [{ x: 0.5, y: 0.5, z: 0, v: 0 }, { x: 0.5, y: 0.5, z: 0, v: 0 }];
+        
+        // Update React state
+        setGestures(gesturesData.length ? gesturesData : ['IDLE', 'IDLE']);
+        setLandmarksList(data.landmarksList && data.landmarksList.length ? data.landmarksList : [null, null]);
+        setHandPosList(handPosData.length ? handPosData : [{ x: 0.5, y: 0.5, z: 0 }, { x: 0.5, y: 0.5, z: 0 }]);
+        setConfidenceList(data.confidenceList && data.confidenceList.length ? data.confidenceList : [0, 0]);
+        
+        if (data.image) setFrameData(data.image);
+        if (data.drawnShape && data.drawnShape !== 'unknown') {
+           window.dispatchEvent(new CustomEvent('stark:drawn', { detail: data.drawnShape }));
+        }
+      } catch (err) {
+        console.error('[AetherForge Hook] Error parsing socket data:', err);
       }
     };
     
