@@ -686,108 +686,80 @@ export default function Editor() {
 
   /* ── AI command parser ── */
   const handleAI = useCallback(async (msg) => {
-    const p = msg.toLowerCase();
-    const n = parseFloat(p.match(/[\d.]+/)?.[0]) || 1;
+    const p = msg.toLowerCase().trim();
+    if (!p) return;
 
     setIsProcessing(true);
     setTimeout(() => setIsProcessing(false), 2000);
 
-    // 1. COMPLEX SYNTHESIS (Python Backend)
-    if (/generate|create|make|add|vision|scan/i.test(p) && (p.includes("camera") || p.includes("vision") || p.includes("drone") || p.includes("tree") || p.includes("building") || p.includes("tower") || p.split(' ').length > 2)) {
+    const entityMatch = p.match(/(?:generate|create|make|add|spawn|vision|scan)(?:\s+|\[)(?:a\s+)?([a-z0-9_-]+)\]?/i);
+    const entity = entityMatch ? entityMatch[1] : null;
+
+    if (/generate|create|make|add|spawn|vision|scan/i.test(p)) {
       setIsGenerating(true);
-      const useCamera = p.includes("camera") || p.includes("vision") || p.includes("scan");
-      const data = await generateFromPython(p, orb.accent, useCamera);
-      if (data) {
-        setObjects(prev => [...prev, data]);
-        setSelectedId(data.id);
-        const source = useCamera ? 'Rodin Vision Engine' : 'Python Neural Engine';
-        setChatHistory(prev => [...prev, { role:'assistant', content:`✓ ${source} synthesized: ${data.name}` }]);
+      if (entity && MODEL_TEMPLATES[entity.toUpperCase()]) {
+        const template = MODEL_TEMPLATES[entity.toUpperCase()](orb.accent);
+        const obj = freshObject(entity);
+        obj.parts = template.parts; obj.name = template.name;
+        setTimeout(() => {
+          setObjects(prev => [...prev, obj]); setSelectedId(obj.id);
+          setIsGenerating(false);
+          setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ [LOCAL] ${obj.name} manifested.` }]);
+        }, 600);
+        return;
       }
-      setIsGenerating(false);
-      return;
+      try {
+        const useCamera = p.includes("camera") || p.includes("vision") || p.includes("scan");
+        const data = await generateFromPython(p, orb.accent, useCamera);
+        if (data) {
+          setObjects(prev => [...prev, data]); setSelectedId(data.id);
+          setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ [STARK_LINK] Neural Synthesis complete: ${data.name}` }]);
+        } else { throw new Error(); }
+      } catch (err) {
+        setChatHistory(prev => [...prev, { role: 'assistant', content: '⚠ Python Engine Offline. Using local procedural fallback.' }]);
+        const dummyKey = (entity && PRIMITIVES[entity]) ? entity : 'cube';
+        const dummy = freshObject(dummyKey);
+        setObjects(prev => [...prev, dummy]); setSelectedId(dummy.id);
+      }
+      setIsGenerating(false); return;
     }
 
-    // 2. PRIMITIVE GENERATION (Local)
-    if (/generate|create|make|add/i.test(p)) {
-      setIsGenerating(true);
-      let key = 'cube';
-      Object.keys(PRIMITIVES).forEach(k => { if (p.includes(k)) key = k; });
-      if (p.includes('ball'))   key = 'sphere';
-      if (p.includes('ring'))   key = 'torus';
-      
-      const template = MODEL_TEMPLATES[key.toUpperCase()];
-      const newObj = freshObject(key);
-      if (template) {
-        newObj.parts = template(orb.accent).parts;
-        newObj.name = template(orb.accent).name;
+    const n = parseFloat(p.match(/[\d.]+/)?.[0]) || 1;
+    if (selectedId && selectedObj) {
+      if (/move|translate/i.test(p)) {
+        const pos = selectedObj.position.clone();
+        if (/up/i.test(p) || /y/i.test(p)) pos.y += n;
+        if (/down/i.test(p)) pos.y -= n;
+        if (/left/i.test(p) || /x/i.test(p)) pos.x -= n;
+        if (/right/i.test(p)) pos.x += n;
+        if (/forward/i.test(p)) pos.z -= n;
+        if (/back/i.test(p) || /z/i.test(p)) pos.z += n;
+        updateSelected({ position: pos });
+        setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ Relocating: ${selectedObj.name}` }]);
+        return;
       }
-
-      setTimeout(() => {
-        setObjects(prev => [...prev, newObj]);
-        setSelectedId(newObj.id);
-        setIsGenerating(false);
-        setChatHistory(prev => [...prev, { role:'assistant', content:`✓ ${newObj.name} added to scene.` }]);
-      }, 800);
-      return;
-    }
-
-    // 3. DETAILING (Shadows, Glow, Materials)
-    if (selectedId) {
-      const updates = {};
-      if (/shadow/i.test(p)) updates.castShadow = !/off|remove/i.test(p);
-      if (/glow|emissive/i.test(p)) {
-        updates.emissive = orb.accent;
-        updates.emissiveIntensity = /off/i.test(p) ? 0 : 2;
+      if (/rotate|spin/i.test(p)) {
+        const axis = /x/i.test(p) ? 'x' : /z/i.test(p) ? 'z' : 'y';
+        const rad = n * Math.PI / 180;
+        const euler = new THREE.Euler().setFromQuaternion(selectedObj.quaternion);
+        euler[axis] += rad;
+        updateSelected({ quaternion: new THREE.Quaternion().setFromEuler(euler) });
+        setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ Rotation applied.` }]);
+        return;
       }
-      if (/metal|chrome/i.test(p)) {
-        updates.metalness = 1;
-        updates.roughness = 0.1;
+      if (/scale|resize/i.test(p)) {
+        updateSelected({ scale: new THREE.Vector3(n, n, n) });
+        setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ Scaling to ${n}.` }]);
+        return;
       }
-      if (/plastic|matte/i.test(p)) {
-        updates.metalness = 0;
-        updates.roughness = 0.8;
-      }
-      if (/color|make it/i.test(p)) {
-        const colors = { red: '#ef4444', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308', white: '#ffffff', black: '#111111' };
-        Object.entries(colors).forEach(([name, hex]) => {
-          if (p.includes(name)) updates.color = hex;
-        });
-      }
-
-      if (Object.keys(updates).length > 0) {
-        updateSelected(updates);
-        setChatHistory(prev => [...prev, { role:'assistant', content:'✓ Detailing applied to active selection.' }]);
+      if (/delete|remove/i.test(p)) {
+        deleteSelected();
+        setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ Object removed.` }]);
         return;
       }
     }
-
-    if (/move|translate/i.test(p) && selectedId) {
-      setObjects(prev => prev.map(o => {
-        if (o.id !== selectedId) return o;
-        const pos = o.position.clone();
-        if (/up/i.test(p))    pos.y += n;
-        if (/down/i.test(p))  pos.y -= n;
-        if (/left/i.test(p))  pos.x -= n;
-        if (/right/i.test(p)) pos.x += n;
-        if (/forward/i.test(p)) pos.z -= n;
-        if (/back/i.test(p))  pos.z += n;
-        return { ...o, position: pos };
-      }));
-      setChatHistory(prev => [...prev, { role:'assistant', content:`✓ Moved.` }]);
-      return;
-    }
-    if (/rotate/i.test(p) && selectedId) {
-      const axis = /x/i.test(p) ? 'x' : /z/i.test(p) ? 'z' : 'y';
-      const deg  = parseFloat(p.match(/[\d.]+/)?.[0]) || 45;
-      setRotDeg(axis, deg + (selectedObj ? new THREE.Euler().setFromQuaternion(selectedObj.quaternion)[axis] * 180/Math.PI : 0));
-      setChatHistory(prev => [...prev, { role:'assistant', content:`✓ Rotated ${axis.toUpperCase()} by ${deg}°.` }]);
-      return;
-    }
-    if (/scale|resize/i.test(p) && selectedId) {
-      setObjects(prev => prev.map(o => o.id !== selectedId ? o : { ...o, scale: new THREE.Vector3(n, n, n) }));
-      setChatHistory(prev => [...prev, { role:'assistant', content:`✓ Scale set to ${n}.` }]);
-      return;
-    }
+    setChatHistory(prev => [...prev, { role: 'assistant', content: 'Processing semantic patterns...' }]);
+  }, [selectedId, selectedObj, updateSelected, deleteSelected, addObject, generateFromPython, orb.accent]);
     if (/spin on/i.test(p)) { updateSelected({ spin:true });  setChatHistory(prev=>[...prev,{role:'assistant',content:'✓ Spin enabled.'}]); return; }
     if (/spin off/i.test(p)){ updateSelected({ spin:false }); setChatHistory(prev=>[...prev,{role:'assistant',content:'✓ Spin stopped.'}]); return; }
     if (/delete|remove/i.test(p)) { deleteSelected(); setChatHistory(prev=>[...prev,{role:'assistant',content:'✓ Deleted.'}]); return; }
@@ -1133,33 +1105,22 @@ export default function Editor() {
           <div className="shelf-section-label">OBJECT</div>
           <ToolBtn icon={Eye}   label="Hide/Show" sub="H" onClick={()=>updateSelected({visible:!selectedObj?.visible})} accent={orb.accent} />
           <ToolBtn icon={CopyCheck} label="Wireframe" sub="W" onClick={()=>updateSelected({wireframe:!selectedObj?.wireframe})} active={selectedObj?.wireframe} accent={orb.accent} />
-          <ToolBtn icon={Film} label={dockedObject && dockedObject.id === selectedId ? "Undock" : "Holo-Dock"} sub="PIP" active={dockedObject?.id === selectedId} onClick={()=>{
+          <ToolBtn icon={Film} label={dockedObject && dockedObject.id === selectedId ? "Undock" : "Secondary View"} sub="PIP" active={dockedObject?.id === selectedId} onClick={()=>{
              if(dockedObject && dockedObject.id === selectedId) setDockedObject(null);
              else if (selectedObj) setDockedObject(selectedObj);
           }} accent={orb.accent} />
 
           <div className="shelf-spacer"/>
-          <div className="shelf-section-label">AI PROTOCOL</div>
-          <div style={{ height: '60px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className={`status-orb-css ${isVoiceActive ? 'active' : ''}`} style={{ 
-               width: '30px', 
-               height: '30px', 
-               borderRadius: '50%', 
-               background: orb.accent,
-               boxShadow: `0 0 20px ${orb.accent}`,
-               animation: isProcessing ? 'pulse 1s infinite' : 'none'
-             }} />
-          </div>
+          <ToolBtn icon={Settings} label="Project Settings" onClick={()=>setActivePanel('properties')} accent={orb.accent} />
           <ToolBtn 
             icon={Bot} 
-            label="Vision Scan" 
-            sub="RODIN" 
-            onClick={handleVisionAI} 
+            label="Hand Tracking" 
+            sub="SPATIAL" 
+            active={isGestureEnabled}
+            onClick={toggleGestures} 
             accent={orb.accent} 
+            danger={permissionState==='denied'}
           />
-
-          <div className="shelf-section-label">SPATIAL</div>
-          <ToolBtn icon={Hand} active={isGestureEnabled} label="Gesture" sub="CAM" onClick={toggleGestures} accent={orb.accent} danger={permissionState==='denied'} />
           
           {/* Removed shelf-monitor-container from here to move to PIP window */}
         </aside>
