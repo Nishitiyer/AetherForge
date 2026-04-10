@@ -59,6 +59,19 @@ class AEPulseEngine:
                 {"type": "Sphere", "position": [0, 0.3, 0], "scale": [0.8, 0.8, 0.8], "color": "#3b82f6", "emissive": "#3b82f6", "emissiveIntensity": 2.0},
                 {"type": "Torus", "position": [0, -0.1, 0], "scale": [2.2, 2.2, 0.1], "color": color, "rotation": [1.57, 0, 0]},
             ]
+        elif "gun" in p or "pistol" in p or "blaster" in p:
+            parts = [
+                {"type": "Box", "position": [0, 0.2, 0], "scale": [0.2, 0.6, 0.4], "color": "#333333"}, # Grip
+                {"type": "Box", "position": [0, 0.6, -0.4], "scale": [0.15, 0.2, 1.2], "color": "#1a1a1a"}, # Barrel
+                {"type": "Box", "position": [0, 0.5, -0.1], "scale": [0.1, 0.1, 0.3], "color": color, "emissive": color, "emissiveIntensity": 2.0}, # Energy Core
+            ]
+        elif "satellite" in p or "comm" in p:
+            parts = [
+                {"type": "Box", "position": [0, 0, 0], "scale": [1, 1, 1], "color": "#fbbf24"}, # Core
+                {"type": "Plane", "position": [1.2, 0, 0], "scale": [1.5, 0.6, 0.05], "color": "#3b82f6", "rotation": [0, 1.57, 0]}, # Panel L
+                {"type": "Plane", "position": [-1.2, 0, 0], "scale": [1.5, 0.6, 0.05], "color": "#3b82f6", "rotation": [0, 1.57, 0]}, # Panel R
+                {"type": "Cylinder", "position": [0, 0.8, 0], "scale": [0.1, 0.4, 0.1], "color": "#ffffff"}, # Antenna
+            ]
         else:
             # GENERIC CATEGORICAL SYNTHESIS
             parts = [
