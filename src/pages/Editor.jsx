@@ -766,45 +766,40 @@ export default function Editor() {
     }
     if (/spin on/i.test(p)) { updateSelected({ spin: true }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Spin enabled.' }]); return; }
     if (/spin off/i.test(p)) { updateSelected({ spin: false }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Spin stopped.' }]); return; }
-    if (/wireframe on/i.test(p)) { updateSelected({ wireframe: true }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Wireframe enabled.' }]); return; }
     if (/wireframe off/i.test(p)) { updateSelected({ wireframe: false }); setChatHistory(prev => [...prev, { role: 'assistant', content: '✓ Wireframe disabled.' }]); return; }
 
     setChatHistory(prev => [...prev, { role: 'assistant', content: 'Analyzing semantic patterns...' }]);
   }, [selectedId, selectedObj, updateSelected, deleteSelected, addObject, generateFromPython, orb.accent]);
 
-  // --- SPATIAL AIR DRAWING MONITOR ---
-  useEffect(() => {
-    const handleDrawn = (e) => {
-       const shape = e.detail;
-       if (Date.now() > creationCooldownRef.current) {
-          addObject(shape);
-          setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Air-Drawn Geometry Detected. Instantiating ${shape.toUpperCase()} Matrix.` }]);
-          creationCooldownRef.current = Date.now() + 2000;
-       }
-    };
-    window.addEventListener('stark:drawn', handleDrawn);
-    return () => window.removeEventListener('stark:drawn', handleDrawn);
-  }, [addObject]);
-
   // PUSH-TO-CREATE MONITOR (Stark Spatial Protocol)
+  const lastGestureRef = useRef(['IDLE', 'IDLE']);
+  
   useEffect(() => {
      const interval = setInterval(() => {
         if (!isGestureEnabled) return;
-        const h0 = handPosRef.current[0];
+        const gList = gestureRef.current;
+        const hpList = handPosRef.current;
+        const h0 = hpList[0];
         
-        // Detection Logic: High-velocity PUSH or THUMBS_UP gesture
-        const isPushing = h0 && h0.v > 50; 
-        const isCreating = isPushing;
+        if (!h0) return;
 
-        // UI COMMANDS VIA GESTURES
-        const gs = gesturesRef.current;
-        if (gs[0] === 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
-           setShowAddPanel(true);
-           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Initiated: Accessing Mesh Primitives.' }]);
-           creationCooldownRef.current = Date.now() + 2000;
+        // 1. STATE TRACKING (To detect gesture onset)
+        const g0 = gList[0];
+        const prevG0 = lastGestureRef.current[0];
+        lastGestureRef.current = [...gList];
+
+        // 2. CREATION LOGIC (PUSH / THUMBS_UP)
+        const isPushing = h0.v > 80; 
+        const isCreating = isPushing && Date.now() > creationCooldownRef.current && !selectedId;
+
+        if (g0 === 'THUMBS_UP' && prevG0 !== 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
+            setShowAddPanel(true);
+            setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Initiated: Accessing Mesh Primitives.' }]);
+            creationCooldownRef.current = Date.now() + 2000;
         }
 
-        if (gs[0] === 'PEACE' && Date.now() > creationCooldownRef.current) {
+        // 3. SELECTION / VISION
+        if (g0 === 'PEACE' && Date.now() > creationCooldownRef.current) {
           if (selectedId) {
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Engaged: Analyzing Geometry for Neural Refinement...' }]);
              updateSelected({ scale: selectedObj.scale.clone().multiplyScalar(1.1) });
@@ -815,52 +810,36 @@ export default function Editor() {
           }
         }
 
-        // NEW STARK GESTURES
-        if (gs[0] === 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
+        // 4. TRANSFORM TOGGLES
+        if (g0 === 'ROCK_ON' && prevG0 !== 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
           updateSelected({ wireframe: !selectedObj.wireframe });
           setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Telemetry Wireframe ${!selectedObj.wireframe ? 'Engaged' : 'Dismissed'}.` }]);
-          creationCooldownRef.current = Date.now() + 1000;
+          creationCooldownRef.current = Date.now() + 1500;
         }
 
-        if (gs[0] === 'PALM' && Date.now() > creationCooldownRef.current) {
+        if (g0 === 'PALM' && prevG0 !== 'PALM' && Date.now() > creationCooldownRef.current) {
           setSelectedId(null);
           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Global Selection Flush.' }]);
           creationCooldownRef.current = Date.now() + 1500;
         }
 
-        if (gs[0] === 'L_SIGN' && Date.now() > creationCooldownRef.current) {
-          setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: JARVIS UI System Reboot.' }]);
-          creationCooldownRef.current = Date.now() + 2000;
+        // 5. SYSTEM RESET
+        if (g0 === 'L_SIGN' && prevG0 !== 'L_SIGN' && Date.now() > creationCooldownRef.current) {
+           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: JARVIS UI System Reboot.' }]);
+           // Visual feedback: brief overlay flash
+           setIsInitializing(true);
+           setTimeout(() => setIsInitializing(false), 800);
+           creationCooldownRef.current = Date.now() + 3000;
         }
 
-        // --- INSTANT SHAPE GESTURES ---
+        // 6. INSTANT PRIMITIVES
         if (Date.now() > creationCooldownRef.current) {
-          if (gs[0] === 'C_SIGN') {
-             addObject('box');
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Cubic Matrix Manifested.' }]);
-             creationCooldownRef.current = Date.now() + 1500;
-          } else if (gs[0] === 'O_SIGN') {
-             addObject('sphere');
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Spherical Core Synthesized.' }]);
-             creationCooldownRef.current = Date.now() + 1500;
-          } else if (gs[0] === 'T_SIGN') {
-             addObject('torus');
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Toroidal Geometry Synchronized.' }]);
-             creationCooldownRef.current = Date.now() + 1500;
-          } else if (gs[0] === 'GUN' && selectedId) {
-             updateSelected({ animation: 'EXPLODE' });
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Kinetic Disruption Initialized.' }]);
-             creationCooldownRef.current = Date.now() + 2000;
-          } else if (gs[0] === 'OK' && !selectedId) {
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Analysis Context Locked.' }]);
-             creationCooldownRef.current = Date.now() + 1000;
-          } else if (gs[0] === 'THUMBS_UP') {
-             setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Magnifying Spatial Grid.' }]);
-             creationCooldownRef.current = Date.now() + 500;
-          }
+          if (g0 === 'C_SIGN' && prevG0 !== 'C_SIGN') { addObject('box'); creationCooldownRef.current = Date.now() + 1500; }
+          else if (g0 === 'O_SIGN' && prevG0 !== 'O_SIGN') { addObject('sphere'); creationCooldownRef.current = Date.now() + 1500; }
         }
 
-        if (isCreating && Date.now() > creationCooldownRef.current) {
+        // 7. SPATIAL SPAWNING (AI Ghost Path)
+        if (isCreating) {
            setIsSynthesizingLocal(true);
            setTimeout(() => setIsSynthesizingLocal(false), 1000);
            
@@ -879,9 +858,9 @@ export default function Editor() {
            setSelectedId(newObj.id);
            creationCooldownRef.current = Date.now() + 1200; 
         }
-     }, 50);
+     }, 40);
      return () => clearInterval(interval);
-  }, [isGestureEnabled, ghostObject, addObject]);
+  }, [isGestureEnabled, ghostObject, addObject, selectedId, selectedObj, updateSelected, handleVisionAI]);
 
   /* ── External Command Link ── */
   useEffect(() => {
