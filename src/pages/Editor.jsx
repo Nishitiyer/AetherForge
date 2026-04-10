@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from 'three';
 import { useHands } from '../hooks/useHands';
 import { useAIEngine } from '../hooks/useAIEngine';
+import { useSession } from "../context/SessionContext";
 import StarkOrb from '../components/common/AssistantOrb';
 import { ORB_MODES } from '../data/orbs';
 import {
@@ -504,7 +505,8 @@ const ViewportScene = React.memo(({ objects, selectedId, onSelect, onDelete, onT
                      MAIN EDITOR PAGE
 ═════════════════════════════════════════════════════════════ */
 export default function Editor() {
-  const [selectedOrbId, setSelectedOrbId] = useState('sentinel');
+  const { session } = useSession();
+  const [selectedOrbId, setSelectedOrbId] = useState(session?.selectedOrbId || 'sentinel');
   const [objects,   setObjects]   = useState(() => [freshObject('cube')]);
   const [selectedId, setSelectedId] = useState(1);
   const [transformMode, setTransformMode] = useState('translate');
@@ -573,7 +575,13 @@ export default function Editor() {
   // STARK_LINK: Core state for gesture-driven creation
   const [ghostObject, setGhostObject] = useState({ type: 'cube', parts: null }); 
   const creationCooldownRef = useRef(0);
+  const gesturesRef = useRef(['IDLE', 'IDLE']);
   const { generateFromPython, isSynthesizing: isAISynthesizing } = useAIEngine();
+
+  // Sync gestures to ref for the creation interval to avoid thrashing
+  useEffect(() => {
+    gesturesRef.current = gestures;
+  }, [gestures]);
 
 
   // Internal state to override useHands during diagnostics
@@ -814,16 +822,16 @@ export default function Editor() {
         const isCreating = isPushing;
 
         // UI COMMANDS VIA GESTURES
-        if (gestures[0] === 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
+        const gs = gesturesRef.current;
+        if (gs[0] === 'THUMBS_UP' && !showAddPanel && Date.now() > creationCooldownRef.current) {
            setShowAddPanel(true);
            setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Initiated: Accessing Mesh Primitives.' }]);
            creationCooldownRef.current = Date.now() + 2000;
         }
 
-        if (gestures[0] === 'PEACE' && Date.now() > creationCooldownRef.current) {
+        if (gs[0] === 'PEACE' && Date.now() > creationCooldownRef.current) {
           if (selectedId) {
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol Engaged: Analyzing Geometry for Neural Refinement...' }]);
-             // Simulate "detailing" by slightly randomized scaling of parts or calling vision
              updateSelected({ scale: selectedObj.scale.clone().multiplyScalar(1.1) });
              creationCooldownRef.current = Date.now() + 1000;
           } else {
@@ -833,54 +841,45 @@ export default function Editor() {
         }
 
         // NEW STARK GESTURES
-        if (gestures[0] === 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
+        if (gs[0] === 'ROCK_ON' && selectedObj && Date.now() > creationCooldownRef.current) {
           updateSelected({ wireframe: !selectedObj.wireframe });
           setChatHistory(prev => [...prev, { role: 'assistant', content: `Protocol: Telemetry Wireframe ${!selectedObj.wireframe ? 'Engaged' : 'Dismissed'}.` }]);
           creationCooldownRef.current = Date.now() + 1000;
         }
 
-        if (gestures[0] === 'PALM' && Date.now() > creationCooldownRef.current) {
+        if (gs[0] === 'PALM' && Date.now() > creationCooldownRef.current) {
           setSelectedId(null);
           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Global Selection Flush.' }]);
           creationCooldownRef.current = Date.now() + 1500;
         }
 
-        if (gestures[0] === 'POINT' && !selectedObj) {
-           // Proximity selection logic in SceneObject handles the selection if pointed
-        }
-
-        if (gestures[0] === 'L_SIGN' && Date.now() > creationCooldownRef.current) {
+        if (gs[0] === 'L_SIGN' && Date.now() > creationCooldownRef.current) {
           setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: JARVIS UI System Reboot.' }]);
           creationCooldownRef.current = Date.now() + 2000;
         }
 
         // --- INSTANT SHAPE GESTURES ---
         if (Date.now() > creationCooldownRef.current) {
-          const spawnPos = new THREE.Vector3((h0.x - 0.5) * 14, (0.5 - h0.y) * 10, -5);
-          
-          if (gestures[0] === 'C_SIGN') {
+          if (gs[0] === 'C_SIGN') {
              addObject('box');
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Cubic Matrix Manifested.' }]);
              creationCooldownRef.current = Date.now() + 1500;
-          } else if (gestures[0] === 'O_SIGN') {
+          } else if (gs[0] === 'O_SIGN') {
              addObject('sphere');
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Spherical Core Synthesized.' }]);
              creationCooldownRef.current = Date.now() + 1500;
-          } else if (gestures[0] === 'T_SIGN') {
+          } else if (gs[0] === 'T_SIGN') {
              addObject('torus');
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Toroidal Geometry Synchronized.' }]);
              creationCooldownRef.current = Date.now() + 1500;
-          } else if (gestures[0] === 'GUN' && selectedId) {
-             // Explode effect logic
+          } else if (gs[0] === 'GUN' && selectedId) {
              updateSelected({ animation: 'EXPLODE' });
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Kinetic Disruption Initialized.' }]);
              creationCooldownRef.current = Date.now() + 2000;
-          } else if (gestures[0] === 'OK' && !selectedId) {
-             // Auto-select nearest
+          } else if (gs[0] === 'OK' && !selectedId) {
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Analysis Context Locked.' }]);
              creationCooldownRef.current = Date.now() + 1000;
-          } else if (gestures[0] === 'THUMBS_UP') {
-             // Zoom In (Perspective adjust)
+          } else if (gs[0] === 'THUMBS_UP') {
              setChatHistory(prev => [...prev, { role: 'assistant', content: 'Protocol: Magnifying Spatial Grid.' }]);
              creationCooldownRef.current = Date.now() + 500;
           }
@@ -907,7 +906,7 @@ export default function Editor() {
         }
      }, 50);
      return () => clearInterval(interval);
-  }, [isGestureEnabled, gestures, ghostObject, addObject]);
+  }, [isGestureEnabled, ghostObject, addObject]);
 
   /* ── External Command Link ── */
   useEffect(() => {
