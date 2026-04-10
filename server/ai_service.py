@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
+import requests
 
 # --- Stark Neural Path Injection ---
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -114,6 +115,22 @@ async def generate(data: GenerationRequest):
         
     result = ai_engine.synthesize(data.prompt, frame, data.color)
     return ModelResponse(**result)
+
+@app.post("/status")
+async def check_status(task_uuid: str):
+    """Check the status of a Rodin generation task."""
+    if not ai_engine.rodin.api_key:
+        return {"status": "OFFLINE", "message": "Rodin API Key missing"}
+        
+    headers = { "Authorization": f"Bearer {ai_engine.rodin.api_key}" }
+    try:
+        # We use the download endpoint as suggested in docs for 'quick and dirty' status+results
+        response = requests.post("https://api.hyper3d.com/api/v2/download", 
+                                 headers=headers, 
+                                 json={"task_uuid": task_uuid})
+        return response.json()
+    except Exception as e:
+        return {"status": "ERROR", "message": str(e)}
 
 @app.websocket("/ws/gestures")
 async def websocket_gestures(websocket: WebSocket):

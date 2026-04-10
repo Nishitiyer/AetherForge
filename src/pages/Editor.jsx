@@ -998,6 +998,39 @@ export default function Editor() {
     return new THREE.Euler().setFromQuaternion(selectedObj.quaternion);
   }, [selectedObj]);
 
+  /* ── Rodin Task Monitor ── */
+  useEffect(() => {
+    const activeTasks = objects.filter(o => o.metadata?.status === 'SYNTHESIZING');
+    if (activeTasks.length === 0) return;
+
+    const poll = async () => {
+      for (const task of activeTasks) {
+        try {
+          const res = await fetch('http://localhost:8000/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task_uuid: task.metadata.task_uuid })
+          });
+          const data = await res.json();
+          
+          if (data && data.list && data.list.length > 0) {
+            setObjects(prev => prev.map(o => o.id === task.id ? {
+               ...o,
+               name: `[RODIN] ${o.name}`,
+               metadata: { ...o.metadata, status: 'PROCESSED', results: data.list }
+            } : o));
+            setChatHistory(prev => [...prev, { role: 'assistant', content: `✓ RODIN Protocol: High-Fidelity Geometry for ${task.name} secured.` }]);
+          }
+        } catch (e) {
+          console.error("Rodin Polling Error:", e);
+        }
+      }
+    };
+
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
+  }, [objects]);
+
   return (
     <div className="editor-root" style={{ "--orb-accent": orb.accent }}>
 
