@@ -8,3 +8,5 @@ server/db.json
 *.task
 server/*.task
 .gemini/
+
+.vercel

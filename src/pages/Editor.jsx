@@ -579,7 +579,7 @@ export default function Editor() {
   // Internal state to override useHands during diagnostics
   const [activeGesture, setActiveGesture] = useState('NONE');
   const [activeHandPos, setActiveHandPos] = useState({ x: 0.5, y: 0.5 });
-  const [isSynthesizing, setIsSynthesizing] = useState(false); // Local state for synthesis UI
+  const [isSynthesizingLocal, setIsSynthesizingLocal] = useState(false); // Local state for synthesis UI
   
   useEffect(() => {
     if (!isDiagnostic) {
